@@ -288,6 +288,75 @@ section{margin-block-start:12px}
   #summary .sum-block[style]{align-items:flex-start!important;flex-direction:column!important}.sum-sub{font-size:16px}
   .row-split{align-items:flex-start}.taperow .meta{display:block}
 }
+
+/* Hierarchy and composition refinements */
+.numwrap{
+  flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;
+}
+.unit{
+  max-inline-size:none;white-space:nowrap;font-size:14px;line-height:1.1;
+}
+
+#keys{
+  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10px;row-gap:0;
+}
+#keys>#hookTitle,#keys>#taskEditor,#keys>#btnMore,#keys>.drawer{grid-column:1/-1}
+#taskEditor .qblock>.keyrow{
+  display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));inline-size:100%;
+}
+#taskEditor .qblock>.keyrow>.key{inline-size:100%;min-inline-size:0}
+#taskEditor .stepper{
+  display:grid;grid-template-columns:52px minmax(72px,1fr) 52px;inline-size:100%;gap:12px;
+}
+#taskEditor .stepper .val{inline-size:100%;min-inline-size:0}
+#taskEditor>.inline-link:last-child{
+  justify-self:end;margin-block-start:8px;padding-inline:7px;color:var(--mute);
+  font-size:13px;font-weight:400;text-decoration:none;
+}
+#taskEditor>.inline-link:last-child:hover{text-decoration:underline}
+
+#btnMore{grid-column:1/-1}
+#btnMore.ghost{
+  color:var(--teal-ink);border-color:var(--teal);background:var(--panel);
+  box-shadow:3px 4px 7px rgba(27,36,54,.10),-3px -3px 7px var(--white),inset 0 1px 0 var(--white);
+}
+#btnQuestions,#btnGroups{
+  inline-size:100%;min-block-size:48px;margin-block-start:7px;padding-block:8px;padding-inline:10px;
+  border-color:transparent;background:transparent;color:var(--mute);font-size:13px;font-weight:500;
+  line-height:1.25;box-shadow:none;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px;
+}
+#btnQuestions:hover,#btnGroups:hover{
+  color:var(--teal-ink);border-color:var(--line);background:var(--white);box-shadow:none;transform:none;
+}
+#btnQuestions:active,#btnGroups:active{
+  transform:translateY(1px);box-shadow:inset 1px 1px 3px rgba(27,36,54,.09);
+}
+
+#toolbar{border-block-start:1px solid var(--line);padding-block-start:13px}
+#toolbar .key,#toolbar .key:first-child{
+  grid-column:auto;background:var(--white);border-color:var(--line);color:var(--mute);font-weight:500;
+  box-shadow:none;
+}
+#toolbar .key:hover,#toolbar .key:first-child:hover{
+  color:var(--teal-ink);border-color:var(--teal);background:var(--white);box-shadow:none;transform:none;
+}
+#toolbar .key:active,#toolbar .key:first-child:active{
+  transform:translateY(1px);box-shadow:inset 1px 1px 3px rgba(27,36,54,.09);
+}
+
+.histline:empty::before{content:'הזמן שיכול לחזור לצוות';opacity:.9}
+#taskEditor>.qblock:only-child{
+  padding:18px;text-align:center;border-color:var(--line);background:var(--white);
+}
+#taskEditor>.qblock:only-child .qlabel{font-size:17px;margin-block-end:12px}
+#taskEditor>.qblock:only-child .key{max-inline-size:360px;margin-inline:auto}
+
+@media (max-width:480px){
+  .numwrap{gap:0}.unit{max-inline-size:none;font-size:13px;white-space:nowrap}
+  #taskEditor .qblock>.keyrow{grid-template-columns:repeat(auto-fit,minmax(70px,1fr))}
+  #taskEditor .stepper{grid-template-columns:52px minmax(60px,1fr) 52px;gap:8px}
+  #btnQuestions,#btnGroups{font-size:12px;padding-inline:6px}
+}
 @media (prefers-reduced-motion:reduce){
   *{transition:none !important;animation:none !important}
 }
@@ -1057,11 +1126,13 @@ function renderKeys(res){
     box.appendChild(d);
   }
 
-  // delete
-  const del = el('button','inline-link','מחיקת המשימה');
-  del.type = 'button';
-  del.addEventListener('click', () => deleteTask(t.id));
-  box.appendChild(del);
+  // delete — never offered for a task the user has not started
+  if(!isBlank(t) || allTasks().length > 1){
+    const del = el('button','inline-link','מחיקת המשימה');
+    del.type = 'button';
+    del.addEventListener('click', () => deleteTask(t.id));
+    box.appendChild(del);
+  }
 
   // one primary action at a time: "לדייק" first, and only then "+ עוד משימה"
   $('btnMore').className = 'key wide ' + (ui.refineOpen ? 'primary' : 'ghost');

@@ -55,6 +55,8 @@ async function main(){
   section('1. ההוק — מספר על המסך בלי שום לחיצה נוספת');
   ok('מצב ריק מציג 0', (await num(page)) === '0');
   ok('מצב ריק מזמין לכתוב או לבחור', (await sub(page)).includes('כתבו משימה או בחרו דוגמה'));
+  ok('אין "מחיקת המשימה" כשאין עדיין משימה',
+     (await page.locator('#taskEditor button', {hasText:'מחיקת המשימה'}).count()) === 0);
   ok('שלוש השאלות חיות מיד, בלי כפתור פתיחה',
      await page.locator('#taskEditor input[aria-label="שם המשימה"]').isVisible());
   ok('השאלות המנחות לא מופיעות לפני שלוחצים', await page.locator('#questionsCard').isHidden());
