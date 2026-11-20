@@ -545,8 +545,11 @@ async function main(){
     await shot('tape-' + tag, w, h, demo);
     await shot('summary-' + tag, w, h, summary);
   }
-  ok('צילומי מסך נוצרו', fs.readdirSync(SHOTS).filter(f => f.endsWith('.png')).length === 10,
-     String(fs.readdirSync(SHOTS).filter(f => f.endsWith('.png')).length));
+  const wanted = [];
+  for(const tag of ['mobile','desktop'])
+    for(const n of ['empty','hook','refine','tape','summary']) wanted.push(n + '-' + tag + '.png');
+  const missing = wanted.filter(f => !fs.existsSync(path.join(SHOTS, f)));
+  ok('עשרת צילומי המסך נוצרו', missing.length === 0, missing.join(', '));
 
   ok('אין שגיאות קונסולה בכל הריצה', consoleErrors.length === 0, consoleErrors.slice(0,3).join(' | '));
 
