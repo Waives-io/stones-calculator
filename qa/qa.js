@@ -498,7 +498,29 @@ async function main(){
   ok('אין שגיאות בבדיקות האלה', rErr.length === 0, rErr.join('; '));
   await ctxR.close();
 
-  section('22. צילומי מסך');
+  section('22. אין גלישה אופקית ואין מילה שנשברת');
+  for(const [w,h,tag] of [[320,700,'320'],[390,844,'390'],[768,1000,'768'],[1280,900,'1280']]){
+    const c = await browser.newContext({viewport:{width:w, height:h}, locale:'he-IL'});
+    const p = await c.newPage();
+    await p.goto(url);
+    await p.locator('#taskEditor button', {hasText:'מיון קורות חיים'}).first().click();
+    await p.locator('#taskEditor button', {hasText:'לדייק את החישוב'}).first().click();
+    const over = await p.evaluate(() => {
+      const d = document.documentElement;
+      const wide = [];
+      document.querySelectorAll('*').forEach(e => {
+        const r = e.getBoundingClientRect();
+        if(r.width > 0 && (r.right > d.clientWidth + 1 || r.left < -1))
+          wide.push((e.id || e.className || e.tagName) + '');
+      });
+      return {scroll: d.scrollWidth, client: d.clientWidth, wide: wide.slice(0,4)};
+    });
+    ok('אין גלישה אופקית ברוחב ' + tag + 'px',
+       over.scroll <= over.client + 1 && over.wide.length === 0, JSON.stringify(over));
+    await c.close();
+  }
+
+  section('23. צילומי מסך');
   const shot = async (name, w, h, fn) => {
     const c = await browser.newContext({viewport:{width:w, height:h}, locale:'he-IL', deviceScaleFactor:2});
     const p = await c.newPage();
