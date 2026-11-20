@@ -432,7 +432,73 @@ async function main(){
   const srcBanned = fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
   ok('אין מילים אסורות בקוד', !/₪|קיצוץ|פיטור/.test(srcBanned));
 
-  section('21. צילומי מסך');
+  section('21. הכשלים שנמצאו בביקורת הקוד');
+  const ctxR = await browser.newContext({viewport:{width:1280, height:900}, locale:'he-IL',
+                                         permissions:['clipboard-read','clipboard-write']});
+  const r = await ctxR.newPage();
+  const rErr = [];
+  r.on('pageerror', e => rErr.push(e.message));
+  await r.goto(url);
+
+  // א. הקלדת שם צוות לא הורסת את השדה
+  await r.locator('#taskEditor button', {hasText:'מיון קורות חיים'}).first().click();
+  await r.locator('#btnGroups').click();
+  const teamInput = r.locator('#groupsCard input[aria-label="שם הצוות או התפקיד"]').first();
+  await teamInput.fill('');
+  await teamInput.type('רכזות גיוס', {delay: 15});
+  ok('שם צוות נכתב במלואו בלי לאבד פוקוס',
+     (await teamInput.inputValue()) === 'רכזות גיוס' &&
+     await teamInput.evaluate(el => el === document.activeElement),
+     await teamInput.inputValue());
+
+  // ב. לחיצה כפולה על "קישור לתרחיש" לא בולעת את הקישור הבא
+  await r.locator('#btnShare').click();
+  await r.locator('#btnShare').click();
+  const otherScenario = enc({v:1,m:'talk',g:[{n:'צוות אחר',p:4,i:0,t:[{n:'משימה מקישור',m:60,f:0,a:2,r:1}]}]});
+  await r.evaluate(h => { location.hash = 's=' + h; }, otherScenario);
+  await r.waitForTimeout(250);
+  const loadedNames = await r.evaluate(() => window.__waives.state.groups.map(g => g.name).join('|'));
+  ok('קישור נכנס נטען גם אחרי שתי לחיצות על "קישור לתרחיש"',
+     loadedNames.includes('צוות אחר'), loadedNames);
+
+  // ג. אחרי הודעה קצרה, כפתור "בטל" עדיין זמין
+  await r.goto(url);
+  await r.evaluate(() => localStorage.clear());
+  await r.goto(url);
+  await r.locator('#taskEditor button', {hasText:'מיון קורות חיים'}).first().click();
+  await r.locator('#btnShare').click();
+  await r.locator('#btnDemo').click();
+  ok('כפתור "בטל" זמין גם אחרי הודעה קצרה',
+     await r.locator('#snackBtn').isVisible());
+  await r.locator('#snackBtn').click();
+  ok('ה-Undo באמת החזיר את התרחיש',
+     (await r.evaluate(() => window.__waives.compute().rows.filter(x => x.minutes > 0).length)) === 1);
+
+  // ד. "תרחיש חדש" ומחיקת המשימה האחרונה משאירים את ההוק חי
+  await r.locator('#btnReset').click();
+  ok('אחרי "תרחיש חדש" שלוש השאלות חיות',
+     await r.locator('#taskEditor input[aria-label="שם המשימה"]').isVisible());
+  ok('אחרי "תרחיש חדש" המסך מציג 0',
+     (await r.locator('#bigNum').textContent()).trim() === '0');
+  await r.locator('#taskEditor button', {hasText:'מיון קורות חיים'}).first().click();
+  await r.locator('#taskEditor button', {hasText:'מחיקת המשימה'}).first().click();
+  ok('אחרי מחיקת המשימה האחרונה ההוק עדיין חי',
+     await r.locator('#taskEditor input[aria-label="שם המשימה"]').isVisible());
+
+  // ה. "הערכה ראשונית" נעלמת אחרי שדייקו הכול
+  await r.goto(url);
+  await r.evaluate(() => localStorage.clear());
+  await r.goto(url);
+  await r.locator('#taskEditor button', {hasText:'מיון קורות חיים'}).first().click();
+  ok('"הערכה ראשונית" מוצגת לפני הדיוק', await r.locator('#estLabel').isVisible());
+  await r.locator('#taskEditor button', {hasText:'לדייק את החישוב'}).first().click();
+  ok('"הערכה ראשונית" נעלמת אחרי הדיוק', await r.locator('#estLabel').isHidden());
+  await r.locator('#btnMore').click();
+  ok('משימה ריקה חדשה לא מחזירה את "הערכה ראשונית"', await r.locator('#estLabel').isHidden());
+  ok('אין שגיאות בבדיקות האלה', rErr.length === 0, rErr.join('; '));
+  await ctxR.close();
+
+  section('22. צילומי מסך');
   const shot = async (name, w, h, fn) => {
     const c = await browser.newContext({viewport:{width:w, height:h}, locale:'he-IL', deviceScaleFactor:2});
     const p = await c.newPage();

@@ -690,7 +690,20 @@ function render(regions){
   if(has('dream')) renderDream(res);
   if(has('display')) renderFormula(res);
 }
-function apply(fn, regions){ fn(); save(); render(regions); }
+/* The three questions are always live: there is never a button to press before
+   the calculator will accept input, however the empty state was reached. */
+function normalize(){
+  const tasks = allTasks();
+  if(!tasks.length){
+    const g = ensureGroup();
+    const t = newTask('', 0, 'day', null);
+    g.tasks.push(t);
+    ui.activeTaskId = t.id;
+  }else if(!findTask(ui.activeTaskId)){
+    ui.activeTaskId = tasks[0].t.id;
+  }
+}
+function apply(fn, regions){ fn(); normalize(); save(); render(regions); }
 
 /* ---- display ---- */
 function renderDisplay(res){
@@ -706,7 +719,8 @@ function renderDisplay(res){
   $('histline').textContent = (!empty && active)
     ? historyLine(active.t, active.g)
     : (empty ? '' : nf(Math.round(t.hoursToday)) + ' שעות היום · ' + nf(t.freedMonth) + ' מתפנות');
-  const anyUnrefined = res.rows.some(r => !r.refined);
+  // a blank task that contributes nothing must not keep the figure marked provisional
+  const anyUnrefined = res.rows.some(r => r.minutes > 0 && !r.refined);
   $('estLabel').hidden = empty || !anyUnrefined;
   renderRing(t.fte, empty, res);
   if(!empty && t.freedMonth !== lastShownNumber) rollNumber(num);
@@ -1070,7 +1084,8 @@ function renderGroups(){
     nameInput.type = 'text'; nameInput.value = g.name;
     nameInput.setAttribute('aria-label','שם הצוות או התפקיד');
     nameInput.addEventListener('input', () => {
-      apply(() => { g.name = str(nameInput.value, LIMITS.names); markExplicit(g); }, ['display','tape','keys']);
+      // never 'keys' or 'groups' here: renderKeys rebuilds this very input
+      apply(() => { g.name = str(nameInput.value, LIMITS.names); markExplicit(g); }, ['display','tape']);
     });
     card.appendChild(nameInput);
 
@@ -1390,6 +1405,7 @@ function restore(json){
 function offerUndo(text, prev){
   undoSnapshot = prev;
   $('snackText').textContent = text;
+  $('snackBtn').hidden = false;   // a toast may have hidden it and cleared its restore timer
   $('snack').hidden = false;
   clearTimeout(undoTimer);
   undoTimer = setTimeout(() => { $('snack').hidden = true; undoSnapshot = null; }, 10000);
@@ -1418,8 +1434,13 @@ let selfHash = false;
 $('btnShare').addEventListener('click', async () => {
   const url = shareUrl();
   if(url.length > 1800){ toast('התרחיש גדול מדי לקישור. אפשר להעתיק סיכום במקום.'); return; }
-  selfHash = true;
-  location.hash = 's=' + b64urlEncode(JSON.stringify(pack(state)));
+  // only arm the guard when the assignment will actually fire hashchange,
+  // otherwise the flag latches and swallows the next incoming link
+  const nextHash = 's=' + b64urlEncode(JSON.stringify(pack(state)));
+  if(location.hash !== '#' + nextHash){
+    selfHash = true;
+    location.hash = nextHash;
+  }
   try{ await navigator.clipboard.writeText(url); toast('הקישור הועתק'); }
   catch(e){ window.prompt('העתיקו את הקישור', url); }
 });
