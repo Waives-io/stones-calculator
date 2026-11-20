@@ -748,9 +748,15 @@ function compute(s){
   }
   const exactFreed = rows.reduce((a,r) => a + r.freedMonth, 0);
   const exactToday = rows.reduce((a,r) => a + r.hoursMonth, 0);
-  const totalShown = Math.round(exactFreed);
-  const shown = allocate(rows.map(r => r.freedMonth), totalShown);
-  rows.forEach((r,i) => { r.freedShown = shown[i]; });
+  /* Under ten hours a whole-number tape lies twice: a task that really exists reads
+     "0 ש׳", and two identical rows can come out 1 and 0 because the leftover hour has
+     to land on one of them. Below that line the tape counts in tenths instead, and the
+     rows still sum exactly to the total. */
+  const step = exactFreed > 0 && exactFreed < 10 ? 10 : 1;
+  const target = Math.round(exactFreed * step);
+  const totalShown = target / step;
+  const shown = allocate(rows.map(r => r.freedMonth * step), target);
+  rows.forEach((r,i) => { r.freedShown = shown[i] / step; });
   let biggestId = null, best = -1;
   for(const r of rows) if(r.freedMonth > best){ best = r.freedMonth; biggestId = r.id; }
   return {
@@ -901,7 +907,10 @@ function apply(fn, regions){ fn(); normalize(); save(); render(regions); }
 /* ---- display ---- */
 function renderDisplay(res){
   const t = res.totals;
-  const empty = res.rows.length === 0 || t.freedMonth === 0;
+  /* "Empty" means the user has not entered anything yet — never merely a small
+     number. Telling someone to write a task while their task is on the screen is
+     the calculator calling itself broken. */
+  const empty = !res.rows.some(r => r.minutes > 0);
   const num = $('bigNum');
   num.textContent = empty ? '0' : nf(t.freedMonth);
   $('bigUnit').textContent = 'שעות בחודש';
@@ -933,19 +942,24 @@ function rollNumber(node){
     {duration:280, easing:'cubic-bezier(.4,0,.2,1)'}
   );
 }
-/* The ring is ONE full-time position. Gold = freed. Never more than 100% of itself. */
-function renderRing(fte, empty, res){
-  const wrap = $('ringWrap');
+/* The ring is ONE full-time position. Gold = freed. Never more than 100% of itself.
+   ONE renderer, used by both the display and the summary: when the summary had its
+   own copy it capped silently at four rings, so 5.2 positions were drawn as 4.2 while
+   the words beside them said 5.2. */
+function fillRings(wrap, fte, empty){
   wrap.textContent = '';
-  // the ring is drawn from the SAME rounded figure the screen writes in words,
+  // the rings are drawn from the SAME rounded figure the screen writes in words,
   // so "0.2 משרה" and the ring never disagree in front of a client
   const shownFte = Math.round(fte * 10) / 10;
   const full = Math.floor(shownFte + 1e-9);
   const partial = shownFte - full;
-  const shown = Math.min(full, 4);
-  for(let i=0; i<shown; i++) wrap.appendChild(ringSvg(1, ''));
+  for(let i=0; i<Math.min(full,4); i++) wrap.appendChild(ringSvg(1, ''));
   if(full < 4 || partial > 0.005) wrap.appendChild(ringSvg(empty ? 0 : partial, empty ? '' : Math.round(partial*100) + '%'));
-  if(full > 4) wrap.appendChild(el('span','ringmore','+' + (full-4)));
+  if(full > 4) wrap.appendChild(el('span','ringmore','+' + (full-4) + ' משרות'));
+}
+function renderRing(fte, empty, res){
+  const wrap = $('ringWrap');
+  fillRings(wrap, fte, empty);
   const label = empty ? 'אין עדיין זמן שהתפנה'
     : freeText(fte) + ', מתוך משרה מלאה. ' + (res.dream.chips[0] || res.dream.text || 'זמן לצמיחה');
   wrap.setAttribute('role','img');
@@ -1181,9 +1195,10 @@ function renderTape(res){
     const nm = el('span','nm');
     nm.appendChild(document.createTextNode(r.name || 'משימה ללא שם'));
     const meta = el('span','meta');
-    const g = findTask(r.id).g;
+    // the row already carries its own headcount; looking it up again made drawing
+    // the tape scan every task once per row
     meta.textContent = ' · ' + fmtMinutes(r.minutes) + ' ' + FREQ_SHORT[r.freq] +
-      (g.people > 1 ? ' · ×' + g.people + ' אנשים' : '') + ' · ' + Math.round(r.auto*100) + '%';
+      (r.people > 1 ? ' · ×' + r.people + ' אנשים' : '') + ' · ' + Math.round(r.auto*100) + '%';
     nm.appendChild(meta);
     row.appendChild(nm);
     const hrs = el('span','hrs');
@@ -1434,11 +1449,9 @@ function renderSummary(res){
   const ringBox = el('div','sum-block');
   ringBox.style.cssText = 'background:var(--deep);border-radius:20px;padding:18px;display:flex;align-items:center;gap:16px;color:#fff';
   const rw = el('div');
-  const shownFte = Math.round(t.fte * 10) / 10;
-  const full = Math.floor(shownFte + 1e-9), partial = shownFte - full;
-  for(let i=0; i<Math.min(full,4); i++) rw.appendChild(ringSvg(1,''));
-  if(full < 4 || partial > 0.005) rw.appendChild(ringSvg(partial, Math.round(partial*100) + '%'));
-  rw.style.cssText = 'display:flex;gap:6px';
+  rw.id = 'sumRings';
+  fillRings(rw, t.fte, t.freedMonthExact === 0);
+  rw.style.cssText = 'display:flex;gap:6px;align-items:center';
   ringBox.appendChild(rw);
   const dreamText = state.dream.chips.concat(state.dream.text ? [state.dream.text] : []).join(' · ');
   const cap = el('div');
@@ -1551,7 +1564,10 @@ function addTask(name){
     if(inp0) inp0.focus();
     return;
   }
-  const g = ensureGroup();
+  /* The new task joins the team the user is standing in, not groups[0] — otherwise
+     "+ עוד משימה" quietly moves it to the first team and multiplies it by the wrong
+     headcount. */
+  const g = (cur && cur.g) || ensureGroup();
   apply(() => {
     const t = newTask(typeof name === 'string' ? name : '', 0, 'day', null);
     g.tasks.push(t);

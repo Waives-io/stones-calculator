@@ -118,9 +118,9 @@ async function main(){
   await page.goto(url);
   await page.locator('#btnDemo').click();
   const tape = await page.evaluate(() => {
-    const rows = [...document.querySelectorAll('#tape .taperow .hrs')].map(e => Number(e.textContent.replace(/[^\d]/g,'')));
-    const total = Number(document.querySelector('#tape .tapetotal span:last-child').textContent.replace(/[^\d]/g,''));
-    const big = Number(document.getElementById('bigNum').textContent.replace(/[^\d]/g,''));
+    const rows = [...document.querySelectorAll('#tape .taperow .hrs')].map(e => Number(e.textContent.replace(/[^\d.]/g,'')));
+    const total = Number(document.querySelector('#tape .tapetotal span:last-child').textContent.replace(/[^\d.]/g,''));
+    const big = Number(document.getElementById('bigNum').textContent.replace(/[^\d.]/g,''));
     return {rows, sum: rows.reduce((a,b)=>a+b,0), total, big};
   });
   ok('סכום השורות = הסה' + '״' + 'כ שעל המסך', tape.sum === tape.total, tape.sum + ' ≠ ' + tape.total);
@@ -500,7 +500,78 @@ async function main(){
   ok('אין שגיאות בבדיקות האלה', rErr.length === 0, rErr.join('; '));
   await ctxR.close();
 
-  section('22. אין גלישה אופקית ואין מילה שנשברת');
+  section('22. הכשלים שנמצאו בביקורת של Codex');
+  const ctxC = await browser.newContext({viewport:{width:1280, height:900}, locale:'he-IL'});
+  const cx = await ctxC.newPage();
+  const cErr = [];
+  cx.on('pageerror', e => cErr.push(e.message));
+  const readTape = () => cx.evaluate(() => {
+    const n = e => Number(e.textContent.replace(/[^\d.]/g,''));
+    const rows = [...document.querySelectorAll('#tape .taperow .hrs')].map(n);
+    return {
+      rows,
+      sum: Math.round(rows.reduce((a,b)=>a+b,0) * 10) / 10,
+      total: n(document.querySelector('#tape .tapetotal span:last-child')),
+      big: n(document.getElementById('bigNum')),
+      sub: document.getElementById('subLine').textContent
+    };
+  });
+
+  // א. שתי משימות זהות חייבות להציג את אותו מספר
+  await cx.goto(url + '#s=' + enc({v:1,m:'talk',g:[{n:'הצוות שלי',p:1,i:1,
+    t:[{n:'אישור א',m:120,f:2,a:0,r:1},{n:'אישור ב',m:120,f:2,a:0,r:1}]}]}));
+  let tp = await readTape();
+  ok('שתי משימות זהות מציגות את אותו מספר שעות',
+     tp.rows.length === 2 && tp.rows[0] === tp.rows[1], JSON.stringify(tp.rows));
+  ok('גם מתחת לעשר שעות השורות מסתדרות עם הסה' + '״' + 'כ',
+     tp.sum === tp.total, tp.sum + ' ≠ ' + tp.total);
+  ok('הסה' + '״' + 'כ הקטן = המספר הגדול במסך', tp.total === tp.big, tp.total + ' ≠ ' + tp.big);
+
+  // ב. משימה אמיתית קטנה אינה "מצב ריק"
+  await cx.goto(url + '#s=' + enc({v:1,m:'talk',g:[{n:'הצוות שלי',p:1,i:1,
+    t:[{n:'דיווח חודשי',m:15,f:2,a:0,r:1}]}]}));
+  tp = await readTape();
+  ok('משימה אמיתית לא מקבלת את ההזמנה "כתבו משימה"',
+     !tp.sub.includes('כתבו משימה'), tp.sub);
+  ok('משימה של רבע שעה בחודש מציגה מספר ולא 0', tp.big > 0, String(tp.big));
+  ok('גם אז השורה והסה' + '״' + 'כ מסכימים', tp.sum === tp.total, tp.sum + ' ≠ ' + tp.total);
+
+  // ג. מעל חמש משרות הטבעות בסיכום מספרות את אותו סיפור כמו המילים
+  await cx.goto(url + '#s=' + enc({v:1,m:'talk',g:[{n:'מוקד',p:2,i:0,
+    t:[{n:'מענה ידני',m:1440,f:0,a:3,r:1}]}]}));
+  const readRings = sel => cx.evaluate(s => {
+    const w = document.querySelector(s);
+    if(!w) return null;
+    const more = w.querySelector('.ringmore');
+    return {
+      svgs: w.querySelectorAll('svg').length,
+      more: more ? Number(more.textContent.replace(/[^\d]/g,'')) : 0,
+      pct: [...w.querySelectorAll('text')].map(t => t.textContent)
+    };
+  }, sel);
+  const dRing = await readRings('#ringWrap');
+  const wordsFte = Number((await sub(cx)).match(/([\d.]+)\s*משרו?ת/)[1]);
+  const drawn = g => g.svgs - g.pct.length + g.more + (g.pct.length ? Number(g.pct[0].replace('%','')) / 100 : 0);
+  ok('מעל חמש משרות התצוגה מציירת בדיוק את מה שכתוב במילים',
+     Math.abs(drawn(dRing) - wordsFte) < 0.051, JSON.stringify(dRing) + ' vs ' + wordsFte);
+  await cx.locator('#btnSummary').click();
+  const sRing = await readRings('#sumRings');
+  ok('הסיכום מצייר אותו דבר בדיוק כמו התצוגה',
+     sRing && JSON.stringify(sRing) === JSON.stringify(dRing), JSON.stringify(sRing));
+
+  // ד. "+ עוד משימה" נשארת בצוות שעומדים בו
+  await cx.goto(url + '#s=' + enc({v:1,m:'talk',g:[
+    {n:'מנהלה',p:1,i:0,t:[{n:'סריקות',m:30,f:0,a:2,r:1}]},
+    {n:'שירות',p:5,i:0,t:[{n:'מענה',m:30,f:0,a:2,r:1}]}]}));
+  await cx.locator('#tape .taperow', {hasText:'מענה'}).first().click();
+  await cx.locator('#btnMore').click();
+  const where = await cx.evaluate(() => window.__waives.state.groups.map(g => g.name + ':' + g.tasks.length).join('|'));
+  ok('"+ עוד משימה" מוסיפה לצוות שעומדים בו, לא לראשון',
+     where === 'מנהלה:1|שירות:2', where);
+  ok('אין שגיאות בבדיקות האלה', cErr.length === 0, cErr.join('; '));
+  await ctxC.close();
+
+  section('23. אין גלישה אופקית ואין מילה שנשברת');
   for(const [w,h,tag] of [[320,700,'320'],[390,844,'390'],[768,1000,'768'],[1280,900,'1280']]){
     const c = await browser.newContext({viewport:{width:w, height:h}, locale:'he-IL'});
     const p = await c.newPage();
@@ -522,7 +593,7 @@ async function main(){
     await c.close();
   }
 
-  section('23. צילומי מסך');
+  section('24. צילומי מסך');
   const shot = async (name, w, h, fn) => {
     const c = await browser.newContext({viewport:{width:w, height:h}, locale:'he-IL', deviceScaleFactor:2});
     const p = await c.newPage();
