@@ -1,0 +1,8 @@
+{
+  "name": "waives-stones-qa",
+  "private": true,
+  "version": "1.0.0",
+  "dependencies": {
+    "playwright": "^1.65.1"
+  }
+}

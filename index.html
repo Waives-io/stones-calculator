@@ -1,0 +1,1533 @@
+<!doctype html>
+<html dir="rtl" lang="he" translate="no">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="google" content="notranslate">
+<title>מחשבון האבנים הקטנות · WAIVES</title>
+<meta name="description" content="כמה שעות בחודש חוזרות לצוות מהמשימות הקטנות והחוזרות.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<style>
+/* ============================================================
+   STRUCTURAL CSS ONLY — the visual layer is owned by the design pass.
+   Tokens are WAIVES Waterline Light and must not be changed.
+   ============================================================ */
+:root{
+  --white:#FFFFFF;
+  --ink:#1B2436;
+  --deep:#04091A;
+  --mute:#54637C;
+  --teal:#1A8FA0;
+  --teal-ink:#14707E;
+  --gold:#C9A84C;
+  --gold-dark:#A07830;
+  --panel:#F5F7FA;
+  --line:#E3E8EF;
+  --ease:.2s cubic-bezier(.4,0,.2,1);
+  --device:460px;
+}
+*{box-sizing:border-box}
+html,body{margin:0;padding:0}
+body{
+  background:var(--white);
+  color:var(--ink);
+  font-family:'Heebo',system-ui,sans-serif;
+  font-weight:400;
+  line-height:1.5;
+  -webkit-text-size-adjust:100%;
+}
+button{font:inherit;color:inherit;cursor:pointer}
+input{font:inherit;color:inherit}
+:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
+[hidden]{display:none !important}
+.sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
+
+/* ---------- device ---------- */
+#device{
+  max-inline-size:var(--device);
+  margin-inline:auto;
+  padding:14px;
+  border:1px solid var(--line);
+  border-radius:28px;
+  background:var(--white);
+}
+.brand{display:flex;align-items:center;gap:8px;padding:4px 6px 12px}
+.brand .mark{inline-size:28px;block-size:28px;color:var(--deep);flex:none}
+.wm{font-weight:800;font-size:20px;letter-spacing:3px;color:var(--deep);line-height:1}
+.wm em{font-style:normal;color:var(--teal);font-size:inherit;font-weight:inherit}
+.brand .sub{margin:0;margin-inline-start:auto;font-size:12px;color:var(--mute)}
+
+/* ---------- display ---------- */
+.screen{
+  background:var(--deep);
+  color:var(--white);
+  border-radius:20px;
+  padding:16px 18px;
+  position:sticky;
+  top:6px;
+  z-index:20;
+}
+.histline{font-size:12px;color:#5FD0DE;min-block-size:18px;font-variant-numeric:tabular-nums}
+.mainrow{display:flex;align-items:center;gap:12px}
+.numwrap{display:flex;align-items:baseline;gap:8px;flex:1;min-inline-size:0}
+.num{font-size:clamp(52px,16vw,80px);font-weight:800;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
+.unit{font-size:15px;font-weight:700;color:var(--gold)}
+.subline{font-size:14px;color:rgba(255,255,255,.7);min-block-size:21px}
+.est{font-size:11px;color:rgba(255,255,255,.55);margin-top:4px}
+.ringwrap{flex:none;display:flex;align-items:center;gap:4px}
+.ringwrap svg{display:block}
+.ringmore{font-size:12px;color:var(--gold);font-weight:700}
+
+/* ---------- keys ---------- */
+section{margin-top:14px}
+.qlabel{font-weight:700;font-size:15px;margin:0 0 8px}
+.keyrow{display:flex;flex-wrap:wrap;gap:8px}
+.key{
+  min-block-size:52px;min-inline-size:52px;
+  padding:0 14px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--panel);
+  color:var(--ink);
+  font-weight:500;
+  transition:transform .08s var(--ease),background var(--ease),color var(--ease);
+}
+.key:active{transform:translateY(2px)}
+.key.on{background:var(--teal);color:var(--white);border-color:var(--teal);font-weight:700}
+.key.wide{inline-size:100%;margin-top:8px}
+.key.primary{background:var(--teal);color:var(--white);border-color:var(--teal);font-weight:700}
+.key.ghost{background:var(--white);border-color:var(--line);color:var(--ink)}
+.key.sm{min-block-size:44px;padding:0 10px;font-size:14px}
+.key.chip{min-block-size:44px;border-radius:22px;font-size:14px;background:var(--white)}
+.key.chip.on{background:var(--teal);color:var(--white)}
+.stepper{display:flex;align-items:center;gap:10px}
+.stepper .key{inline-size:52px;padding:0;font-size:22px;font-weight:700}
+.stepper .val{font-size:30px;font-weight:800;min-inline-size:72px;text-align:center;font-variant-numeric:tabular-nums}
+.field{
+  inline-size:100%;min-block-size:52px;padding:0 14px;
+  border:1px solid var(--line);border-radius:14px;background:var(--white);
+}
+.hint{font-size:12px;color:var(--mute);margin-top:6px}
+.hint.warn{color:var(--gold-dark)}
+.err{font-size:13px;color:#B3261E;margin-top:6px;min-block-size:0}
+.inline-link{background:none;border:0;padding:4px 0;color:var(--teal-ink);text-decoration:underline;font-size:13px;min-block-size:44px}
+.drawer{border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:10px;background:var(--white)}
+.drawer h3{margin:0 0 10px;font-size:15px;font-weight:700}
+.qblock{margin-top:14px}
+.row-split{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.pill{font-size:12px;color:var(--mute);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
+
+/* ---------- tape ---------- */
+#tape{border-top:1px dashed var(--line);padding-top:10px}
+.taperow{
+  display:flex;align-items:center;gap:10px;inline-size:100%;
+  background:none;border:0;border-bottom:1px solid var(--line);
+  padding:10px 4px;text-align:start;min-block-size:52px;
+}
+.taperow:last-of-type{border-bottom:0}
+.taperow .nm{flex:1;min-inline-size:0;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.taperow .meta{font-size:12px;color:var(--mute);font-weight:400}
+.taperow .hrs{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
+.taperow.big .dot{inline-size:8px;block-size:8px;border-radius:50%;background:var(--gold);flex:none}
+.taperow.flash{background:#FFF8E6}
+.tapetotal{display:flex;justify-content:space-between;gap:10px;border-top:2px dashed var(--line);margin-top:6px;padding-top:10px;font-weight:800}
+.taperow.open{background:var(--panel);border-radius:12px}
+
+/* ---------- toolbar ---------- */
+#toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+#toolbar .key{flex:1 1 44%;font-size:14px}
+#formula{font-size:11px;color:var(--mute);margin-top:14px;line-height:1.6}
+
+/* ---------- summary ---------- */
+#summary{max-inline-size:760px;margin-inline:auto;padding:24px 16px}
+#summary h1{font-size:30px;font-weight:800;color:var(--gold-dark);margin:0 0 4px}
+.sum-num{font-size:clamp(56px,12vw,96px);font-weight:800;line-height:1;color:var(--teal-ink);font-variant-numeric:tabular-nums}
+.sum-sub{font-size:18px;color:var(--mute);margin-top:6px}
+.bar{block-size:12px;background:var(--panel);border-radius:999px;overflow:hidden}
+.bar i{display:block;block-size:100%;background:var(--teal)}
+.bar.gold i{background:var(--gold)}
+.sum-block{margin-top:26px}
+.goldline{inline-size:56px;block-size:3px;background:var(--gold);border-radius:2px;margin:8px 0 16px}
+
+/* ---------- snackbar ---------- */
+#snack{
+  position:fixed;inset-block-end:16px;inset-inline:16px;
+  max-inline-size:420px;margin-inline:auto;
+  background:var(--ink);color:var(--white);
+  border-radius:14px;padding:12px 14px;
+  display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:60;
+}
+#snack button{background:none;border:0;color:var(--gold);font-weight:700;min-block-size:44px}
+
+@media (min-width:760px){
+  #device{max-inline-size:var(--device);margin-block:32px}
+}
+@media (prefers-reduced-motion:reduce){
+  *{transition:none !important;animation:none !important}
+}
+</style>
+</head>
+<body>
+
+<svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
+  <symbol id="mkBars" viewBox="0 0 1152 1110"><g transform="translate(0.000000,1110.000000) scale(0.100000,-0.100000)"
+fill="currentColor" stroke="none">
+<path d="M0 10140 l0 -960 1429 0 c1430 0 1430 0 1451 -30 21 -30 21 -30 4331
+-30 l4309 0 0 960 0 960 -2755 0 c-2756 0 -2756 0 -2762 30 -5 30 -5 30 -3004
+30 l-2999 0 0 -960z"/>
+<path d="M3240 8790 c-21 -30 -21 -30 -180 -30 -159 0 -159 0 -180 -30 -21
+-30 -21 -30 -150 -30 -129 0 -129 0 -150 -30 -21 -30 -22 -30 -120 -30 -98 0
+-99 0 -120 -30 -21 -30 -22 -30 -120 -30 -98 0 -99 0 -120 -30 -20 -28 -25
+-30 -90 -30 -65 0 -70 -2 -90 -30 -20 -28 -25 -30 -90 -30 -65 0 -70 -2 -90
+-30 -20 -28 -25 -30 -90 -30 -65 0 -70 -2 -90 -30 -20 -28 -25 -30 -90 -30
+-65 0 -70 -2 -90 -30 -17 -24 -28 -30 -60 -30 -32 0 -43 -6 -60 -30 -17 -24
+-28 -30 -60 -30 -32 0 -43 -6 -60 -30 -20 -28 -25 -30 -90 -30 -65 0 -70 -2
+-90 -30 -17 -24 -28 -30 -60 -30 -32 0 -43 -6 -60 -30 -17 -24 -28 -30 -60
+-30 -32 0 -43 -6 -60 -30 -17 -24 -28 -30 -60 -30 -32 0 -43 -6 -60 -30 -17
+-24 -29 -30 -57 -30 -31 0 -44 -8 -93 -60 -49 -52 -62 -60 -93 -60 -28 0 -40
+-6 -57 -30 -17 -24 -29 -30 -57 -30 -31 0 -44 -8 -93 -60 -54 -57 -59 -60
+-103 -60 -47 0 -47 0 -47 -2010 l0 -2010 229 0 c230 0 230 0 251 -30 21 -30
+21 -30 210 -30 189 0 189 0 210 -30 21 -30 21 -30 210 -30 189 0 189 0 210
+-30 21 -30 21 -30 150 -30 129 0 129 0 150 -30 21 -30 21 -30 150 -30 129 0
+129 0 150 -30 21 -30 22 -30 120 -30 98 0 99 0 120 -30 21 -30 22 -30 120 -30
+98 0 99 0 120 -30 20 -28 25 -30 90 -30 65 0 70 -2 90 -30 21 -30 22 -30 120
+-30 98 0 99 0 120 -30 20 -28 25 -30 90 -30 65 0 70 -2 90 -30 21 -30 22 -30
+120 -30 98 0 99 0 120 -30 20 -28 25 -30 90 -30 65 0 70 -2 90 -30 20 -28 25
+-30 90 -30 65 0 70 -2 90 -30 21 -30 22 -30 120 -30 98 0 99 0 120 -30 20 -28
+25 -30 90 -30 65 0 70 -2 90 -30 21 -30 22 -30 120 -30 98 0 99 0 120 -30 21
+-30 22 -30 120 -30 98 0 99 0 120 -30 21 -30 22 -30 120 -30 98 0 99 0 120
+-30 21 -30 21 -30 180 -30 159 0 159 0 180 -30 21 -30 21 -30 150 -30 129 0
+129 0 150 -30 21 -30 21 -30 240 -30 219 0 219 0 240 -30 21 -30 21 -30 270
+-30 249 0 249 0 270 -30 21 -30 21 -30 360 -30 339 0 339 0 360 -30 21 -30 21
+-30 1050 -30 1029 0 1029 0 1050 30 21 30 21 30 360 30 339 0 339 0 360 30 21
+30 21 30 270 30 249 0 249 0 270 30 21 30 21 30 210 30 189 0 189 0 210 30 21
+30 21 30 210 30 189 0 189 0 210 30 21 29 24 30 101 30 l79 0 0 2010 0 2010
+-169 0 c-170 0 -170 0 -191 30 -21 30 -22 30 -120 30 -98 0 -99 0 -120 30 -20
+28 -25 30 -90 30 -65 0 -70 2 -90 30 -20 28 -25 30 -90 30 -65 0 -70 2 -90 30
+-20 28 -25 30 -90 30 -65 0 -70 2 -90 30 -20 28 -25 30 -90 30 -65 0 -70 2
+-90 30 -20 28 -25 30 -90 30 -65 0 -70 2 -90 30 -17 24 -28 30 -60 30 -32 0
+-43 6 -60 30 -20 28 -25 30 -90 30 -65 0 -70 2 -90 30 -17 24 -28 30 -60 30
+-32 0 -43 6 -60 30 -17 24 -28 30 -60 30 -32 0 -43 6 -60 30 -17 24 -28 30
+-60 30 -32 0 -43 6 -60 30 -17 24 -28 30 -60 30 -32 0 -43 6 -60 30 -17 24
+-28 30 -60 30 -32 0 -43 6 -60 30 -17 24 -28 30 -60 30 -32 0 -43 6 -60 30
+-17 24 -28 30 -60 30 -32 0 -43 6 -60 30 -17 24 -28 30 -60 30 -32 0 -43 6
+-60 30 -17 24 -28 30 -60 30 -32 0 -43 6 -60 30 -17 24 -28 30 -60 30 -32 0
+-43 6 -60 30 -17 24 -28 30 -60 30 -32 0 -43 6 -60 30 -17 24 -28 30 -60 30
+-32 0 -43 6 -60 30 -17 24 -28 30 -60 30 -32 0 -43 6 -60 30 -20 28 -25 30
+-90 30 -65 0 -70 2 -90 30 -17 24 -28 30 -60 30 -32 0 -43 6 -60 30 -17 24
+-28 30 -60 30 -32 0 -43 6 -60 30 -20 28 -25 30 -90 30 -65 0 -70 2 -90 30
+-17 24 -28 30 -60 30 -32 0 -43 6 -60 30 -17 24 -28 30 -60 30 -32 0 -43 6
+-60 30 -20 28 -25 30 -90 30 -65 0 -70 2 -90 30 -17 24 -28 30 -60 30 -32 0
+-43 6 -60 30 -20 28 -25 30 -90 30 -65 0 -70 2 -90 30 -17 24 -28 30 -60 30
+-32 0 -43 6 -60 30 -20 28 -25 30 -90 30 -65 0 -70 2 -90 30 -20 28 -25 30
+-90 30 -65 0 -70 2 -90 30 -21 30 -22 30 -120 30 -98 0 -99 0 -120 30 -21 30
+-22 30 -120 30 -98 0 -99 0 -120 30 -21 30 -21 30 -150 30 -129 0 -129 0 -150
+30 -21 30 -21 30 -180 30 -159 0 -159 0 -180 30 -21 30 -21 30 -990 30 -969 0
+-969 0 -990 -30z m1560 -1980 c21 -30 21 -30 240 -30 219 0 219 0 240 -30 21
+-30 21 -30 180 -30 159 0 159 0 180 -30 21 -30 21 -30 150 -30 129 0 129 0
+150 -30 21 -30 21 -30 150 -30 129 0 129 0 150 -30 20 -28 25 -30 90 -30 65 0
+70 -2 90 -30 20 -28 25 -30 90 -30 65 0 70 -2 90 -30 20 -28 25 -30 90 -30 65
+0 70 -2 90 -30 17 -24 28 -30 60 -30 32 0 43 -6 60 -30 20 -28 25 -30 90 -30
+65 0 70 -2 90 -30 17 -24 28 -30 60 -30 32 0 43 -6 60 -30 20 -28 25 -30 90
+-30 65 0 70 -2 90 -30 17 -24 28 -30 60 -30 32 0 43 -6 60 -30 17 -24 28 -30
+60 -30 32 0 43 -6 60 -30 20 -28 25 -30 90 -30 65 0 70 -2 90 -30 17 -24 28
+-30 60 -30 32 0 43 -6 60 -30 17 -24 28 -30 60 -30 32 0 43 -6 60 -30 17 -24
+28 -30 60 -30 32 0 43 -6 60 -30 17 -24 28 -30 60 -30 32 0 43 -6 60 -30 17
+-24 28 -30 60 -30 32 0 43 -6 60 -30 20 -28 25 -30 90 -30 65 0 70 -2 90 -30
+17 -24 28 -30 60 -30 32 0 43 -6 60 -30 17 -24 28 -30 60 -30 32 0 43 -6 60
+-30 17 -24 28 -30 60 -30 32 0 43 -6 60 -30 17 -24 28 -30 60 -30 32 0 43 -6
+60 -30 17 -24 28 -30 60 -30 32 0 43 -6 60 -30 17 -24 28 -30 60 -30 32 0 43
+-6 60 -30 17 -24 28 -30 60 -30 32 0 43 -6 60 -30 17 -24 28 -30 60 -30 32 0
+43 -6 60 -30 20 -28 25 -30 90 -30 65 0 70 -2 90 -30 17 -24 28 -30 60 -30 32
+0 43 -6 60 -30 17 -24 28 -30 60 -30 32 0 43 -6 60 -30 20 -28 25 -30 90 -30
+65 0 70 -2 90 -30 20 -28 25 -30 90 -30 65 0 70 -2 90 -30 20 -28 25 -30 90
+-30 65 0 70 -2 90 -30 21 -30 22 -30 120 -30 98 0 99 0 120 -30 20 -28 25 -30
+90 -30 65 0 70 -2 90 -30 21 -30 22 -30 118 -30 97 0 98 0 125 -31 26 -30 30
+-31 76 -25 59 8 101 -6 101 -33 0 -11 -4 -23 -10 -26 -5 -3 -55 -6 -110 -7
+-99 0 -101 -1 -121 -29 -20 -29 -20 -29 -179 -29 -159 0 -159 0 -180 -30 -21
+-30 -21 -30 -240 -30 -219 0 -219 0 -240 -30 -21 -30 -21 -30 -360 -30 -339 0
+-339 0 -360 -30 -21 -30 -21 -30 -510 -30 -489 0 -489 0 -510 -30 -21 -30 -21
+-30 -450 -30 -429 0 -429 0 -450 30 -21 30 -21 30 -450 30 -429 0 -429 0 -450
+30 -21 30 -21 30 -300 30 -279 0 -279 0 -300 30 -21 30 -21 30 -210 30 -189 0
+-189 0 -210 30 -21 30 -21 30 -180 30 -159 0 -159 0 -180 30 -21 30 -21 30
+-150 30 -129 0 -129 0 -150 30 -21 30 -21 30 -150 30 -129 0 -129 0 -150 30
+-21 30 -22 30 -120 30 -98 0 -99 0 -120 30 -21 30 -22 30 -120 30 -98 0 -99 0
+-120 30 -21 30 -22 30 -120 30 -98 0 -99 0 -120 30 -21 30 -22 30 -120 30 -98
+0 -99 0 -120 30 -20 28 -25 30 -90 30 -65 0 -70 2 -90 30 -21 30 -22 30 -120
+30 -98 0 -99 0 -120 30 -21 30 -22 30 -120 30 -98 0 -99 0 -120 30 -21 30 -22
+30 -120 30 -98 0 -99 0 -120 30 -21 30 -22 30 -120 30 -98 0 -99 0 -120 30
+-21 30 -22 30 -120 30 -98 0 -99 0 -120 30 -21 30 -22 30 -120 30 -98 0 -99 0
+-120 30 -21 30 -22 30 -120 30 -98 0 -99 0 -120 30 -21 30 -22 30 -120 30 -98
+0 -99 0 -120 30 -21 30 -21 30 -150 30 -129 0 -129 0 -150 30 -21 30 -21 30
+-180 30 -159 0 -159 0 -180 30 -21 30 -21 30 -180 30 -159 0 -159 0 -180 30
+-21 30 -21 30 -305 30 -242 0 -284 2 -289 15 -7 18 2 45 15 45 5 0 36 27 68
+60 50 51 64 60 94 60 28 0 40 6 57 30 17 24 28 30 60 30 32 0 43 6 60 30 17
+24 28 30 60 30 32 0 43 6 60 30 17 24 28 30 60 30 32 0 43 6 60 30 17 24 29
+30 57 30 31 0 44 8 93 60 57 60 57 60 123 60 62 0 67 2 87 30 17 24 28 30 60
+30 32 0 43 6 60 30 17 24 28 30 60 30 32 0 43 6 60 30 20 28 25 30 90 30 65 0
+70 2 90 30 20 28 25 30 90 30 65 0 70 2 90 30 20 28 25 30 90 30 65 0 70 2 90
+30 20 28 25 30 90 30 65 0 70 2 90 30 21 30 22 30 120 30 98 0 99 0 120 30 21
+30 22 30 120 30 98 0 99 0 120 30 21 30 21 30 150 30 129 0 129 0 150 30 21
+30 21 30 180 30 159 0 159 0 180 30 21 30 21 30 330 30 309 0 309 0 330 30 21
+30 21 30 510 30 489 0 489 0 510 -30z"/>
+<path d="M0 1020 l0 -960 2335 0 c2336 0 2336 0 2342 -30 5 -30 6 -30 3424
+-30 l3419 0 0 960 0 960 -1429 0 c-1430 0 -1430 0 -1451 30 -21 30 -21 30
+-4331 30 l-4309 0 0 -960z"/>
+</g></symbol>
+</svg>
+
+<main id="device">
+  <header class="brand">
+    <svg class="mark" aria-hidden="true"><use href="#mkBars"/></svg>
+    <span class="wm">w<em>ai</em>ves</span>
+    <p class="sub">מחשבון האבנים הקטנות</p>
+  </header>
+
+  <section class="screen" id="screen" aria-live="polite" aria-atomic="true">
+    <div class="histline" id="histline"></div>
+    <div class="mainrow">
+      <div class="numwrap">
+        <bdi class="num" id="bigNum">0</bdi>
+        <span class="unit" id="bigUnit">שעות בחודש</span>
+      </div>
+      <div class="ringwrap" id="ringWrap"></div>
+    </div>
+    <div class="subline" id="subLine">כתבו משימה או בחרו דוגמה כדי להתחיל</div>
+    <div class="est" id="estLabel" hidden>הערכה ראשונית · אפשר לדייק</div>
+  </section>
+
+  <section id="keys">
+    <h1 id="hookTitle" style="font-size:19px;font-weight:800;margin:0 0 12px">משימה אחת. נראה כמה זמן היא שווה.</h1>
+    <div id="taskEditor"></div>
+    <button class="key wide primary" id="btnMore">+ עוד משימה קטנה</button>
+    <button class="key wide ghost" id="btnQuestions">שאלות שעוזרות למצוא משימות</button>
+    <button class="key wide ghost" id="btnGroups">רוצים לארגן לפי צוותים?</button>
+    <div class="drawer" id="questionsCard" hidden></div>
+    <div class="drawer" id="groupsCard" hidden></div>
+  </section>
+
+  <section id="tape"></section>
+  <section id="dreamCard" hidden></section>
+
+  <nav id="toolbar">
+    <button class="key ghost" id="btnSummary">סיכום</button>
+    <button class="key ghost" id="btnCopy">העתקת סיכום</button>
+    <button class="key ghost" id="btnShare">קישור לתרחיש</button>
+    <button class="key ghost" id="btnDemo">דוגמה</button>
+    <button class="key ghost" id="btnReset">תרחיש חדש</button>
+  </nav>
+
+  <footer id="formula"></footer>
+</main>
+
+<section id="summary" hidden></section>
+
+<div id="snack" hidden><span id="snackText"></span><button id="snackBtn">בטל</button></div>
+
+<script>
+"use strict";
+/* ============================================================
+   1. CATALOG + CONSTANTS
+   ============================================================ */
+const FTE_MONTH = 182;      // hours in a full-time month (42h/week)
+const DAYS_MONTH = 21.7;
+const WEEKS_MONTH = 4.33;
+
+const FREQS = ['day','week','month','quarter'];
+const FREQ_LABEL = {day:'כל יום', week:'כל שבוע', month:'כל חודש', quarter:'כל רבעון'};
+const FREQ_SHORT = {day:'יומי', week:'שבועי', month:'חודשי', quarter:'רבעוני'};
+const AUTOS = [0.25, 0.5, 0.7, 0.9];
+const AUTO_LABEL = {0.9:'כמעט הכול', 0.7:'רוב', 0.5:'חצי', 0.25:'קצת'};
+
+const CATALOG = [
+ {domain:'משאבי אנוש וגיוס', q:'באיזה שלב בגיוס או בקליטה הכי הרבה הלוך-חזור?', roles:[
+   {role:'רכזת גיוס', tasks:[
+     ['מיון קורות חיים',120,'day'],
+     ['תיאום ראיונות עם מועמדים ומראיינים',45,'day'],
+     ['שליחת עדכונים ותשובות למועמדים',30,'day'],
+     ['פרסום משרות בכמה ערוצים',60,'week'],
+     ['עדכון סטטוס מועמדים בטבלה או במערכת',30,'day'],
+     ['דוח גיוס להנהלה',120,'month']]},
+   {role:'מנהלת משאבי אנוש', tasks:[
+     ['קליטת עובד חדש (טפסים, הרשאות, ציוד)',180,'week'],
+     ['מענה לשאלות חוזרות של עובדים',60,'day'],
+     ['ריכוז נוכחות וחופשות לשכר',240,'month'],
+     ['הכנת מסמכים ואישורים לעובדים',30,'day'],
+     ['ריכוז תהליך הערכות עובדים',600,'quarter'],
+     ['עזיבת עובד (סגירת הרשאות, ציוד, מסמכים)',120,'month']]}]},
+ {domain:'כספים והנהלת חשבונות', q:'אילו מסמכים או אישורים אתה רודף אחריהם כל חודש?', roles:[
+   {role:'מנהלת חשבונות', tasks:[
+     ['הקלדת חשבוניות ספקים',90,'day'],
+     ['התאמות בנק',180,'week'],
+     ['גבייה ותזכורות ללקוחות',60,'day'],
+     ['הפקת חשבוניות ללקוחות',45,'day'],
+     ['איסוף מסמכים חסרים מעובדים ומספקים',30,'day'],
+     ['הכנת חומרים לרואה החשבון',360,'quarter']]},
+   {role:'כספים ובקרה', tasks:[
+     ['דוח תזרים שבועי',120,'week'],
+     ['דוח הנהלה חודשי',360,'month'],
+     ['אישור והעברת תשלומים',60,'week'],
+     ['הכנת תקציב רבעוני',720,'quarter']]}]},
+ {domain:'רכש ותפעול', q:'איזה מידע אתה אוסף מכמה מקומות כדי להכין דוח או הזמנה?', roles:[
+   {role:'רכזת רכש', tasks:[
+     ['בקשה והשוואה של הצעות מחיר',120,'week'],
+     ['פתיחת הזמנות רכש',30,'day'],
+     ['מעקב אספקות מול ספקים',45,'day'],
+     ['התאמת חשבונית להזמנה ולתעודת משלוח',30,'day'],
+     ['עדכון מחירונים',180,'month'],
+     ['הערכת ספקים',360,'quarter']]},
+   {role:'מנהלת תפעול', tasks:[
+     ['דוח סטטוס שבועי מכמה מקורות',120,'week'],
+     ['העברת מידע בין מערכות (העתק-הדבק)',60,'day'],
+     ['תיאום משימות ומעקב מול צוותים',45,'day'],
+     ['ריכוז תקלות ובקשות',30,'day']]}]},
+ {domain:'שירות, מכירות ושיווק', q:'מה אתה מעדכן אחרי כל שיחה או פגישה?', roles:[
+   {role:'נציגת שירות', tasks:[
+     ['מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day'],
+     ['תיעוד פניות במערכת',45,'day'],
+     ['ניתוב פניות לגורם הנכון',30,'day'],
+     ['סיכום שיחות',30,'day'],
+     ['דוח פניות שבועי',60,'week']]},
+   {role:'איש מכירות', tasks:[
+     ['עדכון CRM אחרי פגישות ושיחות',45,'day'],
+     ['הכנת הצעת מחיר',60,'week'],
+     ['פולואפ ללידים',60,'day'],
+     ['הכנה לפגישה (מחקר על הלקוח)',30,'day'],
+     ['דוח מכירות',120,'week']]},
+   {role:'רכזת שיווק', tasks:[
+     ['הכנת פוסטים ותזמונם',180,'week'],
+     ['איסוף נתוני קמפיינים לדוח',120,'week'],
+     ['עדכון רשימות תפוצה',60,'week'],
+     ['הכנת ניוזלטר',240,'month']]}]},
+ {domain:'לוגיסטיקה', q:'מה לקוחות או ספקים שואלים אותך שהתשובה עליו כבר קיימת במערכת?', roles:[
+   {role:'רכזת לוגיסטיקה', tasks:[
+     ['תיאום משלוחים מול מובילים',60,'day'],
+     ['הפקת תעודות משלוח ומסמכים',45,'day'],
+     ['מענה ללקוחות "איפה ההזמנה שלי"',60,'day'],
+     ['עדכון מלאי',30,'day'],
+     ['ספירת מלאי',960,'quarter']]},
+   {role:'מנהלת מחסן', tasks:[
+     ['תכנון ליקוטים',45,'day'],
+     ['דוח החזרות',120,'week'],
+     ['הזמנה חוזרת של מלאי',60,'week']]}]},
+ {domain:'שירותי משרד', q:'מה אתה מתאם בטלפון או בוואטסאפ שהיה יכול לקרות לבד?', roles:[
+   {role:'מנהלת משרד', tasks:[
+     ['ניהול יומנים ותיאום פגישות',60,'day'],
+     ['הזמנת ציוד וכיבוד',60,'week'],
+     ['מענה לטלפונים ולמיילים כלליים',60,'day'],
+     ['סריקה ותיוק מסמכים',30,'day'],
+     ['ריכוז נוכחות',120,'month'],
+     ['ארגון אירועי חברה',480,'quarter']]},
+   {role:'עוזרת אישית', tasks:[
+     ['הכנת סיכומי ישיבות',30,'day'],
+     ['תיאום נסיעות',120,'month'],
+     ['מעקב משימות פתוחות של המנהל',30,'day']]}]}
+];
+
+const GENERAL_Q = [
+  ['מה עשית אתמול שתעשה גם מחר בדיוק באותה צורה?','מה עשיתי אתמול שאעשה גם מחר בדיוק באותה צורה?'],
+  ['מה אתה מעתיק ממקום אחד למקום אחר: ממייל לטבלה, מטבלה למערכת?','מה אני מעתיק ממקום אחד למקום אחר?'],
+  ['על מה אתה מחכה לאחרים כדי להמשיך לעבוד?','על מה אני מחכה לאחרים כדי להמשיך?'],
+  ['איזו שאלה אתה עונה עליה שוב ושוב?','איזו שאלה אני עונה עליה שוב ושוב?'],
+  ['מה אתה בודק או מתקן ידנית, כי אין לך אמון במה שהגיע?','מה אני בודק או מתקן ידנית?'],
+  ['איזו משימה היית שמח שתיעלם מחר בבוקר?','איזו משימה הייתי שמח שתיעלם מחר בבוקר?']
+];
+
+const HOOK_CHIPS = [
+  ['מיון קורות חיים',120,'day'],
+  ['הקלדת חשבוניות',90,'day'],
+  ['מענה לשאלות חוזרות',60,'day'],
+  ['עדכון CRM',45,'day']
+];
+
+const DREAM_CHIPS = ['פרויקט חדש שמחכה','פיתוח מקצועי לצוות','שירות טוב יותר ללקוחות','צמיחה ולקוחות חדשים','זמן לחשוב ולתכנן','פחות שעות נוספות'];
+
+const TIME_KEYS = [15,30,60,120,180];
+
+/* ============================================================
+   2. MODEL + VALIDATION
+   ============================================================ */
+const LIMITS = {minutes:[0,1440], people:[1,999], names:120, groups:60, tasks:300};
+
+function uid(p){ return p + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-3); }
+function clamp(n, lo, hi){ n = Number(n); if(!Number.isFinite(n)) return lo; return Math.min(hi, Math.max(lo, n)); }
+function str(s, max){ return (typeof s === 'string' ? s : '').slice(0, max); }
+
+function emptyState(){
+  return { v:1, mode:'talk', groups:[], dream:{chips:[], text:''} };
+}
+function newGroup(name, implicit){
+  return { id:uid('g'), name:name||'הצוות שלי', domain:null, people:1, implicit:!!implicit, tasks:[] };
+}
+function newTask(name, minutes, freq, src){
+  return { id:uid('t'), name:name||'', minutes:minutes||0, freq:freq||'day', auto:0.7, refined:false, src:src||null };
+}
+
+/* A group stops being implicit the moment the user takes ownership of it. */
+function markExplicit(g){ if(g) g.implicit = false; }
+
+function ensureGroup(){
+  if(!state.groups.length) state.groups.push(newGroup('הצוות שלי', true));
+  return state.groups[0];
+}
+function allTasks(){
+  const out = [];
+  for(const g of state.groups) for(const t of g.tasks) out.push({t, g});
+  return out;
+}
+function findTask(id){
+  for(const g of state.groups) for(const t of g.tasks) if(t.id === id) return {t, g};
+  return null;
+}
+/* The hook's people control is only shown while a single, still-implicit group exists. */
+function hookOwnsPeople(){
+  return state.groups.length === 1 && state.groups[0].implicit === true;
+}
+
+/* Validation never throws. Anything unknown is clamped or defaulted. */
+function sanitize(raw){
+  if(!raw || typeof raw !== 'object') return null;
+  const seen = new Set();
+  const s = emptyState();
+  s.mode = (raw.mode === 'solo') ? 'solo' : 'talk';
+  const groups = Array.isArray(raw.groups) ? raw.groups.slice(0, LIMITS.groups) : [];
+  let taskCount = 0;
+  for(const rg of groups){
+    if(!rg || typeof rg !== 'object') continue;
+    const g = newGroup(str(rg.name, LIMITS.names) || 'הצוות שלי', rg.implicit === true);
+    while(seen.has(g.id)) g.id = uid('g');
+    seen.add(g.id);
+    g.people = Math.round(clamp(rg.people, LIMITS.people[0], LIMITS.people[1]));
+    g.domain = CATALOG.some(d => d.domain === rg.domain) ? rg.domain : null;
+    const tasks = Array.isArray(rg.tasks) ? rg.tasks : [];
+    for(const rt of tasks){
+      if(!rt || typeof rt !== 'object') continue;
+      if(taskCount >= LIMITS.tasks) break;
+      const t = newTask(str(rt.name, LIMITS.names), 0, 'day', str(rt.src, LIMITS.names) || null);
+      while(seen.has(t.id)) t.id = uid('t');
+      seen.add(t.id);
+      t.minutes = Math.round(clamp(rt.minutes, LIMITS.minutes[0], LIMITS.minutes[1]));
+      t.freq = FREQS.includes(rt.freq) ? rt.freq : 'day';
+      t.auto = AUTOS.includes(Number(rt.auto)) ? Number(rt.auto) : 0.7;
+      t.refined = rt.refined === true;
+      g.tasks.push(t); taskCount++;
+    }
+    s.groups.push(g);
+  }
+  if(s.groups.length > 1) s.groups.forEach(markExplicit);
+  const chips = Array.isArray(raw.dream && raw.dream.chips) ? raw.dream.chips : [];
+  s.dream.chips = chips.filter(c => DREAM_CHIPS.includes(c)).slice(0, DREAM_CHIPS.length);
+  s.dream.text = str(raw.dream && raw.dream.text, 400);
+  return s;
+}
+
+/* ============================================================
+   3. COMPUTE — one pure function, nothing derived is ever stored
+   ============================================================ */
+function freqFactor(f){
+  return f === 'day' ? DAYS_MONTH : f === 'week' ? WEEKS_MONTH : f === 'month' ? 1 : 1/3;
+}
+/* Largest-remainder rounding: the displayed rows sum EXACTLY to the displayed total. */
+function allocate(values, target){
+  const floors = values.map(v => Math.floor(v));
+  const out = floors.slice();
+  let rem = target - floors.reduce((a,b) => a+b, 0);
+  const order = values
+    .map((v,i) => ({i, frac: v - Math.floor(v)}))
+    .sort((a,b) => b.frac - a.frac || a.i - b.i);
+  for(let k=0; k<order.length && rem>0; k++){ out[order[k].i]++; rem--; }
+  for(let k=order.length-1; k>=0 && rem<0; k--){ if(out[order[k].i] > 0){ out[order[k].i]--; rem++; } }
+  return out;
+}
+function compute(s){
+  const rows = [];
+  for(const g of s.groups){
+    for(const t of g.tasks){
+      const hours = (t.minutes/60) * freqFactor(t.freq) * g.people;
+      rows.push({
+        id:t.id, groupId:g.id, name:t.name, people:g.people,
+        minutes:t.minutes, freq:t.freq, auto:t.auto, refined:t.refined,
+        hoursMonth:hours, freedMonth:hours * t.auto
+      });
+    }
+  }
+  const exactFreed = rows.reduce((a,r) => a + r.freedMonth, 0);
+  const exactToday = rows.reduce((a,r) => a + r.hoursMonth, 0);
+  const totalShown = Math.round(exactFreed);
+  const shown = allocate(rows.map(r => r.freedMonth), totalShown);
+  rows.forEach((r,i) => { r.freedShown = shown[i]; });
+  let biggestId = null, best = -1;
+  for(const r of rows) if(r.freedMonth > best){ best = r.freedMonth; biggestId = r.id; }
+  return {
+    rows,
+    totals:{
+      hoursToday: exactToday,
+      freedMonthExact: exactFreed,
+      freedMonth: totalShown,
+      freedYear: Math.round(exactFreed * 12),
+      fte: exactFreed / FTE_MONTH
+    },
+    biggestId,
+    dream:{chips:s.dream.chips.slice(), text:s.dream.text},
+    mode:s.mode
+  };
+}
+
+/* ============================================================
+   4. PERSIST / ENCODE / MIGRATE
+   ============================================================ */
+const LS_KEY = 'waives.stones.v1';
+
+function b64urlEncode(text){
+  const bytes = new TextEncoder().encode(text);      // Hebrew would break btoa() directly
+  let bin = '';
+  for(let i=0; i<bytes.length; i++) bin += String.fromCharCode(bytes[i]);
+  return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
+}
+function b64urlDecode(s){
+  let t = String(s).replace(/-/g,'+').replace(/_/g,'/');
+  while(t.length % 4) t += '=';
+  const bin = atob(t);
+  const bytes = new Uint8Array(bin.length);
+  for(let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
+  return new TextDecoder().decode(bytes);
+}
+/* Compact NAMED keys — adding a field never shifts the meaning of the others. */
+function pack(s){
+  return {
+    v:1, m:s.mode,
+    g:s.groups.map(g => ({
+      n:g.name, d:g.domain, p:g.people, i:g.implicit ? 1 : 0,
+      t:g.tasks.map(t => ({n:t.name, m:t.minutes, f:FREQS.indexOf(t.freq), a:AUTOS.indexOf(t.auto), r:t.refined ? 1 : 0, s:t.src}))
+    })),
+    dc:s.dream.chips, dt:s.dream.text
+  };
+}
+function unpack(o){
+  if(!o || typeof o !== 'object') return null;
+  return migrate({
+    v:o.v, mode:o.m,
+    groups:Array.isArray(o.g) ? o.g.map(g => ({
+      name:g && g.n, domain:g && g.d, people:g && g.p, implicit:!!(g && g.i),
+      tasks:Array.isArray(g && g.t) ? g.t.map(t => ({
+        name:t && t.n, minutes:t && t.m,
+        freq:FREQS[t && t.f], auto:AUTOS[t && t.a],
+        refined:!!(t && t.r), src:t && t.s
+      })) : []
+    })) : [],
+    dream:{chips:o.dc, text:o.dt}
+  });
+}
+/* Kept forever: every past shape must still open. */
+function migrate(obj){
+  if(!obj || typeof obj !== 'object') return null;
+  // v1 is the current shape. Future versions chain from here.
+  return obj;
+}
+function save(){
+  try{ localStorage.setItem(LS_KEY, JSON.stringify(pack(state))); }catch(e){ /* private mode */ }
+}
+function loadLocal(){
+  try{
+    const raw = localStorage.getItem(LS_KEY);
+    if(!raw) return null;
+    return sanitize(unpack(JSON.parse(raw)));
+  }catch(e){ return null; }
+}
+function readHash(){
+  const m = /[#&]s=([A-Za-z0-9\-_]+)/.exec(location.hash || '');
+  if(!m) return null;
+  try{ return sanitize(unpack(JSON.parse(b64urlDecode(m[1])))); }
+  catch(e){ return 'bad'; }
+}
+function shareUrl(){
+  return location.origin + location.pathname + '#s=' + b64urlEncode(JSON.stringify(pack(state)));
+}
+
+/* ============================================================
+   5. RENDER
+   ============================================================ */
+let state = emptyState();
+let ui = { activeTaskId:null, screen:'calc', refineOpen:false, groupsOpen:false,
+           questionsOpen:false, qOneByOne:false, qIndex:0, flashId:null, error:'' };
+let undoSnapshot = null, undoTimer = null, lastShownNumber = 0;
+
+const $ = id => document.getElementById(id);
+const nf = n => Number(n).toLocaleString('he-IL');
+function el(tag, cls, text){
+  const n = document.createElement(tag);
+  if(cls) n.className = cls;
+  if(text != null) n.textContent = text;   // user text is NEVER innerHTML
+  return n;
+}
+function fmtMinutes(m){
+  if(m < 60) return m + ' דק׳';
+  const h = m/60;
+  return (Number.isInteger(h) ? h : h.toFixed(1).replace('.0','')) + ' ש׳';
+}
+function fteText(fte){
+  const n = Math.round(fte * 10) / 10;
+  return n === 1 ? 'משרה אחת' : nf(n) + (n > 1 ? ' משרות' : ' משרה');
+}
+/* grammar has to agree, or the headline reads as a typo on a shared screen */
+function freeText(fte){
+  const n = Math.round(fte * 10) / 10;
+  return fteText(fte) + (n > 1 ? ' פנויות לפרויקטים' : ' פנויה לפרויקטים');
+}
+
+function render(regions){
+  const all = !regions;
+  const has = r => all || regions.indexOf(r) !== -1;
+  const res = compute(state);
+  if(ui.screen === 'summary'){ renderSummary(res); $('device').hidden = true; $('summary').hidden = false; return; }
+  $('device').hidden = false; $('summary').hidden = true;
+  if(has('display')) renderDisplay(res);
+  if(has('keys')) renderKeys(res);
+  if(has('tape')) renderTape(res);
+  if(has('groups')) renderGroups();
+  if(has('dream')) renderDream(res);
+  if(has('display')) renderFormula(res);
+}
+function apply(fn, regions){ fn(); save(); render(regions); }
+
+/* ---- display ---- */
+function renderDisplay(res){
+  const t = res.totals;
+  const empty = res.rows.length === 0 || t.freedMonth === 0;
+  const num = $('bigNum');
+  num.textContent = empty ? '0' : nf(t.freedMonth);
+  $('bigUnit').textContent = 'שעות בחודש';
+  $('subLine').textContent = empty
+    ? 'כתבו משימה או בחרו דוגמה כדי להתחיל'
+    : freeText(t.fte) + ' · ' + nf(t.freedYear) + ' שעות בשנה';
+  const active = ui.activeTaskId ? findTask(ui.activeTaskId) : null;
+  $('histline').textContent = (!empty && active)
+    ? historyLine(active.t, active.g)
+    : (empty ? '' : nf(Math.round(t.hoursToday)) + ' שעות היום · ' + nf(t.freedMonth) + ' מתפנות');
+  const anyUnrefined = res.rows.some(r => !r.refined);
+  $('estLabel').hidden = empty || !anyUnrefined;
+  renderRing(t.fte, empty, res);
+  if(!empty && t.freedMonth !== lastShownNumber) rollNumber(num);
+  lastShownNumber = t.freedMonth;
+}
+function historyLine(t, g){
+  const factor = t.freq === 'day' ? DAYS_MONTH + ' ימים'
+    : t.freq === 'week' ? WEEKS_MONTH + ' שבועות'
+    : t.freq === 'month' ? 'פעם בחודש' : 'פעם ברבעון';
+  const people = g.people > 1 ? ' × ' + g.people + ' אנשים' : '';
+  return fmtMinutes(t.minutes) + ' × ' + factor + people + ' × ' + Math.round(t.auto*100) + '%';
+}
+function rollNumber(node){
+  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  node.animate(
+    [{transform:'translateY(14%)', opacity:.35}, {transform:'none', opacity:1}],
+    {duration:280, easing:'cubic-bezier(.4,0,.2,1)'}
+  );
+}
+/* The ring is ONE full-time position. Gold = freed. Never more than 100% of itself. */
+function renderRing(fte, empty, res){
+  const wrap = $('ringWrap');
+  wrap.textContent = '';
+  // the ring is drawn from the SAME rounded figure the screen writes in words,
+  // so "0.2 משרה" and the ring never disagree in front of a client
+  const shownFte = Math.round(fte * 10) / 10;
+  const full = Math.floor(shownFte + 1e-9);
+  const partial = shownFte - full;
+  const shown = Math.min(full, 4);
+  for(let i=0; i<shown; i++) wrap.appendChild(ringSvg(1, ''));
+  if(full < 4 || partial > 0.005) wrap.appendChild(ringSvg(empty ? 0 : partial, empty ? '' : Math.round(partial*100) + '%'));
+  if(full > 4) wrap.appendChild(el('span','ringmore','+' + (full-4)));
+  const label = empty ? 'אין עדיין זמן שהתפנה'
+    : freeText(fte) + ', מתוך משרה מלאה. ' + (res.dream.chips[0] || res.dream.text || 'זמן לצמיחה');
+  wrap.setAttribute('role','img');
+  wrap.setAttribute('aria-label', label);
+}
+function ringSvg(frac, centre){
+  const NS = 'http://www.w3.org/2000/svg';
+  const size = 76, r = 30, c = 2*Math.PI*r;
+  const svg = document.createElementNS(NS,'svg');
+  svg.setAttribute('width', size); svg.setAttribute('height', size);
+  svg.setAttribute('viewBox','0 0 '+size+' '+size);
+  svg.setAttribute('aria-hidden','true');
+  const mk = (stroke, dash, op) => {
+    const ci = document.createElementNS(NS,'circle');
+    ci.setAttribute('cx', size/2); ci.setAttribute('cy', size/2); ci.setAttribute('r', r);
+    ci.setAttribute('fill','none'); ci.setAttribute('stroke', stroke);
+    ci.setAttribute('stroke-width','9'); ci.setAttribute('stroke-linecap','round');
+    if(dash) ci.setAttribute('stroke-dasharray', dash);
+    ci.setAttribute('transform','rotate(-90 '+(size/2)+' '+(size/2)+')');
+    if(op) ci.setAttribute('opacity', op);
+    return ci;
+  };
+  svg.appendChild(mk('#FFFFFF', null, '.18'));                                     // the rest of the position
+  const f = Math.max(0, Math.min(1, frac));
+  if(f > 0) svg.appendChild(mk('var(--gold)', (c*f) + ' ' + (c*(1-f) + 1)));       // the opening
+  if(centre){
+    const txt = document.createElementNS(NS,'text');
+    txt.setAttribute('x', size/2); txt.setAttribute('y', size/2 + 5);
+    txt.setAttribute('text-anchor','middle');
+    txt.setAttribute('fill','#FFFFFF');
+    txt.setAttribute('font-size','17'); txt.setAttribute('font-weight','800');
+    txt.textContent = centre;
+    svg.appendChild(txt);
+  }
+  return svg;
+}
+
+/* ---- keys (the task editor) ---- */
+function renderKeys(res){
+  const box = $('taskEditor');
+  box.textContent = '';
+  const active = ui.activeTaskId ? findTask(ui.activeTaskId) : null;
+  if(!active){ box.appendChild(newTaskPrompt()); return; }
+  const {t, g} = active;
+
+  // 1. what is the task
+  const b1 = el('div','qblock');
+  b1.appendChild(el('p','qlabel','מה המשימה?'));
+  const inp = el('input','field');
+  inp.type = 'text'; inp.value = t.name;
+  inp.placeholder = 'למשל: מיון קורות חיים';
+  inp.setAttribute('aria-label','שם המשימה');
+  inp.addEventListener('input', () => {
+    apply(() => { t.name = str(inp.value, LIMITS.names); }, ['display','tape','dream']);
+  });
+  b1.appendChild(inp);
+  const chips = el('div','keyrow');
+  chips.style.marginTop = '8px';
+  HOOK_CHIPS.forEach(([n,m,f]) => {
+    const b = el('button','key chip sm', n);
+    b.type = 'button';
+    b.addEventListener('click', () => apply(() => {
+      t.name = n; t.minutes = m; t.freq = f; t.src = n;
+    }));
+    chips.appendChild(b);
+  });
+  b1.appendChild(chips);
+  b1.appendChild(el('p','hint','זמנים לדוגמה, משנים לפי מה שקורה אצלכם'));
+  box.appendChild(b1);
+
+  // 2. how long
+  const b2 = el('div','qblock');
+  b2.appendChild(el('p','qlabel','כמה זמן היא לוקחת בכל פעם?'));
+  const row = el('div','keyrow');
+  TIME_KEYS.forEach(m => {
+    const b = el('button','key' + (t.minutes === m ? ' on' : ''), fmtMinutes(m));
+    b.type = 'button';
+    b.setAttribute('aria-pressed', t.minutes === m ? 'true' : 'false');
+    b.addEventListener('click', () => apply(() => { t.minutes = m; }));
+    row.appendChild(b);
+  });
+  b2.appendChild(row);
+  const st = el('div','stepper');
+  st.style.marginTop = '8px';
+  const minus = el('button','key','−'); minus.type='button'; minus.setAttribute('aria-label','פחות רבע שעה');
+  const plus  = el('button','key','+'); plus.type='button';  plus.setAttribute('aria-label','עוד רבע שעה');
+  const val = el('span','val', fmtMinutes(t.minutes));
+  minus.addEventListener('click', () => apply(() => { t.minutes = Math.max(0, t.minutes - 15); }));
+  plus.addEventListener('click',  () => apply(() => { t.minutes = Math.min(LIMITS.minutes[1], t.minutes + 15); }));
+  st.appendChild(minus); st.appendChild(val); st.appendChild(plus);
+  b2.appendChild(st);
+  // the daily assumption is never hidden
+  const freqLink = el('button','inline-link', FREQ_LABEL[t.freq] + ' · לשינוי');
+  freqLink.type = 'button';
+  freqLink.addEventListener('click', () => { ui.refineOpen = true; render(['keys']); setTimeout(() => { const f = $('freqRow'); if(f) f.scrollIntoView({block:'center', behavior:'smooth'}); }, 0); });
+  b2.appendChild(freqLink);
+  const h = timeHint(t, g, res);
+  if(h) b2.appendChild(el('p','hint warn', h));
+  box.appendChild(b2);
+
+  // 3. how many people — only while the hook still owns the number
+  const b3 = el('div','qblock');
+  if(hookOwnsPeople()){
+    b3.appendChild(el('p','qlabel','כמה אנשים עושים את זה?'));
+    const st2 = el('div','stepper');
+    const m2 = el('button','key','−'); m2.type='button'; m2.setAttribute('aria-label','פחות אדם אחד');
+    const p2 = el('button','key','+'); p2.type='button'; p2.setAttribute('aria-label','עוד אדם אחד');
+    const v2 = el('span','val', nf(g.people));
+    m2.addEventListener('click', () => apply(() => { g.people = Math.max(1, g.people - 1); }));
+    p2.addEventListener('click', () => apply(() => { g.people = Math.min(LIMITS.people[1], g.people + 1); }));
+    st2.appendChild(m2); st2.appendChild(v2); st2.appendChild(p2);
+    b3.appendChild(st2);
+  }else{
+    const line = el('div','row-split');
+    line.appendChild(el('span','pill', nf(g.people) + (g.people === 1 ? ' אדם' : ' אנשים') + ' · ' + g.name));
+    const move = el('button','inline-link','שינוי מספר האנשים בכרטיס הצוות');
+    move.type = 'button';
+    move.addEventListener('click', () => { ui.groupsOpen = true; render(['groups','keys']); $('groupsCard').scrollIntoView({block:'center', behavior:'smooth'}); });
+    line.appendChild(move);
+    b3.appendChild(line);
+  }
+  box.appendChild(b3);
+
+  // which team does this task belong to (only once more than one exists)
+  if(state.groups.length > 1){
+    const b4 = el('div','qblock');
+    b4.appendChild(el('p','qlabel','לאיזה צוות המשימה שייכת?'));
+    const gr = el('div','keyrow');
+    gr.id = 'groupPicker';
+    state.groups.forEach(other => {
+      const on = other.id === g.id;
+      const b = el('button','key chip sm' + (on ? ' on' : ''), other.name + ' · ' + nf(other.people) + (other.people === 1 ? ' אדם' : ' אנשים'));
+      b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
+      if(!on) b.addEventListener('click', () => apply(() => {
+        const i = g.tasks.indexOf(t);
+        if(i !== -1) g.tasks.splice(i,1);
+        other.tasks.push(t);
+        flash(t.id);
+      }));
+      gr.appendChild(b);
+    });
+    b4.appendChild(gr);
+    b4.appendChild(el('p','hint','מעבר לצוות אחר משנה את מספר האנשים שמכפיל את המשימה.'));
+    box.appendChild(b4);
+  }
+
+  // refine
+  if(!ui.refineOpen){
+    const b = el('button','key wide primary','לדייק את החישוב');
+    b.type = 'button';
+    b.addEventListener('click', () => { ui.refineOpen = true; apply(() => { t.refined = true; }, ['keys','display']); });
+    box.appendChild(b);
+  }else{
+    const d = el('div','drawer');
+    d.appendChild(el('h3',null,'לדייק את החישוב'));
+    d.appendChild(el('p','qlabel','באיזו תדירות?'));
+    const fr = el('div','keyrow'); fr.id = 'freqRow';
+    FREQS.forEach(f => {
+      const b = el('button','key' + (t.freq === f ? ' on' : ''), FREQ_LABEL[f]);
+      b.type = 'button'; b.setAttribute('aria-pressed', t.freq === f ? 'true' : 'false');
+      b.addEventListener('click', () => apply(() => { t.freq = f; t.refined = true; }));
+      fr.appendChild(b);
+    });
+    d.appendChild(fr);
+    d.appendChild(el('p','qlabel','כמה ממנה אפשר להפוך לאוטומטי?'));
+    const ar = el('div','keyrow');
+    [0.9,0.7,0.5,0.25].forEach(a => {
+      const b = el('button','key' + (t.auto === a ? ' on' : ''), AUTO_LABEL[a] + ' (' + Math.round(a*100) + '%)');
+      b.type = 'button'; b.setAttribute('aria-pressed', t.auto === a ? 'true' : 'false');
+      b.addEventListener('click', () => apply(() => { t.auto = a; t.refined = true; }));
+      ar.appendChild(b);
+    });
+    d.appendChild(ar);
+    const link = el('button','inline-link','לא בטוחים בזמן?');
+    link.type = 'button';
+    link.addEventListener('click', () => { ui.questionsOpen = true; render(['keys']); $('questionsCard').scrollIntoView({block:'center', behavior:'smooth'}); });
+    d.appendChild(link);
+    box.appendChild(d);
+  }
+
+  // delete
+  const del = el('button','inline-link','מחיקת המשימה');
+  del.type = 'button';
+  del.addEventListener('click', () => deleteTask(t.id));
+  box.appendChild(del);
+
+  // one primary action at a time: "לדייק" first, and only then "+ עוד משימה"
+  $('btnMore').className = 'key wide ' + (ui.refineOpen ? 'primary' : 'ghost');
+  $('questionsCard').hidden = !ui.questionsOpen;
+  $('groupsCard').hidden = !ui.groupsOpen;
+  if(ui.questionsOpen) renderQuestions();
+  if(ui.groupsOpen) renderGroups();
+}
+function newTaskPrompt(){
+  const d = el('div','qblock');
+  d.appendChild(el('p','qlabel','מה המשימה?'));
+  const b = el('button','key wide primary','+ משימה ראשונה');
+  b.type = 'button';
+  b.addEventListener('click', addTask);
+  d.appendChild(b);
+  return d;
+}
+function timeHint(t, g, res){
+  if(t.minutes > 0 && t.minutes < 10 && t.freq === 'day')
+    return 'גם 10 דקות ביום הן 3.6 שעות בחודש.';
+  if(t.src){
+    const ref = catalogMinutes(t.src);
+    if(ref && t.minutes > 0 && (t.minutes < ref/4 || t.minutes > ref*4))
+      return 'רק ' + fmtMinutes(t.minutes) + '? שווה לשאול: כמה פעמים זה קורה?';
+  }
+  const perPerson = g.tasks.reduce((a,x) => a + (x.minutes/60)*freqFactor(x.freq), 0) / WEEKS_MONTH;
+  if(perPerson > 42) return 'יותר משבוע עבודה מלא. כדאי לבדוק את ההערכות.';
+  return '';
+}
+function catalogMinutes(name){
+  for(const d of CATALOG) for(const r of d.roles) for(const t of r.tasks) if(t[0] === name) return t[1];
+  for(const c of HOOK_CHIPS) if(c[0] === name) return c[1];
+  return 0;
+}
+
+/* ---- tape ---- */
+function renderTape(res){
+  const box = $('tape');
+  box.textContent = '';
+  const rows = res.rows.filter(r => r.minutes > 0);
+  if(!rows.length) return;
+  rows.forEach(r => {
+    const row = el('button','taperow' + (r.id === res.biggestId ? ' big' : '') + (r.id === ui.activeTaskId ? ' open' : '') + (r.id === ui.flashId ? ' flash' : ''));
+    row.type = 'button';
+    if(r.id === res.biggestId) row.appendChild(el('span','dot'));
+    const nm = el('span','nm');
+    nm.appendChild(document.createTextNode(r.name || 'משימה ללא שם'));
+    const meta = el('span','meta');
+    const g = findTask(r.id).g;
+    meta.textContent = ' · ' + fmtMinutes(r.minutes) + ' ' + FREQ_SHORT[r.freq] +
+      (g.people > 1 ? ' · ×' + g.people + ' אנשים' : '') + ' · ' + Math.round(r.auto*100) + '%';
+    nm.appendChild(meta);
+    row.appendChild(nm);
+    const hrs = el('span','hrs');
+    hrs.appendChild(el('bdi', null, nf(r.freedShown)));
+    hrs.appendChild(document.createTextNode(' ש׳'));
+    row.appendChild(hrs);
+    row.addEventListener('click', () => { ui.activeTaskId = r.id; render(['keys','tape','display']); $('keys').scrollIntoView({block:'start', behavior:'smooth'}); });
+    box.appendChild(row);
+  });
+  const tot = el('div','tapetotal');
+  tot.appendChild(el('span', null, 'סה״כ מתפנה בחודש'));
+  const v = el('span');
+  v.appendChild(el('bdi', null, nf(res.totals.freedMonth)));
+  v.appendChild(document.createTextNode(' ש׳'));
+  tot.appendChild(v);
+  box.appendChild(tot);
+}
+
+/* ---- guiding questions ---- */
+function renderQuestions(){
+  const box = $('questionsCard');
+  box.textContent = '';
+  const solo = state.mode === 'solo';
+  const head = el('div','row-split');
+  head.appendChild(el('h3', null, 'שאלות שעוזרות למצוא משימות'));
+  const modeBtn = el('button','key sm', solo ? 'אני לבד' : 'שיחה עם עובד');
+  modeBtn.type = 'button';
+  modeBtn.addEventListener('click', () => apply(() => { state.mode = solo ? 'talk' : 'solo'; }, ['keys','dream','display']));
+  head.appendChild(modeBtn);
+  box.appendChild(head);
+
+  const one = el('button','inline-link', ui.qOneByOne ? 'להציג את כל השאלות' : 'אחת-אחת');
+  one.type = 'button';
+  one.addEventListener('click', () => { ui.qOneByOne = !ui.qOneByOne; ui.qIndex = 0; render(['keys']); });
+  box.appendChild(one);
+
+  const list = questionList(solo);
+  const render1 = (q, idx) => {
+    const d = el('div','qblock');
+    d.appendChild(el('p','qlabel', q));
+    const inp = el('input','field');
+    inp.type = 'text'; inp.placeholder = 'כתבו בקצרה'; inp.setAttribute('aria-label', q);
+    const add = el('button','key sm','+ להוסיף כמשימה');
+    add.type = 'button';
+    add.style.marginTop = '8px';
+    add.addEventListener('click', () => {
+      const name = str(inp.value.trim(), LIMITS.names);
+      if(!name) return;
+      addTask(name);
+      inp.value = '';
+    });
+    d.appendChild(inp); d.appendChild(add);
+    return d;
+  };
+  if(ui.qOneByOne){
+    const i = Math.max(0, Math.min(list.length-1, ui.qIndex));
+    box.appendChild(render1(list[i], i));
+    const nav = el('div','keyrow');
+    const prev = el('button','key sm','הקודמת'); prev.type='button';
+    const next = el('button','key sm','הבאה ←'); next.type='button';
+    const skip = el('button','inline-link','דילוג'); skip.type='button';
+    prev.disabled = i === 0;
+    prev.addEventListener('click', () => { ui.qIndex = i-1; render(['keys']); });
+    next.addEventListener('click', () => { ui.qIndex = Math.min(list.length-1, i+1); render(['keys']); });
+    skip.addEventListener('click', () => { ui.qIndex = Math.min(list.length-1, i+1); render(['keys']); });
+    nav.appendChild(next); nav.appendChild(prev); nav.appendChild(skip);
+    box.appendChild(nav);
+    box.appendChild(el('p','hint', (i+1) + ' מתוך ' + list.length));
+  }else{
+    list.forEach((q,i) => box.appendChild(render1(q,i)));
+  }
+  const close = el('button','inline-link','סגירה');
+  close.type = 'button';
+  close.addEventListener('click', () => { ui.questionsOpen = false; render(['keys']); });
+  box.appendChild(close);
+}
+function questionList(solo){
+  const out = GENERAL_Q.map(p => solo ? p[1] : p[0]);
+  const domains = new Set(state.groups.map(g => g.domain).filter(Boolean));
+  CATALOG.forEach(d => { if(domains.has(d.domain)) out.push(d.q); });
+  return out;
+}
+
+/* ---- groups + catalog ---- */
+function renderGroups(){
+  const box = $('groupsCard');
+  if(!box || box.hidden) return;
+  box.textContent = '';
+  box.appendChild(el('h3', null, 'צוותים ותפקידים'));
+  state.groups.forEach(g => {
+    const card = el('div','qblock');
+    const nameInput = el('input','field');
+    nameInput.type = 'text'; nameInput.value = g.name;
+    nameInput.setAttribute('aria-label','שם הצוות או התפקיד');
+    nameInput.addEventListener('input', () => {
+      apply(() => { g.name = str(nameInput.value, LIMITS.names); markExplicit(g); }, ['display','tape','keys']);
+    });
+    card.appendChild(nameInput);
+
+    const st = el('div','stepper');
+    st.style.marginTop = '8px';
+    const m = el('button','key','−'); m.type='button'; m.setAttribute('aria-label','פחות אדם אחד');
+    const p = el('button','key','+'); p.type='button'; p.setAttribute('aria-label','עוד אדם אחד');
+    const v = el('span','val', nf(g.people));
+    m.addEventListener('click', () => apply(() => { g.people = Math.max(1, g.people - 1); }));
+    p.addEventListener('click', () => apply(() => { g.people = Math.min(LIMITS.people[1], g.people + 1); }));
+    st.appendChild(m); st.appendChild(v); st.appendChild(p);
+    card.appendChild(st);
+    card.appendChild(el('p','hint','מספר האנשים מכפיל את כל משימות הצוות הזה.'));
+
+    const dr = el('div','keyrow');
+    CATALOG.forEach(d => {
+      const b = el('button','key chip sm' + (g.domain === d.domain ? ' on' : ''), d.domain);
+      b.type = 'button';
+      b.addEventListener('click', () => apply(() => { g.domain = (g.domain === d.domain) ? null : d.domain; markExplicit(g); }, ['groups','keys','display']));
+      dr.appendChild(b);
+    });
+    card.appendChild(dr);
+
+    if(g.domain) card.appendChild(catalogPicker(g));
+
+    if(state.groups.length > 1){
+      const del = el('button','inline-link','מחיקת הצוות ומשימותיו');
+      del.type = 'button';
+      del.addEventListener('click', () => deleteGroup(g.id));
+      card.appendChild(del);
+    }
+    box.appendChild(card);
+  });
+  const add = el('button','key wide ghost','+ צוות או תפקיד חדש');
+  add.type = 'button';
+  add.addEventListener('click', () => apply(() => {
+    state.groups.forEach(markExplicit);
+    const g = newGroup('צוות חדש', false);
+    state.groups.push(g);
+  }));
+  box.appendChild(add);
+  const close = el('button','inline-link','סגירה');
+  close.type = 'button';
+  close.addEventListener('click', () => { ui.groupsOpen = false; render(['keys']); });
+  box.appendChild(close);
+}
+function catalogPicker(g){
+  const d = CATALOG.find(x => x.domain === g.domain);
+  const wrap = el('div','qblock');
+  wrap.appendChild(el('p','qlabel','משימות מוכנות להוספה'));
+  const search = el('input','field');
+  search.type = 'search'; search.placeholder = 'חיפוש משימה'; search.setAttribute('aria-label','חיפוש משימה בקטלוג');
+  wrap.appendChild(search);
+  const list = el('div','keyrow');
+  list.style.marginTop = '8px';
+  const draw = () => {
+    list.textContent = '';
+    const q = search.value.trim();
+    d.roles.forEach(r => {
+      r.tasks.forEach(([n,m,f]) => {
+        if(q && n.indexOf(q) === -1 && r.role.indexOf(q) === -1) return;
+        const b = el('button','key chip sm', n + ' · ' + fmtMinutes(m) + ' · ' + FREQ_SHORT[f]);
+        b.type = 'button';
+        b.addEventListener('click', () => apply(() => {
+          const t = newTask(n, m, f, n);
+          g.tasks.push(t);
+          ui.activeTaskId = t.id;
+          flash(t.id);
+        }));
+        list.appendChild(b);
+      });
+    });
+  };
+  search.addEventListener('input', draw);
+  draw();
+  wrap.appendChild(list);
+  wrap.appendChild(el('p','hint','זמנים לדוגמה, משנים לפי מה שקורה אצלכם'));
+  return wrap;
+}
+
+/* ---- the closing question ---- */
+function renderDream(res){
+  const box = $('dreamCard');
+  const t = res.totals;
+  if(!res.rows.length || t.freedMonth === 0){ box.hidden = true; return; }
+  box.hidden = false;
+  box.textContent = '';
+  const solo = state.mode === 'solo';
+  const h = el('h2');
+  h.style.cssText = 'font-size:20px;font-weight:800;margin:0 0 4px';
+  h.appendChild(document.createTextNode(solo ? 'מה היית רוצה לעשות עם ה-' : 'מה הייתם רוצים לעשות עם ה-'));
+  const b = el('bdi'); b.textContent = nf(t.freedMonth);
+  b.style.cssText = 'color:var(--gold-dark);font-weight:800';
+  h.appendChild(b);
+  h.appendChild(document.createTextNode(solo ? ' שעות בחודש שהתפנו לך עכשיו?' : ' שעות בחודש שהתפנו לצוות?'));
+  box.appendChild(h);
+  box.appendChild(el('div','goldline'));
+  if(!solo) box.appendChild(el('p','hint','שווה לשאול גם את העובד מה הוא היה רוצה לקחת על עצמו'));
+  const row = el('div','keyrow');
+  DREAM_CHIPS.forEach(c => {
+    const on = state.dream.chips.indexOf(c) !== -1;
+    const btn = el('button','key chip sm' + (on ? ' on' : ''), c);
+    btn.type = 'button'; btn.setAttribute('aria-pressed', on ? 'true' : 'false');
+    btn.addEventListener('click', () => apply(() => {
+      const i = state.dream.chips.indexOf(c);
+      if(i === -1) state.dream.chips.push(c); else state.dream.chips.splice(i,1);
+    }, ['dream','display']));
+    row.appendChild(btn);
+  });
+  box.appendChild(row);
+  const inp = el('input','field');
+  inp.type = 'text'; inp.style.marginTop = '8px';
+  inp.value = state.dream.text;
+  inp.placeholder = 'או כתבו בעצמכם';
+  inp.setAttribute('aria-label','מה הייתם רוצים לעשות עם הזמן שהתפנה');
+  inp.addEventListener('input', () => { state.dream.text = str(inp.value, 400); save(); render(['display']); });
+  box.appendChild(inp);
+}
+
+function renderFormula(res){
+  const f = $('formula');
+  f.textContent = 'משרה מלאה = ' + FTE_MONTH + ' שעות בחודש (42 שעות בשבוע). חודש = ' + DAYS_MONTH +
+    ' ימי עבודה = ' + WEEKS_MONTH + ' שבועות. מספר האנשים מכפיל את כל משימות הצוות, בהנחה שכולם עושים אותן באותו זמן. ' +
+    'זמנים לדוגמה בקטלוג, משנים לפי מה שקורה אצלכם.';
+}
+
+/* ---- summary ---- */
+function renderSummary(res){
+  const box = $('summary');
+  box.textContent = '';
+  const t = res.totals;
+  const head = el('div','brand');
+  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
+  svg.setAttribute('class','mark'); svg.setAttribute('aria-hidden','true');
+  const use = document.createElementNS('http://www.w3.org/2000/svg','use');
+  use.setAttribute('href','#mkBars'); svg.appendChild(use);
+  head.appendChild(svg);
+  const wm = el('span','wm');
+  wm.appendChild(document.createTextNode('w'));
+  const em = el('em'); em.textContent = 'ai'; wm.appendChild(em);
+  wm.appendChild(document.createTextNode('ves'));
+  head.appendChild(wm);
+  box.appendChild(head);
+
+  box.appendChild(el('h1', null, 'הזמן שחוזר לצוות'));
+  box.appendChild(el('div','goldline'));
+  const n = el('div','sum-num'); n.appendChild(el('bdi', null, nf(t.freedMonth)));
+  box.appendChild(n);
+  box.appendChild(el('div','sum-sub', 'שעות בחודש · ' + freeText(t.fte) + ' · ' + nf(t.freedYear) + ' שעות בשנה'));
+
+  const ringBox = el('div','sum-block');
+  ringBox.style.cssText = 'background:var(--deep);border-radius:20px;padding:18px;display:flex;align-items:center;gap:16px;color:#fff';
+  const rw = el('div');
+  const shownFte = Math.round(t.fte * 10) / 10;
+  const full = Math.floor(shownFte + 1e-9), partial = shownFte - full;
+  for(let i=0; i<Math.min(full,4); i++) rw.appendChild(ringSvg(1,''));
+  if(full < 4 || partial > 0.005) rw.appendChild(ringSvg(partial, Math.round(partial*100) + '%'));
+  rw.style.cssText = 'display:flex;gap:6px';
+  ringBox.appendChild(rw);
+  const dreamText = state.dream.chips.concat(state.dream.text ? [state.dream.text] : []).join(' · ');
+  const cap = el('div');
+  cap.appendChild(el('div', null, 'מתוך משרה מלאה, החלק בזהב הוא מה שהתפנה'));
+  const d2 = el('div', null, dreamText || 'זמן לצמיחה');
+  d2.style.cssText = 'color:var(--gold);font-weight:800;margin-top:4px';
+  cap.appendChild(d2);
+  ringBox.appendChild(cap);
+  box.appendChild(ringBox);
+
+  const mb = el('div','sum-block');
+  mb.appendChild(el('h2', null, 'ההר'));
+  mb.appendChild(mountain(res));
+  box.appendChild(mb);
+
+  const top = res.rows.slice().sort((a,b) => b.freedMonth - a.freedMonth).slice(0,3);
+  if(top.length){
+    const tb = el('div','sum-block');
+    tb.appendChild(el('h2', null, 'שלוש האבנים הגדולות'));
+    const max = top[0].freedMonth || 1;
+    top.forEach((r,i) => {
+      const line = el('div');
+      line.style.marginTop = '12px';
+      const lab = el('div','row-split');
+      lab.appendChild(el('span', null, r.name || 'משימה ללא שם'));
+      const vv = el('span'); vv.appendChild(el('bdi', null, nf(r.freedShown))); vv.appendChild(document.createTextNode(' ש׳ בחודש'));
+      lab.appendChild(vv);
+      line.appendChild(lab);
+      const bar = el('div','bar' + (i === 0 ? ' gold' : ''));
+      const fill = el('i'); fill.style.width = Math.max(4, (r.freedMonth/max)*100) + '%';
+      bar.appendChild(fill);
+      line.appendChild(bar);
+      tb.appendChild(line);
+    });
+    box.appendChild(tb);
+  }
+
+  if(dreamText){
+    const db = el('div','sum-block');
+    db.appendChild(el('h2', null, 'מה נעשה עם הזמן'));
+    db.appendChild(el('div','sum-sub', dreamText));
+    box.appendChild(db);
+  }
+  const back = el('button','key wide primary','חזרה לעריכה');
+  back.type = 'button';
+  back.addEventListener('click', () => { ui.screen = 'calc'; render(); });
+  box.appendChild(back);
+}
+/* Stones pile up to the exact height of the freed hours, on the same scale as the
+   dashed "one full position" line, so the picture and the number agree. */
+function mountain(res){
+  const NS = 'http://www.w3.org/2000/svg';
+  const W = 640, H = 300, base = H - 28;
+  const svg = document.createElementNS(NS,'svg');
+  svg.setAttribute('viewBox','0 0 '+W+' '+H);
+  svg.setAttribute('width','100%'); svg.setAttribute('role','img');
+  const total = res.totals.freedMonthExact;
+  svg.setAttribute('aria-label','ערימת אבנים בגובה ' + nf(res.totals.freedMonth) + ' שעות בחודש, מול קו של משרה מלאה אחת');
+  const scaleMax = Math.max(total, FTE_MONTH) * 1.18;
+  const yFor = hours => base - (hours/scaleMax) * (base - 16);
+
+  const stones = res.rows.slice().filter(r => r.freedMonth > 0).sort((a,b) => b.freedMonth - a.freedMonth);
+  let cum = 0;
+  stones.forEach((r,i) => {
+    const y0 = yFor(cum), y1 = yFor(cum + r.freedMonth);
+    cum += r.freedMonth;
+    const cy = (y0 + y1)/2;
+    const hh = Math.max(14, Math.abs(y0 - y1));
+    const spread = 1 - (cum/Math.max(total,1)) * 0.6;
+    const cx = W/2 + (i % 2 === 0 ? -1 : 1) * (i === 0 ? 0 : 26 + (i*9)) * spread;
+    const rx = Math.max(26, Math.min(130, 30 + Math.sqrt(r.freedMonth) * 11)) * spread;
+    const p = document.createElementNS(NS,'path');
+    const ry = hh/2 + 8;
+    p.setAttribute('d',
+      'M '+(cx-rx)+' '+cy+
+      ' C '+(cx-rx*0.96)+' '+(cy-ry*1.12)+' '+(cx-rx*0.34)+' '+(cy-ry*1.3)+' '+cx+' '+(cy-ry)+
+      ' C '+(cx+rx*0.44)+' '+(cy-ry*1.28)+' '+(cx+rx)+' '+(cy-ry*0.74)+' '+(cx+rx)+' '+cy+
+      ' C '+(cx+rx*0.98)+' '+(cy+ry*0.86)+' '+(cx+rx*0.4)+' '+(cy+ry)+' '+cx+' '+(cy+ry)+
+      ' C '+(cx-rx*0.46)+' '+(cy+ry*1.04)+' '+(cx-rx)+' '+(cy+ry*0.8)+' '+(cx-rx)+' '+cy+' Z');
+    p.setAttribute('fill', r.id === res.biggestId ? 'var(--gold)' : (i % 2 ? 'var(--teal-ink)' : 'var(--teal)'));
+    p.setAttribute('stroke','#fff'); p.setAttribute('stroke-width','2');
+    svg.appendChild(p);
+  });
+
+  const line = document.createElementNS(NS,'line');
+  const ly = yFor(FTE_MONTH);
+  line.setAttribute('x1','8'); line.setAttribute('x2', W-8);
+  line.setAttribute('y1', ly); line.setAttribute('y2', ly);
+  line.setAttribute('stroke','var(--mute)'); line.setAttribute('stroke-width','2');
+  line.setAttribute('stroke-dasharray','8 7');
+  svg.appendChild(line);
+  const lab = document.createElementNS(NS,'text');
+  lab.setAttribute('x', W-78); lab.setAttribute('y', ly - 8);
+  lab.setAttribute('text-anchor','middle'); lab.setAttribute('direction','rtl');
+  lab.setAttribute('fill','var(--mute)');
+  lab.setAttribute('font-size','13'); lab.setAttribute('font-weight','700');
+  lab.textContent = 'משרה מלאה אחת';
+  svg.appendChild(lab);
+  return svg;
+}
+
+/* ============================================================
+   6. EVENTS
+   ============================================================ */
+function isBlank(t){ return t && !t.name.trim() && t.minutes === 0; }
+function addTask(name){
+  const cur = ui.activeTaskId ? findTask(ui.activeTaskId) : null;
+  if(typeof name !== 'string' && cur && isBlank(cur.t)){
+    const inp0 = $('taskEditor').querySelector('input');
+    if(inp0) inp0.focus();
+    return;
+  }
+  const g = ensureGroup();
+  apply(() => {
+    const t = newTask(typeof name === 'string' ? name : '', 0, 'day', null);
+    g.tasks.push(t);
+    ui.activeTaskId = t.id;
+    flash(t.id);
+  });
+  const inp = $('taskEditor').querySelector('input');
+  if(inp) inp.focus();
+}
+function flash(id){
+  ui.flashId = id;
+  setTimeout(() => { ui.flashId = null; render(['tape']); }, 1200);
+}
+function deleteTask(id){
+  const prev = snapshot();
+  apply(() => {
+    for(const g of state.groups){
+      const i = g.tasks.findIndex(t => t.id === id);
+      if(i !== -1){ g.tasks.splice(i,1); break; }
+    }
+    if(ui.activeTaskId === id){
+      const left = allTasks();
+      ui.activeTaskId = left.length ? left[left.length-1].t.id : null;
+    }
+  });
+  offerUndo('המשימה נמחקה', prev);
+}
+function deleteGroup(id){
+  const prev = snapshot();
+  apply(() => {
+    const i = state.groups.findIndex(g => g.id === id);
+    if(i !== -1) state.groups.splice(i,1);
+    // deleting never promotes a named group back into the hook
+    if(!findTask(ui.activeTaskId)){
+      const left = allTasks();
+      ui.activeTaskId = left.length ? left[0].t.id : null;
+    }
+  });
+  offerUndo('הצוות נמחק', prev);
+}
+function snapshot(){ return JSON.stringify(pack(state)); }
+function restore(json){
+  const s = sanitize(unpack(JSON.parse(json)));
+  if(s){ state = s; const first = allTasks(); ui.activeTaskId = first.length ? first[0].t.id : null; save(); render(); }
+}
+function offerUndo(text, prev){
+  undoSnapshot = prev;
+  $('snackText').textContent = text;
+  $('snack').hidden = false;
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(() => { $('snack').hidden = true; undoSnapshot = null; }, 10000);
+}
+$('snackBtn').addEventListener('click', () => {
+  if(undoSnapshot) restore(undoSnapshot);
+  undoSnapshot = null; $('snack').hidden = true; clearTimeout(undoTimer);
+});
+
+$('btnMore').addEventListener('click', () => addTask());
+$('btnQuestions').addEventListener('click', () => { ui.questionsOpen = !ui.questionsOpen; render(['keys']); });
+$('btnGroups').addEventListener('click', () => { ui.groupsOpen = !ui.groupsOpen; render(['keys','groups']); });
+$('btnSummary').addEventListener('click', () => { ui.screen = 'summary'; render(); window.scrollTo(0,0); });
+$('btnDemo').addEventListener('click', () => { const prev = snapshot(); apply(loadDemo); offerUndo('נטען תרחיש לדוגמה', prev); });
+$('btnReset').addEventListener('click', () => {
+  const prev = snapshot();
+  apply(() => { state = emptyState(); ui.activeTaskId = null; ui.refineOpen = false; ui.groupsOpen = false; ui.questionsOpen = false; });
+  offerUndo('נפתח תרחיש חדש', prev);
+});
+$('btnCopy').addEventListener('click', async () => {
+  const text = summaryText();
+  try{ await navigator.clipboard.writeText(text); toast('הסיכום הועתק'); }
+  catch(e){ window.prompt('העתיקו את הטקסט', text); }
+});
+let selfHash = false;
+$('btnShare').addEventListener('click', async () => {
+  const url = shareUrl();
+  if(url.length > 1800){ toast('התרחיש גדול מדי לקישור. אפשר להעתיק סיכום במקום.'); return; }
+  selfHash = true;
+  location.hash = 's=' + b64urlEncode(JSON.stringify(pack(state)));
+  try{ await navigator.clipboard.writeText(url); toast('הקישור הועתק'); }
+  catch(e){ window.prompt('העתיקו את הקישור', url); }
+});
+function toast(text){
+  $('snackText').textContent = text;
+  $('snackBtn').hidden = true;
+  $('snack').hidden = false;
+  clearTimeout(undoTimer);
+  undoTimer = setTimeout(() => { $('snack').hidden = true; $('snackBtn').hidden = false; }, 4000);
+}
+function summaryText(){
+  const res = compute(state);
+  const t = res.totals;
+  const lines = [];
+  lines.push('*' + nf(t.freedMonth) + ' שעות בחודש חוזרות לצוות*');
+  lines.push(fteText(t.fte) + ' פנויה לפרויקטים · ' + nf(t.freedYear) + ' שעות בשנה');
+  lines.push('');
+  res.rows.slice().sort((a,b) => b.freedMonth - a.freedMonth).forEach(r => {
+    lines.push('• ' + (r.name || 'משימה') + ' — ' + nf(r.freedShown) + ' ש׳ בחודש');
+  });
+  const dream = state.dream.chips.concat(state.dream.text ? [state.dream.text] : []).join(' · ');
+  if(dream){ lines.push(''); lines.push('מה נעשה עם הזמן: ' + dream); }
+  lines.push('');
+  lines.push('מחשבון האבנים הקטנות · WAIVES');
+  return lines.join('\n');
+}
+function loadDemo(){
+  state = emptyState();
+  const mk = (name, domain, people, tasks) => {
+    const g = newGroup(name, false);
+    g.domain = domain; g.people = people;
+    tasks.forEach(([n,m,f,a]) => {
+      const t = newTask(n, m, f, n);
+      t.auto = a; t.refined = true;
+      g.tasks.push(t);
+    });
+    state.groups.push(g);
+  };
+  mk('רכזות גיוס','משאבי אנוש וגיוס',2,[
+    ['מיון קורות חיים',120,'day',0.7],
+    ['תיאום ראיונות עם מועמדים ומראיינים',45,'day',0.9],
+    ['שליחת עדכונים ותשובות למועמדים',30,'day',0.9],
+    ['עדכון סטטוס מועמדים בטבלה או במערכת',30,'day',0.9]]);
+  mk('מנהלת חשבונות','כספים והנהלת חשבונות',1,[
+    ['הקלדת חשבוניות ספקים',90,'day',0.9],
+    ['גבייה ותזכורות ללקוחות',60,'day',0.7],
+    ['התאמות בנק',180,'week',0.5]]);
+  mk('נציגות שירות','שירות, מכירות ושיווק',3,[
+    ['מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day',0.5],
+    ['תיעוד פניות במערכת',45,'day',0.9],
+    ['ניתוב פניות לגורם הנכון',30,'day',0.9]]);
+  const first = allTasks();
+  ui.activeTaskId = first.length ? first[0].t.id : null;
+  ui.refineOpen = true;
+}
+
+/* ============================================================
+   7. BOOT — the hash is validated before anything local is touched
+   ============================================================ */
+(function boot(){
+  const local = loadLocal();
+  const fromHash = readHash();
+  if(fromHash && fromHash !== 'bad'){
+    state = fromHash;
+    if(local){
+      setTimeout(() => offerUndo('נפתח תרחיש מקישור', JSON.stringify(pack(local))), 400);
+    }
+  }else{
+    if(fromHash === 'bad') setTimeout(() => toast('הקישור לא נקרא, נפתח התרחיש שלך'), 300);
+    state = local || emptyState();
+  }
+  const tasks = allTasks();
+  if(tasks.length){
+    ui.activeTaskId = tasks[0].t.id;
+    if(tasks.some(x => x.t.refined)) ui.refineOpen = true;
+  }else{
+    // the three questions are live from the first second — never a button to press first
+    const g = ensureGroup();
+    const t = newTask('', 0, 'day', null);
+    g.tasks.push(t);
+    ui.activeTaskId = t.id;
+  }
+  render();
+})();
+
+/* A shared link opened in a tab that is already on the page is a navigation the
+   browser handles without reloading — the scenario must still load. */
+window.addEventListener('hashchange', () => {
+  if(selfHash){ selfHash = false; return; }
+  const incoming = readHash();
+  if(!incoming) return;
+  if(incoming === 'bad'){ toast('הקישור לא נקרא, נפתח התרחיש שלך'); return; }
+  const prev = snapshot();
+  state = incoming;
+  const tasks = allTasks();
+  ui.activeTaskId = tasks.length ? tasks[0].t.id : null;
+  ui.screen = 'calc';
+  save();
+  render();
+  offerUndo('נפתח תרחיש מקישור', prev);
+});
+
+/* exposed for QA only */
+window.__waives = {
+  get state(){ return state; },
+  compute: () => compute(state),
+  shareUrl, summaryText, sanitize, unpack, pack, b64urlEncode, b64urlDecode
+};
+</script>
+</body>
+</html>
