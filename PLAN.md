@@ -21,6 +21,19 @@ screen and work on a phone. No login, no server. Hosted on GitHub Pages at calc.
    and the discovery questions.
 6. Design/visuals are produced by GPT via a separate design brief. Claude writes logic only
    and does not author or "fix" visual code.
+7. **The position ring** (added after Galli's design references, see `design-refs/`):
+   "0.2 משרה" as a bare number is not enough. A ring shows one full-time position: the
+   freed share in gold, the rest of the position in a muted tone. The freed slice must read
+   as an opening that wants to be filled with new work, never as a saving. Rules:
+   - `freedFTE = freedMonthlyHours / 182`. Below one position: one ring, gold arc =
+     `round(freedFTE × 100)`%, centre shows that percentage, caption "זמן לצמיחה".
+   - At or above one position: N complete gold rings plus one partial ring for the
+     remainder, captioned "1.7 משרות". The ring never shows more than 100% of itself.
+   - Once the closing question is answered, the gold slice is labelled with HER answer
+     ("פרויקט חדש שמחכה"), so the opening literally carries what will fill it.
+   - Empty state: a quiet grey ring at 0%. No sweep animation under
+     `prefers-reduced-motion`; the ring is reinforcement of a number already written in
+     text, never the only place a figure appears.
 
 ## Approach
 - **State**: one object `{ v, mode:'talk'|'solo', groups:[{id,name,domain,people,implicit,
