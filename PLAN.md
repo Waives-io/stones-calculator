@@ -1,133 +1,86 @@
 # PLAN — מחשבון האבנים הקטנות (WAIVES small-stones calculator)
 
 ## Goal
-One Hebrew RTL HTML file, vanilla JS, no build step. A manager enters small repetitive
-tasks; the tool shows live how many hours per month come back to the team and what share
-of a full-time position that frees. Framing is always "time freed for growth" — never
-money, never headcount reduction. Sales tool: must look impressive on a shared desktop
-screen and work on a phone. No login, no server. Hosted on GitHub Pages at calc.waives.io.
+One Hebrew RTL HTML file, vanilla JS, no build step. A manager adds small repetitive
+tasks; each one folds into a single line in a shopping-list-style cart, and the cart
+shows how many hours a month come back to the team and what share of a full-time
+position that frees. Framing is always "time freed for growth" — never money, never
+headcount reduction. Sales tool: must look impressive on a shared desktop screen and
+work on a phone. No login, no server. GitHub Pages at calc.waives.io.
 
-## Decisions already made by Galli (not open for re-litigation)
-1. Headcount lives ONLY at the group/role level. The 3-question hook silently creates an
-   implicit group ("הצוות שלי", 1 person); the hook's people counter edits that group.
-   When a second group exists, the counter moves to the group header with a one-line note.
-2. Display shows "0.2 משרה פנויה לפרויקטים" — the growth frame is never detached from the number.
-3. Guiding questions: ONE card listing all six, each with a short field and
-   "+ להוסיף כמשימה". A small "אחת-אחת" toggle turns it into one-at-a-time for 1:1 meetings.
-4. Hook keeps 3 questions. Under the time keys sits a small tappable label
-   "כל יום · לשינוי" that opens frequency inline, so the daily assumption is never hidden.
-5. Wording: "לדייק את החישוב" (not "לחדד את ההערכה"), "צוות או תפקיד" (not "תפקיד"),
-   "יש עוד משימות קטנות?" (not "יש עוד אבנים?"). "אבנים" stays in the title, the mountain
-   and the discovery questions.
-6. Design/visuals are produced by GPT via a separate design brief. Claude writes logic only
-   and does not author or "fix" visual code.
-7. **The position ring** (added after Galli's design references, see `design-refs/`):
-   "0.2 משרה" as a bare number is not enough. A ring shows one full-time position: the
-   freed share in gold, the rest of the position in a muted tone. The freed slice must read
-   as an opening that wants to be filled with new work, never as a saving. Rules:
-   - `freedFTE = freedMonthlyHours / 182`. Below one position: one ring, gold arc =
-     `round(freedFTE × 100)`%, centre shows that percentage, caption "זמן לצמיחה".
-   - At or above one position: N complete gold rings plus one partial ring for the
-     remainder, captioned "1.7 משרות". The ring never shows more than 100% of itself.
-   - Once the closing question is answered, the gold slice is labelled with HER answer
-     ("פרויקט חדש שמחכה"), so the opening literally carries what will fill it.
-   - Empty state: a quiet grey ring at 0%. No sweep animation under
-     `prefers-reduced-motion`; the ring is reinforcement of a number already written in
-     text, never the only place a figure appears.
+## Decisions by Galli (not open for re-litigation)
+1. **The shopping-list model, 2026-11-21.** The home screen is a LIST, not a form. You
+   add an item, fill everything in one sheet, and it folds into one row: icon, name,
+   monthly hours. "+ חדש" sits at the TOP LEFT and opens that sheet. The cart total
+   lives at the end of the list. A dashboard is reached from the bottom of the app.
+2. **The tick box adds and removes a row from the total.** An unticked row stays on
+   screen with its own number in grey, struck through, outside the sum — so a meeting
+   can ask "what if we drop this one" and watch the total move.
+3. **Headcount lives ONLY on the teams screen.** An item picks a team by NAME; it never
+   carries a number of people. Changing a headcount updates the whole list at once.
+4. **Row icons are automatic, by domain.** Six domains, each with its own WAIVES colour.
+   A name typed by hand is matched against the catalog on the way in. Galli never picks
+   an icon.
+5. **Month basis: 20 working days, 4.5 calendar weeks, a 9-hour day, FTE = 180 h/month.**
+   A daily task is multiplied by working days; a weekly task by calendar weeks. The two
+   differ on purpose — a month holds about four and a half weeks but you work twenty of
+   their days.
+6. **The position is a person, not a fraction.** One gold person icon per whole position,
+   plus one ring for the remainder that fills towards 100% and becomes another person.
+   Wording: "70% משרה פנוי למשימות חשובות אחרות" below one position,
+   "משרה ועוד 70% פנויים למשימות חשובות אחרות" above it. Never a bare "0.2 משרה".
+7. **No stones anywhere.** The stones are a figure of speech in the name and nothing
+   else. The mountain illustration and every stone drawing are gone for good.
+8. **Dashboard contents**, in order: hours per month and per year · the position icons
+   and ring · the big tasks ranked · a breakdown per team · the closing question
+   ("what would you do with the time") · share and copy.
 
 ## Approach
-- **State**: one object `{ v, mode:'talk'|'solo', groups:[{id,name,domain,people,implicit,
-  tasks:[{id,name,minutes,freq,auto,refined,src}]}], dream:{chips,text} }`.
-  `implicit` is an explicit stored boolean, never inferred from `groups.length`. It is set
-  true only by the hook creating the first group, and is set false permanently the moment
-  the user renames that group, assigns it a domain, or adds a second group. Deleting groups
-  never promotes a named group back to implicit.
-  `src` is a catalog reference for attribution only; name/minutes/freq are stored BY VALUE
-  so an old shared link reproduces the exact numbers after the catalog changes.
-- **Compute**: one pure function `compute(state) -> result`, no stored derived numbers.
-  `result` is the exact shape a future Make webhook will receive; it is not reshaped later.
-  Constants: FTE 182 h/month, day 21.7, week 4.33, quarter ÷3.
-  Order of operations per task: `minutes/60 × freqFactor × people × auto`, kept as an exact
-  float. Nothing is rounded before the end.
-- **Rounding invariant (the tape must add up on screen)**: the per-row monthly hours shown
-  in the tape are rounded with largest-remainder rounding against the exact total, so the
-  displayed rows sum EXACTLY to the displayed total. The big display number is that same
-  total. Hours/year and the FTE figure are derived from the exact (unrounded) total, which
-  is why 30 hours/month shows as 365 hours/year and not 360 — they are separate lines, never
-  a column that must sum. This is stated here because a visible off-by-one in a tape shown
-  on a shared screen in a client meeting is the single most embarrassing failure available.
-- **Render contract**: `apply(mutation)` → `render(dirty)`, where `dirty` is a set of
-  regions (`display | keys | tape | groups | summary`). The default for any mutation is ALL
-  regions. The only narrow exception is keystrokes inside a text field, which skip the
-  region holding the focused input. There is no "typing vs structural" taxonomy; a mutation
-  that does not declare its regions gets a full render.
+- **State**: `{ v:2, groups:[{id,name,people,tasks:[{id,name,minutes,freq,auto,on,dom}]}],
+  dream:{chips,text} }`. `on` is the tick. `dom` is the domain index, resolved once on
+  the way in and stored BY VALUE so an old link keeps its icon after the catalog changes.
+- **Compute**: one pure function `compute(state) -> result`, nothing derived is stored.
+  Order per task: `minutes/60 × freqFactor × people × auto`, exact float, rounded last.
+- **Rounding invariant (the list must add up on screen)**: the per-row hours are rounded
+  with largest-remainder rounding against the exact total of the TICKED rows, so the
+  ticked rows sum EXACTLY to the cart total. Under ten hours the list counts in tenths:
+  whole numbers there would print "0 ש׳" for a real task and could show two identical
+  tasks as 1 and 0. Hours/year and the position figure come from the exact total.
+- **The sheet is the calculator.** Its header carries a live number that moves on every
+  press, so the list screen can be a list without the tool stopping being a calculator.
+  The frequency is a button INSIDE the question ("כמה זמן היא לוקחת פעם ביום?"), never a
+  line hidden underneath.
 - **Persist**: `localStorage['waives.stones.v1']` in try/catch. Share link is `#s=` +
-  base64url of a compact **named-key** object (`{v,g:[{n,p,t:[{n,m,f,a}]}]}`) — named, not
-  positional, so adding a field never shifts the meaning of the others. Encoding goes
-  through `TextEncoder` before base64url and `TextDecoder` after, because `btoa` throws on
-  Hebrew. `migrate()` chain stays in the file forever.
+  base64url of a compact NAMED-key object. Encoding goes through `TextEncoder` because
+  `btoa` throws on Hebrew. `migrate()` stays in the file forever; a v1 link (no `o`, no
+  `dm`) still opens, every task counted and its icon recovered from its name.
 - **Load policy**: a hash is decoded, validated and migrated BEFORE anything local is
-  touched. Only on success does it replace the current scenario, and the previous local
-  scenario is held in the Undo snackbar ("נפתח תרחיש מקישור · חזרה לתרחיש שלי") so a link
-  never silently destroys the user's own work. A malformed hash is ignored entirely and the
-  local scenario loads untouched, with one quiet line: "הקישור לא נקרא, נפתח התרחיש שלך".
-- **Validation**: every loaded value is bounded, not trusted. `minutes` 0–1440, `people`
-  1–999, `auto` ∈ {0.25,0.5,0.7,0.9}, `freq` ∈ {day,week,month,quarter}, names trimmed to
-  120 chars, max 60 groups and 300 tasks. Non-finite or out-of-range numbers are clamped,
-  unknown enums fall back to the default, duplicate ids are regenerated, and a task with no
-  valid group id is attached to the first group. Validation never throws.
-- **User text is never HTML**: task names, group names and the dream answer are written
-  with `textContent` only. A shared link is untrusted input and must not be able to inject
-  markup or script into the page.
-- If the encoded link exceeds ~1800 chars the share button says so and offers
-  "העתקת סיכום" instead.
-- **Moving a task between groups changes its multiplier.** The tape row shows the people
-  count it is multiplied by ("×3 אנשים") and highlights briefly when it changes, so the
-  total never jumps without a visible cause.
-- **File sections**, in order: catalog + constants, model + validation, compute, persist +
-  encode + migrate, render, events, share + undo.
-- **Screens**: `calc` and `summary`, same state, so "חזרה לעריכה" loses nothing.
-- **Undo**: delete, "דוגמה" and "תרחיש חדש" all pass through `applyState(next)` with a
-  10-second snackbar holding the previous state. No confirmation dialogs.
+  touched, and the previous local scenario waits in the Undo snackbar. A malformed hash
+  is ignored with one quiet line.
+- **Validation**: `minutes` 0–1440, `people` 1–999, `auto` ∈ {0.25,0.5,0.7,0.9},
+  `freq` ∈ {day,week,month,quarter}, names 120 chars, 60 groups, 300 tasks. Unknown
+  values are clamped or defaulted; duplicate ids regenerated. Validation never throws.
+- **User text is never HTML**: every name is written with `textContent`, inside a `<bdi>`
+  that isolates it from the small print — otherwise a name ending in Latin letters
+  ("עדכון CRM") drags the next number across the boundary and the row reads scrambled.
+- **File sections**: catalog + constants, model + validation, compute, persist + encode +
+  migrate, render, events, boot.
 
-## Files touched
-- `index.html` — the entire tool (new)
+## Files
+- `index.html` — the entire tool
 - `PLAN.md` — this file
 - `.nojekyll`, `CNAME` — GitHub Pages
-- `qa/` — Playwright QA script and screenshots (not deployed)
-
-## Risks
-1. **Trust**: a default 70% automation rate shown before it is explained reads as a sales
-   trick. Mitigation: the display's history line shows `× 70%` from the first second, and
-   the "הערכה ראשונית · אפשר לדייק" label sits inside the display.
-2. **Phone**: a sticky display plus a long key column eats a small screen. Mitigation: the
-   display collapses to a single line after the first scroll.
-3. **Link length / old links**: compacted encoding plus by-value catalog tasks plus a
-   version byte and a migrate chain; a corrupt hash must fail gracefully to an empty
-   calculator, never to a blank page.
-4. **Focus loss** while typing a task name, if render is too coarse. Mitigation: the render
-   contract above, verified in QA by typing a full task name without losing the caret.
-5. **Modeling honesty**: 21.7 days assumes a standard working month, and the people
-   multiplier assumes everyone in the group does the task for the stated time. The footer
-   that shows the formula states both in one line, so the assumption is on screen rather
-   than buried in the arithmetic.
-6. **A shared link is untrusted input.** Validation, clamping and `textContent`-only
-   rendering are what stop a crafted link from producing absurd totals or injecting markup.
+- `qa/qa.js` — 125 Playwright checks (not deployed)
+- `design-options/` — the five look directions GPT drew; option 4 was chosen
 
 ## Definition of done
-`node --check` on the extracted JS. Playwright QA covering, beyond the brief's own list:
-- the three exact calculation checks from the brief (30/365/0.2, 39/469/0.2, 304/3,646/1.7);
-- **the tape adds up**: with mixed frequencies, the sum of the displayed rows equals the
-  displayed total, checked by reading the rendered text, not the internal numbers;
-- a hostile / corrupt hash: truncated, hand-edited, valid JSON with negative minutes,
-  `1e9` people, `auto` of 5, an unknown frequency, duplicate ids, and a task name
-  containing `<img src=x onerror=...>` — none may break the page or inject markup;
-- Hebrew task names survive a round trip through the share link;
-- an existing localStorage scenario plus an incoming link: the link loads, and Undo
-  restores the user's own scenario;
-- a task moved between a 1-person and a 3-person group updates the total visibly;
-- the only named group deleted: the survivor is not demoted back into the hook;
-- typing a full task name without losing the caret, and keyboard-only navigation;
-- storage denied (private mode): the tool still works, nothing throws.
-Screenshots at 390px and 1280px: empty, after the hook, "לדייק" open, several tasks with
-the tape, and the summary with the mountain. Then verified live on calc.waives.io.
+`node --check` on the extracted JS, then Playwright covering: the exact calculation
+checks under the new constants · the list adds up, read from the screen · the tick box
+moves the total and the list still adds up · the sheet's number moves on every press ·
+headcount exists only on the teams screen and multiplies the list · a hostile or corrupt
+hash (truncated, non-base64, negative minutes, 1e9 people, auto 99, unknown frequency,
+unknown domain, `<img src=x onerror=…>`, and a v1 link) · Hebrew and Latin names survive
+a round trip · an incoming link with Undo · storage denied · the wording at 0, under a
+position, exactly one, two, and above one · no stones, no ₪, no cutting words · RTL and
+keyboard · no horizontal overflow at 320/390/768/1280 · ten screenshots.
+Then verified live on calc.waives.io against the bytes the site actually serves.

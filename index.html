@@ -1,369 +1,260 @@
 <!doctype html>
-<html dir="rtl" lang="he" translate="no">
+<html lang="he" dir="rtl">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<meta name="google" content="notranslate">
 <title>מחשבון האבנים הקטנות · WAIVES</title>
-<meta name="description" content="כמה שעות בחודש חוזרות לצוות מהמשימות הקטנות והחוזרות.">
+<meta name="description" content="כמה שעות בחודש חוזרות לצוות כשהמשימות הקטנות נעשות לבד.">
+<meta name="theme-color" content="#14707E">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   STRUCTURAL CSS ONLY — the visual layer is owned by the design pass.
-   Tokens are WAIVES Waterline Light and must not be changed.
+   WAIVES Waterline Light — the token values are fixed.
    ============================================================ */
 :root{
-  --white:#FFFFFF;
-  --ink:#1B2436;
-  --deep:#04091A;
-  --mute:#54637C;
-  --teal:#1A8FA0;
-  --teal-ink:#14707E;
-  --gold:#C9A84C;
-  --gold-dark:#A07830;
-  --panel:#F5F7FA;
-  --line:#E3E8EF;
-  --ease:.2s cubic-bezier(.4,0,.2,1);
-  --device:600px;
+  --white:#FFFFFF; --ink:#1B2436; --deep:#04091A; --mute:#54637C;
+  --teal:#1A8FA0; --teal-ink:#14707E; --gold:#C9A84C; --gold-dark:#A07830;
+  --panel:#F5F7FA; --line:#E3E8EF;
+  --bar:72px;            /* bottom navigation */
+  --sheet-max:560px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
 body{
-  background:var(--white);
-  color:var(--ink);
-  font-family:'Heebo',sans-serif;
-  font-weight:400;
-  line-height:1.5;
-  -webkit-text-size-adjust:100%;
+  font-family:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  background:var(--panel); color:var(--ink);
+  -webkit-font-smoothing:antialiased;
+  padding-bottom:calc(var(--bar) + env(safe-area-inset-bottom));
 }
 button{font:inherit;color:inherit;cursor:pointer}
 input{font:inherit;color:inherit}
-:focus-visible{outline:3px solid var(--teal);outline-offset:2px}
-[hidden]{display:none !important}
+:focus-visible{outline:3px solid var(--gold); outline-offset:2px; border-radius:10px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* ---------- device ---------- */
-#device{
-  max-inline-size:var(--device);
-  margin-inline:auto;
-  padding:14px;
-  border:1px solid var(--line);
-  border-radius:28px;
-  background:var(--white);
+/* ---------- top bar ---------- */
+.top{
+  position:sticky; top:0; z-index:30;
+  background:var(--teal-ink); color:#fff;
+  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  display:flex; align-items:center; gap:10px;
+  box-shadow:0 1px 0 rgba(0,0,0,.08);
 }
-.brand{display:flex;align-items:center;gap:8px;padding:4px 6px 12px}
-.brand .mark{inline-size:28px;block-size:28px;color:var(--deep);flex:none}
-.wm{font-weight:800;font-size:20px;letter-spacing:3px;color:var(--deep);line-height:1}
-.wm em{font-style:normal;color:var(--teal);font-size:inherit;font-weight:inherit}
-.brand .sub{margin:0;margin-inline-start:auto;font-size:12px;color:var(--mute)}
+.top .brand{display:flex;align-items:center;gap:8px;min-width:0}
+.top .mark{width:20px;height:20px;flex:none}
+.top h1{font-size:17px;font-weight:700;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .grow{flex:1}
+.icobtn{
+  background:rgba(255,255,255,.14); border:0; color:#fff;
+  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;
+}
+.icobtn:hover{background:rgba(255,255,255,.24)}
+.newbtn{
+  background:var(--gold); color:var(--deep); border:0; font-weight:700;
+  height:38px; padding:0 14px; border-radius:11px; display:flex; align-items:center; gap:6px; flex:none;
+}
+.newbtn:hover{background:#d8ba63}
 
-/* ---------- display ---------- */
-.screen{
-  background:var(--deep);
-  color:var(--white);
-  border-radius:20px;
-  padding:16px 18px;
-  position:sticky;
-  top:6px;
-  z-index:20;
+/* ---------- page frame ---------- */
+.wrap{max-width:720px;margin:0 auto;padding:16px 14px 24px}
+.card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
+.card + .card{margin-top:14px}
+.cardhead{
+  padding:14px 16px 12px;border-bottom:1px solid var(--line);
+  display:flex;align-items:baseline;gap:8px;
 }
-.histline{font-size:12px;color:#5FD0DE;min-block-size:18px;font-variant-numeric:tabular-nums}
-.mainrow{display:flex;align-items:center;gap:12px}
-.numwrap{display:flex;align-items:baseline;gap:8px;flex:1;min-inline-size:0}
-.num{font-size:clamp(52px,16vw,80px);font-weight:800;line-height:1;letter-spacing:-1px;font-variant-numeric:tabular-nums}
-.unit{font-size:15px;font-weight:700;color:var(--gold)}
-.subline{font-size:14px;color:rgba(255,255,255,.7);min-block-size:21px}
-.est{font-size:11px;color:rgba(255,255,255,.55);margin-top:4px}
-.ringwrap{flex:none;display:flex;align-items:center;gap:4px}
-.ringwrap svg{display:block}
-.ringmore{font-size:12px;color:var(--gold);font-weight:700}
+.cardhead h2{margin:0;font-size:15px;font-weight:700}
+.cardhead .sub{font-size:12.5px;color:var(--mute)}
 
-/* ---------- keys ---------- */
-section{margin-top:14px}
-.qlabel{font-weight:700;font-size:15px;margin:0 0 8px}
-.keyrow{display:flex;flex-wrap:wrap;gap:8px}
-.key{
-  min-block-size:52px;min-inline-size:52px;
-  padding:0 14px;
-  border:1px solid var(--line);
-  border-radius:14px;
-  background:var(--panel);
-  color:var(--ink);
-  font-weight:500;
-  transition:transform .08s var(--ease),background var(--ease),color var(--ease);
+/* ---------- the list ---------- */
+.row{
+  display:flex;align-items:center;gap:12px;width:100%;
+  background:#fff;border:0;border-bottom:1px solid var(--line);
+  padding:12px 14px;text-align:start;
 }
-.key:active{transform:translateY(2px)}
-.key.on{background:var(--teal);color:var(--white);border-color:var(--teal);font-weight:700}
-.key.wide{inline-size:100%;margin-top:8px}
-.key.primary{background:var(--teal);color:var(--white);border-color:var(--teal);font-weight:700}
-.key.ghost{background:var(--white);border-color:var(--line);color:var(--ink)}
-.key.sm{min-block-size:44px;padding:0 10px;font-size:14px}
-.key.chip{min-block-size:44px;border-radius:22px;font-size:14px;background:var(--white)}
-.key.chip.on{background:var(--teal);color:var(--white)}
-.stepper{display:flex;align-items:center;gap:10px}
-.stepper .key{inline-size:52px;padding:0;font-size:22px;font-weight:700}
-.stepper .val{font-size:30px;font-weight:800;min-inline-size:72px;text-align:center;font-variant-numeric:tabular-nums}
+.row:last-of-type{border-bottom:0}
+.row:hover{background:#FBFCFE}
+.row.off .nm,.row.off .hrs{opacity:.42}
+.ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
+.ico svg{width:19px;height:19px}
+.rowmain{flex:1;min-width:0}
+.nm{font-weight:600;font-size:15px;line-height:1.3;display:block;
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{display:block;font-size:12px;color:var(--mute);margin-top:2px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrs{font-weight:700;font-size:15px;color:var(--teal-ink);flex:none;white-space:nowrap}
+.row.off .hrs{color:var(--mute);text-decoration:line-through}
+.tick{
+  width:26px;height:26px;border-radius:8px;border:2px solid var(--line);
+  background:#fff;flex:none;display:grid;place-items:center;padding:0;
+}
+.tick[aria-checked="true"]{background:var(--teal);border-color:var(--teal)}
+.tick svg{width:15px;height:15px;color:#fff;opacity:0}
+.tick[aria-checked="true"] svg{opacity:1}
+
+/* ---------- cart total ---------- */
+.total{
+  background:var(--deep);color:#fff;padding:16px;
+  display:flex;align-items:center;gap:14px;
+}
+.total .lbl{font-size:13px;color:#C7D0DD;font-weight:500}
+.total .big{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.5px}
+.total .unit{font-size:12.5px;color:var(--gold);font-weight:700;margin-top:3px}
+.total .grow{flex:1}
+.total .free{font-size:12.5px;color:#C7D0DD;margin-top:7px;line-height:1.45}
+
+/* ---------- empty state ---------- */
+.empty{padding:34px 20px;text-align:center}
+.empty h3{margin:0 0 6px;font-size:17px}
+.empty p{margin:0 0 18px;color:var(--mute);font-size:13.5px;line-height:1.6}
+.btn{
+  background:var(--teal);color:#fff;border:0;border-radius:12px;
+  padding:12px 20px;font-weight:700;font-size:15px;
+}
+.btn:hover{background:var(--teal-ink)}
+.btn.ghost{background:#fff;color:var(--teal-ink);border:1.5px solid var(--line)}
+.btn.ghost:hover{background:var(--panel)}
+.btn.block{display:block;width:100%}
+.btn.gold{background:var(--gold);color:var(--deep)}
+.btn.gold:hover{background:#d8ba63}
+
+/* ---------- discovery questions ---------- */
+.disc{margin-top:14px}
+.disc summary{
+  list-style:none;cursor:pointer;color:var(--teal-ink);font-weight:600;font-size:13.5px;
+  padding:10px 2px;
+}
+.disc summary::-webkit-details-marker{display:none}
+.disc ul{margin:4px 0 0;padding:0 18px 0 0}
+.disc li{color:var(--mute);font-size:13px;line-height:1.75}
+
+/* ---------- bottom navigation ---------- */
+nav.bar{
+  position:fixed;inset-inline:0;bottom:0;z-index:30;
+  background:#fff;border-top:1px solid var(--line);
+  display:flex;padding-bottom:env(safe-area-inset-bottom);
+}
+nav.bar button{
+  flex:1;background:none;border:0;padding:10px 4px 12px;
+  display:flex;flex-direction:column;align-items:center;gap:4px;
+  color:var(--mute);font-size:11.5px;font-weight:600;
+}
+nav.bar button svg{width:21px;height:21px}
+nav.bar button[aria-current="page"]{color:var(--teal-ink)}
+nav.bar .pill{font-size:11px;font-weight:700;background:var(--panel);
+  border-radius:20px;padding:1px 7px;color:var(--ink)}
+
+/* ---------- the sheet (new / edit item) ---------- */
+.scrim{position:fixed;inset:0;background:rgba(4,9,26,.55);z-index:40;display:grid;align-items:end}
+.scrim[hidden]{display:none}
+.sheet{
+  background:#fff;width:100%;max-width:var(--sheet-max);margin:0 auto;
+  border-radius:20px 20px 0 0;max-height:94vh;display:flex;flex-direction:column;
+}
+@media(min-width:700px){
+  .scrim{align-items:center}
+  .sheet{border-radius:20px;max-height:88vh}
+}
+.sheethead{
+  background:var(--deep);color:#fff;padding:16px;border-radius:20px 20px 0 0;
+  display:flex;align-items:center;gap:14px;flex:none;
+}
+.sheethead .t{font-size:13px;color:#C7D0DD;font-weight:600}
+.sheethead .n{font-size:30px;font-weight:800;line-height:1.05}
+.sheethead .u{font-size:12px;color:var(--gold);font-weight:700}
+.sheetbody{padding:16px;overflow:auto;flex:1}
+.sheetfoot{padding:12px 16px calc(12px + env(safe-area-inset-bottom));
+  border-top:1px solid var(--line);display:flex;gap:10px;flex:none;background:#fff;
+  border-radius:0 0 20px 20px}
+.sheetfoot .btn{flex:1}
+
+.q{margin-bottom:20px}
+.q > label,.qlabel{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+  font-weight:700;font-size:14.5px;margin-bottom:9px}
 .field{
-  inline-size:100%;min-block-size:52px;padding:0 14px;
-  border:1px solid var(--line);border-radius:14px;background:var(--white);
+  width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;
+  background:var(--panel);font-size:16px;
 }
-.hint{font-size:12px;color:var(--mute);margin-top:6px}
-.hint.warn{color:var(--gold-dark)}
-.err{font-size:13px;color:#B3261E;margin-top:6px;min-block-size:0}
-.inline-link{background:none;border:0;padding:4px 0;color:var(--teal-ink);text-decoration:underline;font-size:13px;min-block-size:44px}
-.drawer{border:1px solid var(--line);border-radius:16px;padding:12px;margin-top:10px;background:var(--white)}
-.drawer h3{margin:0 0 10px;font-size:15px;font-weight:700}
-.qblock{margin-top:14px}
-.row-split{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.pill{font-size:12px;color:var(--mute);background:var(--panel);border:1px solid var(--line);border-radius:999px;padding:4px 10px}
-
-/* ---------- tape ---------- */
-#tape{border-top:1px dashed var(--line);padding-top:10px}
-.taperow{
-  display:flex;align-items:center;gap:10px;inline-size:100%;
-  background:none;border:0;border-bottom:1px solid var(--line);
-  padding:10px 4px;text-align:start;min-block-size:52px;
+.field:focus{background:#fff;border-color:var(--teal);outline:none}
+.chips{display:flex;flex-wrap:wrap;gap:8px}
+.chip{
+  background:#fff;border:1.5px solid var(--line);border-radius:11px;
+  padding:9px 13px;font-size:13.5px;font-weight:600;color:var(--ink);
 }
-.taperow:last-of-type{border-bottom:0}
-.taperow .nm{flex:1;min-inline-size:0;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
-.taperow .meta{font-size:12px;color:var(--mute);font-weight:400}
-.taperow .hrs{font-weight:800;font-variant-numeric:tabular-nums;white-space:nowrap}
-.taperow.big .dot{inline-size:8px;block-size:8px;border-radius:50%;background:var(--gold);flex:none}
-.taperow.flash{background:#FFF8E6}
-.tapetotal{display:flex;justify-content:space-between;gap:10px;border-top:2px dashed var(--line);margin-top:6px;padding-top:10px;font-weight:800}
-.taperow.open{background:var(--panel);border-radius:12px}
+.chip:hover{border-color:var(--teal)}
+.chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
+.chip.sm{padding:7px 11px;font-size:12.5px}
+.freqbtn{
+  background:var(--gold);border:0;color:var(--deep);border-radius:9px;
+  padding:4px 10px;font-weight:700;font-size:14px;
+}
+.freqbtn:hover{background:#d8ba63}
+.hint{font-size:12.5px;color:var(--mute);margin-top:8px;line-height:1.55}
+.hint.warn{color:var(--gold-dark);font-weight:600}
+.inline-link{background:none;border:0;color:var(--teal-ink);
+  text-decoration:underline;font-size:13px;padding:4px 0;font-weight:600}
 
-/* ---------- toolbar ---------- */
-#toolbar{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
-#toolbar .key{flex:1 1 44%;font-size:14px}
-#formula{font-size:11px;color:var(--mute);margin-top:14px;line-height:1.6}
+/* ---------- teams ---------- */
+.team{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
+.team:last-child{border-bottom:0}
+.team input[type=text]{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--line);
+  border-radius:10px;background:var(--panel);font-size:15px}
+.team input[type=text]:focus{background:#fff;border-color:var(--teal);outline:none}
+.stepper{display:flex;align-items:center;gap:2px;flex:none;
+  border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
+.stepper button{background:#fff;border:0;width:34px;height:38px;font-size:19px;font-weight:700;color:var(--teal-ink)}
+.stepper button:hover{background:var(--panel)}
+.stepper input{width:48px;height:38px;border:0;text-align:center;font-weight:700;font-size:15px;background:#fff}
+.stepper input:focus{outline:none;background:var(--panel)}
+.teamcount{font-size:12px;color:var(--mute);flex:none}
 
-/* ---------- summary ---------- */
-#summary{max-inline-size:760px;margin-inline:auto;padding:24px 16px}
-#summary h1{font-size:30px;font-weight:800;color:var(--gold-dark);margin:0 0 4px}
-.sum-num{font-size:clamp(56px,12vw,96px);font-weight:800;line-height:1;color:var(--teal-ink);font-variant-numeric:tabular-nums}
-.sum-sub{font-size:18px;color:var(--mute);margin-top:6px}
-.bar{block-size:12px;background:var(--panel);border-radius:999px;overflow:hidden}
-.bar i{display:block;block-size:100%;background:var(--teal)}
-.bar.gold i{background:var(--gold)}
-.sum-block{margin-top:26px}
-.goldline{inline-size:56px;block-size:3px;background:var(--gold);border-radius:2px;margin:8px 0 16px}
+/* ---------- dashboard ---------- */
+.dash-num{font-size:60px;font-weight:800;line-height:.95;color:var(--teal-ink);letter-spacing:-1.5px}
+.dash-sub{color:var(--mute);font-size:14px;margin-top:8px;line-height:1.6}
+.block{padding:18px 16px}
+.block + .block{border-top:1px solid var(--line)}
+.block h3{margin:0 0 12px;font-size:14px;font-weight:700;color:var(--gold-dark)}
+.posrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
+.person{width:34px;height:46px;flex:none;color:var(--gold)}
+.posmore{font-size:13px;font-weight:700;color:var(--gold-dark)}
+.poscap{margin-top:10px;font-size:13px;color:var(--mute);line-height:1.6}
+.poscap b{color:var(--gold-dark)}
+.bar-item{margin-bottom:13px}
+.bar-item:last-child{margin-bottom:0}
+.bar-top{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;margin-bottom:5px}
+.bar-top .v{font-weight:700;color:var(--teal-ink);flex:none}
+.bar-track{height:9px;background:var(--panel);border-radius:6px;overflow:hidden}
+.bar-fill{height:100%;background:var(--teal);border-radius:6px}
+.bar-item.lead .bar-fill{background:var(--gold)}
+.bar-item.lead .bar-top .v{color:var(--gold-dark)}
 
 /* ---------- snackbar ---------- */
-#snack{
-  position:fixed;inset-block-end:16px;inset-inline:16px;
-  max-inline-size:420px;margin-inline:auto;
-  background:var(--ink);color:var(--white);
-  border-radius:14px;padding:12px 14px;
-  display:flex;align-items:center;justify-content:space-between;gap:12px;z-index:60;
+.snack{
+  position:fixed;inset-inline:12px;bottom:calc(var(--bar) + 12px + env(safe-area-inset-bottom));
+  max-width:520px;margin:0 auto;background:var(--deep);color:#fff;
+  border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;
+  z-index:50;font-size:13.5px;box-shadow:0 10px 30px rgba(4,9,26,.3);
 }
-#snack button{background:none;border:0;color:var(--gold);font-weight:700;min-block-size:44px}
+.snack[hidden]{display:none}
+.snack .grow{flex:1}
+.snack button{background:none;border:0;color:var(--gold);font-weight:700;font-size:13.5px}
 
-@media (min-width:760px){
-  #device{max-inline-size:var(--device);margin-block:32px}
+/* ---------- menu ---------- */
+.menu{
+  position:fixed;z-index:45;top:calc(58px + env(safe-area-inset-top));inset-inline-end:12px;
+  background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;
+  box-shadow:0 14px 40px rgba(4,9,26,.18);min-width:210px;
 }
-
-/* WAIVES calculator device — visual design layer */
-html,body{min-inline-size:0}
-body{overflow-x:hidden;line-height:1.45}
-button,input{font-family:'Heebo',sans-serif}
-:focus-visible{outline:3px solid var(--teal);outline-offset:3px}
-#device{
-  inline-size:min(calc(100% - 24px),var(--device));
-  margin:12px auto 28px;padding:12px 12px 18px;
-  border-radius:28px;background:var(--panel);
-  box-shadow:0 16px 34px rgba(27,36,54,.10),inset 0 1px 0 var(--white);
-}
-.brand{padding:3px 7px 10px}
-.brand .sub{font-size:13px;font-weight:500}
-.screen{
-  inset-block-start:6px;padding:15px 18px 16px;border:1px solid var(--deep);
-  box-shadow:0 8px 18px rgba(4,9,26,.18);
-}
-.histline{
-  direction:rtl;text-align:start;font-size:13px;color:var(--teal);min-block-size:20px;font-weight:500;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.mainrow{direction:ltr;justify-content:space-between;gap:16px;min-inline-size:0}
-.numwrap{direction:ltr;justify-content:flex-start;gap:10px;text-align:start}
-.num{font-size:clamp(64px,13vw,88px);line-height:.94;letter-spacing:-2px;white-space:nowrap}
-.unit{direction:rtl;font-size:15px;line-height:1.15;max-inline-size:72px}
-.subline{
-  direction:rtl;text-align:start;font-size:15px;color:rgba(255,255,255,.78);
-  margin-block-start:5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;
-}
-.est{font-size:12px;color:rgba(255,255,255,.62);margin-block-start:2px}
-.ringwrap{direction:ltr;max-inline-size:160px;overflow:hidden}
-.ringwrap svg{flex:none}
-
-section{margin-block-start:12px}
-#keys{padding:4px 4px 0}
-#hookTitle{font-size:20px!important;line-height:1.25;margin:0 2px 10px!important}
-#taskEditor{display:grid;gap:8px}
-.qblock{
-  margin:0;padding:12px;border:1px solid var(--line);border-radius:17px;background:var(--panel);
-  box-shadow:4px 4px 9px rgba(27,36,54,.09),-4px -4px 9px var(--white);
-}
-.qlabel{font-size:15px;margin-block-end:7px}
-.key{
-  min-block-size:52px;padding-inline:15px;border-radius:14px;background:var(--panel);font-weight:600;
-  box-shadow:4px 5px 9px rgba(27,36,54,.13),-4px -4px 8px var(--white),inset 0 1px 0 var(--white);
-  transition:transform 70ms cubic-bezier(.2,.8,.2,1),box-shadow 70ms cubic-bezier(.2,.8,.2,1),border-color 70ms cubic-bezier(.2,.8,.2,1),background-color 70ms cubic-bezier(.2,.8,.2,1),color 70ms cubic-bezier(.2,.8,.2,1);
-}
-@media (hover:hover){
-  .key:hover{color:var(--teal-ink);border-color:var(--teal);transform:translateY(-1px);box-shadow:5px 6px 10px rgba(27,36,54,.14),-4px -4px 8px var(--white),inset 0 1px 0 var(--white)}
-  .key.on:hover,.key.primary:hover{color:var(--white);background:var(--teal-ink);border-color:var(--teal-ink)}
-}
-.key:active,.key.on:active,.key.primary:active,.key.ghost:active{
-  transform:translateY(3px);box-shadow:1px 1px 2px rgba(27,36,54,.14),-1px -1px 2px var(--white),inset 2px 2px 4px rgba(27,36,54,.12);transition-duration:60ms;
-}
-.key.on,.key.primary{
-  background:var(--teal);color:var(--white);border-color:var(--teal);font-weight:700;
-  box-shadow:3px 4px 8px rgba(27,36,54,.17),-3px -3px 7px var(--white),inset 0 1px 0 rgba(255,255,255,.28);
-}
-.key.wide{margin-block-start:8px;min-block-size:54px}
-.key.ghost,.key.chip{background:var(--panel)}
-.key.sm{padding-inline:12px}
-.key.chip.on{background:var(--teal);color:var(--white)}
-.stepper .val{color:var(--teal-ink)}
-.field{
-  border-radius:13px;background:var(--white);
-  box-shadow:inset 2px 2px 5px rgba(27,36,54,.09),inset -2px -2px 4px var(--white);
-}
-.field:focus{border-color:var(--teal)}
-.hint{font-size:13px}.err{color:var(--gold-dark)}
-.inline-link{font-size:14px;text-underline-offset:3px}
-.drawer{
-  border-radius:17px;padding:13px;background:var(--panel);
-  box-shadow:inset 2px 2px 5px rgba(27,36,54,.07),inset -2px -2px 4px var(--white);
-}
-.drawer h3{font-size:16px;font-weight:800}.drawer .qblock{margin-block-start:8px}
-.pill{font-size:13px;background:var(--white)}
-
-#tape{padding:10px 6px 0}
-.taperow{padding:8px 7px;min-block-size:50px;border-radius:10px}
-.taperow .nm{font-weight:600}.taperow .hrs{color:var(--teal-ink)}
-.taperow.flash,.taperow.open{background:var(--white)}
-#dreamCard{padding:14px;border-block:1px solid var(--line)}
-#toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:9px;margin-block-start:14px;padding:4px}
-#toolbar .key{inline-size:100%}
-#toolbar .key:first-child{grid-column:1/-1;background:var(--teal);border-color:var(--teal);color:var(--white)}
-#formula{font-size:12px;margin:14px 6px 0;line-height:1.55}
-
-#summary{
-  inline-size:min(calc(100% - 24px),820px);max-inline-size:none;margin:20px auto 40px;padding:22px 28px 30px;
-  border:1px solid var(--line);border-radius:26px;background:var(--white);box-shadow:0 16px 36px rgba(27,36,54,.10);
-}
-#summary .brand{padding-inline:0;border-block-end:1px solid var(--line);margin-block-end:20px}
-#summary h1{font-size:clamp(30px,5vw,44px);line-height:1.12}
-#summary h2{font-size:24px;color:var(--ink);margin:0 0 10px}
-.sum-num{font-size:clamp(72px,13vw,112px);line-height:.92;letter-spacing:-2px}
-.sum-sub{margin-block-start:8px}
-.bar{block-size:14px;border:1px solid var(--line);margin-block-start:6px}
-.bar i{border-radius:inherit}
-.sum-block{margin-block-start:24px;padding-block-start:20px;border-block-start:1px solid var(--line)}
-#summary .sum-block[style]{
-  background:var(--deep)!important;border-radius:20px!important;padding:20px!important;
-  display:flex!important;align-items:center!important;gap:18px!important;color:var(--white)!important;border-block-start:0;
-}
-#summary .sum-block svg{display:block}
-#summary .sum-block>svg{padding:12px 0 2px;border-radius:16px;background:var(--panel)}
-.goldline{inline-size:64px}
-#summary>.key{margin-block-start:26px}
-
-@media (min-width:760px){
-  #device{margin-block:28px 44px;padding:16px 16px 22px}
-  .screen{padding:18px 22px 19px}.qblock{padding:14px}.keyrow{gap:9px}
-}
-@media (max-width:480px){
-  #device{inline-size:100%;margin:0;border-inline:0;border-block-start:0;border-radius:0 0 22px 22px;padding:8px 8px 16px}
-  .brand{padding-block:2px 7px}.brand .sub{font-size:12px}
-  .screen{inset-block-start:4px;border-radius:17px;padding:10px 12px 11px}.histline{font-size:12px;min-block-size:17px}
-  .mainrow{gap:8px}.num{font-size:clamp(64px,18vw,76px)}.unit{font-size:13px;max-inline-size:58px}
-  .ringwrap{max-inline-size:76px}.ringwrap svg{inline-size:64px;block-size:64px}.subline{font-size:13px;margin-block-start:2px}.est{display:none}
-  .qblock{padding:10px}.key{padding-inline:12px}.keyrow{gap:7px}#hookTitle{font-size:18px!important}
-  #summary{inline-size:100%;margin:0;border:0;border-radius:0;padding:16px 14px 24px;box-shadow:none}
-  #summary .sum-block[style]{align-items:flex-start!important;flex-direction:column!important}.sum-sub{font-size:16px}
-  .row-split{align-items:flex-start}.taperow .meta{display:block}
-}
-
-/* Hierarchy and composition refinements */
-.numwrap{
-  flex-direction:column;align-items:flex-start;justify-content:center;gap:1px;
-}
-.unit{
-  max-inline-size:none;white-space:nowrap;font-size:14px;line-height:1.1;
-}
-
-#keys{
-  display:grid;grid-template-columns:repeat(2,minmax(0,1fr));column-gap:10px;row-gap:0;
-}
-#keys>#hookTitle,#keys>#taskEditor,#keys>#btnMore,#keys>.drawer{grid-column:1/-1}
-#taskEditor .qblock>.keyrow{
-  display:grid;grid-template-columns:repeat(auto-fit,minmax(84px,1fr));inline-size:100%;
-}
-#taskEditor .qblock>.keyrow>.key{inline-size:100%;min-inline-size:0}
-#taskEditor .stepper{
-  display:grid;grid-template-columns:52px minmax(72px,1fr) 52px;inline-size:100%;gap:12px;
-}
-#taskEditor .stepper .val{inline-size:100%;min-inline-size:0}
-#taskEditor>.inline-link:last-child{
-  justify-self:end;margin-block-start:8px;padding-inline:7px;color:var(--mute);
-  font-size:13px;font-weight:400;text-decoration:none;
-}
-#taskEditor>.inline-link:last-child:hover{text-decoration:underline}
-
-#btnMore{grid-column:1/-1}
-#btnMore.ghost{
-  color:var(--teal-ink);border-color:var(--teal);background:var(--panel);
-  box-shadow:3px 4px 7px rgba(27,36,54,.10),-3px -3px 7px var(--white),inset 0 1px 0 var(--white);
-}
-#btnQuestions,#btnGroups{
-  inline-size:100%;min-block-size:48px;margin-block-start:7px;padding-block:8px;padding-inline:10px;
-  border-color:transparent;background:transparent;color:var(--mute);font-size:13px;font-weight:500;
-  line-height:1.25;box-shadow:none;text-decoration:underline;text-decoration-color:var(--line);text-underline-offset:4px;
-}
-#btnQuestions:hover,#btnGroups:hover{
-  color:var(--teal-ink);border-color:var(--line);background:var(--white);box-shadow:none;transform:none;
-}
-#btnQuestions:active,#btnGroups:active{
-  transform:translateY(1px);box-shadow:inset 1px 1px 3px rgba(27,36,54,.09);
-}
-
-#toolbar{border-block-start:1px solid var(--line);padding-block-start:13px}
-#toolbar .key,#toolbar .key:first-child{
-  grid-column:auto;background:var(--white);border-color:var(--line);color:var(--mute);font-weight:500;
-  box-shadow:none;
-}
-#toolbar .key:hover,#toolbar .key:first-child:hover{
-  color:var(--teal-ink);border-color:var(--teal);background:var(--white);box-shadow:none;transform:none;
-}
-#toolbar .key:active,#toolbar .key:first-child:active{
-  transform:translateY(1px);box-shadow:inset 1px 1px 3px rgba(27,36,54,.09);
-}
-
-.histline:empty::before{content:'הזמן שיכול לחזור לצוות';opacity:.9}
-#taskEditor>.qblock:only-child{
-  padding:18px;text-align:center;border-color:var(--line);background:var(--white);
-}
-#taskEditor>.qblock:only-child .qlabel{font-size:17px;margin-block-end:12px}
-#taskEditor>.qblock:only-child .key{max-inline-size:360px;margin-inline:auto}
-
-@media (max-width:480px){
-  .numwrap{gap:0}.unit{max-inline-size:none;font-size:13px;white-space:nowrap}
-  #taskEditor .qblock>.keyrow{grid-template-columns:repeat(auto-fit,minmax(70px,1fr))}
-  #taskEditor .stepper{grid-template-columns:52px minmax(60px,1fr) 52px;gap:8px}
-  #btnQuestions,#btnGroups{font-size:12px;padding-inline:6px}
-}
-@media (prefers-reduced-motion:reduce){
-  *{transition:none !important;animation:none !important}
-}
+.menu[hidden]{display:none}
+.menu button{display:block;width:100%;text-align:start;background:#fff;border:0;
+  padding:13px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--line)}
+.menu button:last-child{border-bottom:0}
+.menu button:hover{background:var(--panel)}
+.foot{margin-top:18px;font-size:11.5px;color:var(--mute);line-height:1.65;text-align:center}
 </style>
 </head>
 <body>
-
 <svg aria-hidden="true" focusable="false" style="position:absolute;width:0;height:0;overflow:hidden">
   <symbol id="mkBars" viewBox="0 0 1152 1110"><g transform="translate(0.000000,1110.000000) scale(0.100000,-0.100000)"
 fill="currentColor" stroke="none">
@@ -471,68 +362,98 @@ fill="currentColor" stroke="none">
 </g></symbol>
 </svg>
 
-<main id="device">
-  <header class="brand">
-    <svg class="mark" aria-hidden="true"><use href="#mkBars"/></svg>
-    <span class="wm">w<em>ai</em>ves</span>
-    <p class="sub">מחשבון האבנים הקטנות</p>
-  </header>
+<header class="top">
+  <span class="brand">
+    <svg class="mark" aria-hidden="true"><use href="#mkBars"></use></svg>
+    <h1>מחשבון האבנים הקטנות</h1>
+  </span>
+  <span class="grow"></span>
+  <button class="icobtn" id="btnMenu" aria-haspopup="true" aria-expanded="false" aria-label="עוד פעולות">
+    <svg viewBox="0 0 24 24" width="20" height="20" aria-hidden="true" fill="currentColor"><circle cx="5" cy="12" r="2"/><circle cx="12" cy="12" r="2"/><circle cx="19" cy="12" r="2"/></svg>
+  </button>
+  <button class="newbtn" id="btnNew">
+    <svg viewBox="0 0 24 24" width="17" height="17" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg>
+    חדש
+  </button>
+</header>
 
-  <section class="screen" id="screen" aria-live="polite" aria-atomic="true">
-    <div class="histline" id="histline"></div>
-    <div class="mainrow">
-      <div class="numwrap">
-        <bdi class="num" id="bigNum">0</bdi>
-        <span class="unit" id="bigUnit">שעות בחודש</span>
-      </div>
-      <div class="ringwrap" id="ringWrap"></div>
-    </div>
-    <div class="subline" id="subLine">כתבו משימה או בחרו דוגמה כדי להתחיל</div>
-    <div class="est" id="estLabel" hidden>הערכה ראשונית · אפשר לדייק</div>
-  </section>
+<div class="menu" id="menu" hidden role="menu"></div>
 
-  <section id="keys">
-    <h1 id="hookTitle" style="font-size:19px;font-weight:800;margin:0 0 12px">משימה אחת. נראה כמה זמן היא שווה.</h1>
-    <div id="taskEditor"></div>
-    <button class="key wide primary" id="btnMore">+ עוד משימה קטנה</button>
-    <button class="key wide ghost" id="btnQuestions">שאלות שעוזרות למצוא משימות</button>
-    <button class="key wide ghost" id="btnGroups">רוצים לארגן לפי צוותים?</button>
-    <div class="drawer" id="questionsCard" hidden></div>
-    <div class="drawer" id="groupsCard" hidden></div>
-  </section>
-
-  <section id="tape"></section>
-  <section id="dreamCard" hidden></section>
-
-  <nav id="toolbar">
-    <button class="key ghost" id="btnSummary">סיכום</button>
-    <button class="key ghost" id="btnCopy">העתקת סיכום</button>
-    <button class="key ghost" id="btnShare">קישור לתרחיש</button>
-    <button class="key ghost" id="btnDemo">דוגמה</button>
-    <button class="key ghost" id="btnReset">תרחיש חדש</button>
-  </nav>
-
-  <footer id="formula"></footer>
+<main class="wrap">
+  <section id="screenList"></section>
+  <section id="screenTeams" hidden></section>
+  <section id="screenDash" hidden></section>
+  <p class="foot" id="formula"></p>
 </main>
 
-<section id="summary" hidden></section>
+<nav class="bar" aria-label="מסכים">
+  <button id="navList" aria-current="page">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M8 6h12M8 12h12M8 18h12M3.5 6h.01M3.5 12h.01M3.5 18h.01"/></svg>
+    <span>הרשימה</span>
+  </button>
+  <button id="navDash">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 20h18M7 20v-7M12 20V6M17 20v-10"/></svg>
+    <span>דשבורד</span>
+  </button>
+  <button id="navTeams">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19"/><circle cx="10" cy="7.5" r="3.2"/><path d="M20 19v-1.5a3.5 3.5 0 0 0-2.6-3.4M15.5 4.6a3.2 3.2 0 0 1 0 5.9"/></svg>
+    <span>צוותים</span>
+  </button>
+</nav>
 
-<div id="snack" hidden><span id="snackText"></span><button id="snackBtn">בטל</button></div>
+<div class="snack" id="snack" hidden>
+  <span class="grow" id="snackText"></span>
+  <button id="snackBtn" hidden>בטל</button>
+</div>
+
+<div class="scrim" id="scrim" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" id="sheet"></div>
+</div>
 
 <script>
-"use strict";
+/* ============================================================
+   מחשבון האבנים הקטנות · WAIVES
+   One file, no build step, no server. Seven sections:
+     1 catalog + constants   2 model + validation   3 compute
+     4 persist / encode      5 render               6 events    7 boot
+   Rules that hold everywhere in this file:
+     - user text is written with textContent, NEVER innerHTML;
+     - every value that arrives from a link or from storage is clamped;
+     - validation never throws;
+     - nothing derived is stored: compute(state) is the single source.
+   ============================================================ */
+
 /* ============================================================
    1. CATALOG + CONSTANTS
    ============================================================ */
-const FTE_MONTH = 182;      // hours in a full-time month (42h/week)
-const DAYS_MONTH = 21.7;
-const WEEKS_MONTH = 4.33;
+/* Galli's estimate, 2026-11-21: a 9-hour day, 20 working days a month.
+   Weekly work is multiplied by calendar weeks (4.5) while daily work is
+   multiplied by working days (20) — a month holds about four and a half
+   weeks, but you only work twenty of their days. */
+const FTE_MONTH = 180;      // hours in a full-time month (20 × 9)
+const DAYS_MONTH = 20;
+const WEEKS_MONTH = 4.5;
+const DAY_HOURS = 9;
 
 const FREQS = ['day','week','month','quarter'];
-const FREQ_LABEL = {day:'כל יום', week:'כל שבוע', month:'כל חודש', quarter:'כל רבעון'};
+const FREQ_ONCE = {day:'פעם ביום', week:'פעם בשבוע', month:'פעם בחודש', quarter:'פעם ברבעון'};
 const FREQ_SHORT = {day:'יומי', week:'שבועי', month:'חודשי', quarter:'רבעוני'};
 const AUTOS = [0.25, 0.5, 0.7, 0.9];
 const AUTO_LABEL = {0.9:'כמעט הכול', 0.7:'רוב', 0.5:'חצי', 0.25:'קצת'};
+const TIME_KEYS = [15, 30, 45, 60, 120];
+
+/* Six domains. Each row in the list wears its domain's colour, so a long
+   list can be read at a glance without anyone having to pick an icon.
+   The colours are WAIVES tokens only. */
+const DOMAINS = [
+  {name:'משאבי אנוש וגיוס',      color:'var(--teal)',      icon:'people'},
+  {name:'כספים והנהלת חשבונות',  color:'var(--gold-dark)', icon:'doc'},
+  {name:'רכש ותפעול',            color:'var(--teal-ink)',  icon:'box'},
+  {name:'שירות, מכירות ושיווק',  color:'var(--gold)',      icon:'chat'},
+  {name:'לוגיסטיקה',             color:'var(--mute)',      icon:'truck'},
+  {name:'שירותי משרד',           color:'var(--deep)',      icon:'clip'}
+];
+const DOMAIN_FALLBACK = {color:'var(--mute)', icon:'dot'};
 
 const CATALOG = [
  {domain:'משאבי אנוש וגיוס', q:'באיזה שלב בגיוס או בקליטה הכי הרבה הלוך-חזור?', roles:[
@@ -619,25 +540,29 @@ const CATALOG = [
      ['מעקב משימות פתוחות של המנהל',30,'day']]}]}
 ];
 
-const GENERAL_Q = [
-  ['מה עשית אתמול שתעשה גם מחר בדיוק באותה צורה?','מה עשיתי אתמול שאעשה גם מחר בדיוק באותה צורה?'],
-  ['מה אתה מעתיק ממקום אחד למקום אחר: ממייל לטבלה, מטבלה למערכת?','מה אני מעתיק ממקום אחד למקום אחר?'],
-  ['על מה אתה מחכה לאחרים כדי להמשיך לעבוד?','על מה אני מחכה לאחרים כדי להמשיך?'],
-  ['איזו שאלה אתה עונה עליה שוב ושוב?','איזו שאלה אני עונה עליה שוב ושוב?'],
-  ['מה אתה בודק או מתקן ידנית, כי אין לך אמון במה שהגיע?','מה אני בודק או מתקן ידנית?'],
-  ['איזו משימה היית שמח שתיעלם מחר בבוקר?','איזו משימה הייתי שמח שתיעלם מחר בבוקר?']
+/* The ready-made keys inside the form: name, minutes, frequency, domain index. */
+const QUICK = [
+  ['מיון קורות חיים',120,'day',0],
+  ['הקלדת חשבוניות',90,'day',1],
+  ['מענה לשאלות חוזרות',60,'day',3],
+  ['עדכון CRM',45,'day',3],
+  ['תיאום פגישות ביומן',60,'day',5],
+  ['הפקת דוחות חודשיים',120,'month',1],
+  ['מעקב אחרי תשלומים',45,'day',1],
+  ['קליטת עובד חדש',180,'week',0],
+  ['העברת נתונים בין מערכות',60,'day',2]
 ];
 
-const HOOK_CHIPS = [
-  ['מיון קורות חיים',120,'day'],
-  ['הקלדת חשבוניות',90,'day'],
-  ['מענה לשאלות חוזרות',60,'day'],
-  ['עדכון CRM',45,'day']
+const DISCOVERY = [
+  'מה עשית אתמול שתעשה גם מחר בדיוק באותה צורה?',
+  'מה אתה מעתיק ממקום אחד למקום אחר: ממייל לטבלה, מטבלה למערכת?',
+  'על מה אתה מחכה לאחרים כדי להמשיך לעבוד?',
+  'איזו שאלה אתה עונה עליה שוב ושוב?',
+  'מה אתה בודק או מתקן ידנית, כי אין לך אמון במה שהגיע?',
+  'איזו משימה היית שמח שתיעלם מחר בבוקר?'
 ];
 
 const DREAM_CHIPS = ['פרויקט חדש שמחכה','פיתוח מקצועי לצוות','שירות טוב יותר ללקוחות','צמיחה ולקוחות חדשים','זמן לחשוב ולתכנן','פחות שעות נוספות'];
-
-const TIME_KEYS = [15,30,60,120,180];
 
 /* ============================================================
    2. MODEL + VALIDATION
@@ -648,21 +573,31 @@ function uid(p){ return p + Math.random().toString(36).slice(2,8) + Date.now().t
 function clamp(n, lo, hi){ n = Number(n); if(!Number.isFinite(n)) return lo; return Math.min(hi, Math.max(lo, n)); }
 function str(s, max){ return (typeof s === 'string' ? s : '').slice(0, max); }
 
-function emptyState(){
-  return { v:1, mode:'talk', groups:[], dream:{chips:[], text:''} };
+function emptyState(){ return { v:2, groups:[], dream:{chips:[], text:''} }; }
+function newGroup(name){
+  return { id:uid('g'), name:name || 'הצוות שלי', people:1, tasks:[] };
 }
-function newGroup(name, implicit){
-  return { id:uid('g'), name:name||'הצוות שלי', domain:null, people:1, implicit:!!implicit, tasks:[] };
+function newTask(name, minutes, freq, dom){
+  return { id:uid('t'), name:name||'', minutes:minutes||0, freq:freq||'day',
+           auto:0.7, on:true, dom:(typeof dom === 'number' ? dom : null) };
 }
-function newTask(name, minutes, freq, src){
-  return { id:uid('t'), name:name||'', minutes:minutes||0, freq:freq||'day', auto:0.7, refined:false, src:src||null };
+/* A task's icon follows its domain. A name typed by hand is matched against the
+   catalog once, on the way in, so the list still looks sorted without asking. */
+function domainOf(name){
+  const n = String(name || '').trim();
+  if(!n) return null;
+  for(let i=0; i<CATALOG.length; i++)
+    for(const r of CATALOG[i].roles)
+      for(const t of r.tasks)
+        if(t[0] === n || t[0].indexOf(n) === 0 || n.indexOf(t[0]) === 0) return i;
+  return null;
 }
-
-/* A group stops being implicit the moment the user takes ownership of it. */
-function markExplicit(g){ if(g) g.implicit = false; }
+function domainMeta(i){
+  return (typeof i === 'number' && DOMAINS[i]) ? DOMAINS[i] : DOMAIN_FALLBACK;
+}
 
 function ensureGroup(){
-  if(!state.groups.length) state.groups.push(newGroup('הצוות שלי', true));
+  if(!state.groups.length) state.groups.push(newGroup('הצוות שלי'));
   return state.groups[0];
 }
 function allTasks(){
@@ -674,42 +609,37 @@ function findTask(id){
   for(const g of state.groups) for(const t of g.tasks) if(t.id === id) return {t, g};
   return null;
 }
-/* The hook's people control is only shown while a single, still-implicit group exists. */
-function hookOwnsPeople(){
-  return state.groups.length === 1 && state.groups[0].implicit === true;
-}
+function findGroup(id){ return state.groups.filter(g => g.id === id)[0] || null; }
 
 /* Validation never throws. Anything unknown is clamped or defaulted. */
 function sanitize(raw){
   if(!raw || typeof raw !== 'object') return null;
   const seen = new Set();
   const s = emptyState();
-  s.mode = (raw.mode === 'solo') ? 'solo' : 'talk';
   const groups = Array.isArray(raw.groups) ? raw.groups.slice(0, LIMITS.groups) : [];
   let taskCount = 0;
   for(const rg of groups){
     if(!rg || typeof rg !== 'object') continue;
-    const g = newGroup(str(rg.name, LIMITS.names) || 'הצוות שלי', rg.implicit === true);
+    const g = newGroup(str(rg.name, LIMITS.names) || 'הצוות שלי');
     while(seen.has(g.id)) g.id = uid('g');
     seen.add(g.id);
     g.people = Math.round(clamp(rg.people, LIMITS.people[0], LIMITS.people[1]));
-    g.domain = CATALOG.some(d => d.domain === rg.domain) ? rg.domain : null;
     const tasks = Array.isArray(rg.tasks) ? rg.tasks : [];
     for(const rt of tasks){
       if(!rt || typeof rt !== 'object') continue;
       if(taskCount >= LIMITS.tasks) break;
-      const t = newTask(str(rt.name, LIMITS.names), 0, 'day', str(rt.src, LIMITS.names) || null);
+      const t = newTask(str(rt.name, LIMITS.names), 0, 'day', null);
       while(seen.has(t.id)) t.id = uid('t');
       seen.add(t.id);
       t.minutes = Math.round(clamp(rt.minutes, LIMITS.minutes[0], LIMITS.minutes[1]));
       t.freq = FREQS.includes(rt.freq) ? rt.freq : 'day';
       t.auto = AUTOS.includes(Number(rt.auto)) ? Number(rt.auto) : 0.7;
-      t.refined = rt.refined === true;
+      t.on = rt.on !== false;                      // older links have no flag: everything counts
+      t.dom = (Number.isInteger(rt.dom) && DOMAINS[rt.dom]) ? rt.dom : domainOf(t.name);
       g.tasks.push(t); taskCount++;
     }
     s.groups.push(g);
   }
-  if(s.groups.length > 1) s.groups.forEach(markExplicit);
   const chips = Array.isArray(raw.dream && raw.dream.chips) ? raw.dream.chips : [];
   s.dream.chips = chips.filter(c => DREAM_CHIPS.includes(c)).slice(0, DREAM_CHIPS.length);
   s.dream.text = str(raw.dream && raw.dream.text, 400);
@@ -740,27 +670,41 @@ function compute(s){
     for(const t of g.tasks){
       const hours = (t.minutes/60) * freqFactor(t.freq) * g.people;
       rows.push({
-        id:t.id, groupId:g.id, name:t.name, people:g.people,
-        minutes:t.minutes, freq:t.freq, auto:t.auto, refined:t.refined,
+        id:t.id, groupId:g.id, groupName:g.name, name:t.name, people:g.people,
+        minutes:t.minutes, freq:t.freq, auto:t.auto, dom:t.dom, on:t.on !== false,
         hoursMonth:hours, freedMonth:hours * t.auto
       });
     }
   }
-  const exactFreed = rows.reduce((a,r) => a + r.freedMonth, 0);
-  const exactToday = rows.reduce((a,r) => a + r.hoursMonth, 0);
-  /* Under ten hours a whole-number tape lies twice: a task that really exists reads
-     "0 ש׳", and two identical rows can come out 1 and 0 because the leftover hour has
-     to land on one of them. Below that line the tape counts in tenths instead, and the
-     rows still sum exactly to the total. */
+  /* Only the ticked rows are in the cart. An unticked row still shows its own
+     number, in grey, outside the sum — so nobody has to guess why the total moved. */
+  const live = rows.filter(r => r.on && r.minutes > 0);
+  const exactFreed = live.reduce((a,r) => a + r.freedMonth, 0);
+  const exactToday = live.reduce((a,r) => a + r.hoursMonth, 0);
+  /* Under ten hours a whole-number list lies twice: a real task reads "0 ש׳", and
+     two identical tasks come out 1 and 0 because the leftover hour has to land on
+     one of them. Below that line the list counts in tenths. */
   const step = exactFreed > 0 && exactFreed < 10 ? 10 : 1;
   const target = Math.round(exactFreed * step);
   const totalShown = target / step;
-  const shown = allocate(rows.map(r => r.freedMonth * step), target);
-  rows.forEach((r,i) => { r.freedShown = shown[i] / step; });
-  let biggestId = null, best = -1;
-  for(const r of rows) if(r.freedMonth > best){ best = r.freedMonth; biggestId = r.id; }
+  const shown = allocate(live.map(r => r.freedMonth * step), target);
+  live.forEach((r,i) => { r.freedShown = shown[i] / step; });
+  rows.forEach(r => {
+    if(r.freedShown === undefined)
+      r.freedShown = Math.round(r.freedMonth * step) / step;
+  });
+
+  const byGroup = [];
+  for(const g of s.groups){
+    const mine = live.filter(r => r.groupId === g.id);
+    if(!mine.length) continue;
+    byGroup.push({id:g.id, name:g.name, people:g.people,
+                  freed:mine.reduce((a,r) => a + r.freedMonth, 0)});
+  }
+  byGroup.sort((a,b) => b.freed - a.freed);
+
   return {
-    rows,
+    rows, live,
     totals:{
       hoursToday: exactToday,
       freedMonthExact: exactFreed,
@@ -768,9 +712,8 @@ function compute(s){
       freedYear: Math.round(exactFreed * 12),
       fte: exactFreed / FTE_MONTH
     },
-    biggestId,
-    dream:{chips:s.dream.chips.slice(), text:s.dream.text},
-    mode:s.mode
+    byGroup,
+    dream:{chips:s.dream.chips.slice(), text:s.dream.text}
   };
 }
 
@@ -796,10 +739,13 @@ function b64urlDecode(s){
 /* Compact NAMED keys — adding a field never shifts the meaning of the others. */
 function pack(s){
   return {
-    v:1, m:s.mode,
+    v:2,
     g:s.groups.map(g => ({
-      n:g.name, d:g.domain, p:g.people, i:g.implicit ? 1 : 0,
-      t:g.tasks.map(t => ({n:t.name, m:t.minutes, f:FREQS.indexOf(t.freq), a:AUTOS.indexOf(t.auto), r:t.refined ? 1 : 0, s:t.src}))
+      n:g.name, p:g.people,
+      t:g.tasks.map(t => ({
+        n:t.name, m:t.minutes, f:FREQS.indexOf(t.freq), a:AUTOS.indexOf(t.auto),
+        o:t.on === false ? 0 : 1, dm:(typeof t.dom === 'number' ? t.dom : -1)
+      }))
     })),
     dc:s.dream.chips, dt:s.dream.text
   };
@@ -807,22 +753,23 @@ function pack(s){
 function unpack(o){
   if(!o || typeof o !== 'object') return null;
   return migrate({
-    v:o.v, mode:o.m,
+    v:o.v,
     groups:Array.isArray(o.g) ? o.g.map(g => ({
-      name:g && g.n, domain:g && g.d, people:g && g.p, implicit:!!(g && g.i),
+      name:g && g.n, people:g && g.p,
       tasks:Array.isArray(g && g.t) ? g.t.map(t => ({
         name:t && t.n, minutes:t && t.m,
         freq:FREQS[t && t.f], auto:AUTOS[t && t.a],
-        refined:!!(t && t.r), src:t && t.s
+        on:!(t && t.o === 0),
+        dom:(t && Number.isInteger(t.dm) && t.dm >= 0) ? t.dm : null
       })) : []
     })) : [],
     dream:{chips:o.dc, text:o.dt}
   });
 }
-/* Kept forever: every past shape must still open. */
+/* Kept forever: every past shape must still open. v1 links carry no `o` and no
+   `dm`; unpack already defaults those, so a v1 payload simply flows through. */
 function migrate(obj){
   if(!obj || typeof obj !== 'object') return null;
-  // v1 is the current shape. Future versions chain from here.
   return obj;
 }
 function save(){
@@ -849,9 +796,8 @@ function shareUrl(){
    5. RENDER
    ============================================================ */
 let state = emptyState();
-let ui = { activeTaskId:null, screen:'calc', refineOpen:false, groupsOpen:false,
-           questionsOpen:false, qOneByOne:false, qIndex:0, flashId:null, error:'' };
-let undoSnapshot = null, undoTimer = null, lastShownNumber = 0;
+let ui = { screen:'list', editId:null, draft:null, menuOpen:false };
+let undoSnapshot = null, undoTimer = null, snackTimer = null;
 
 const $ = id => document.getElementById(id);
 const nf = n => Number(n).toLocaleString('he-IL');
@@ -861,725 +807,706 @@ function el(tag, cls, text){
   if(text != null) n.textContent = text;   // user text is NEVER innerHTML
   return n;
 }
+function svgIcon(name, size){
+  const NS = 'http://www.w3.org/2000/svg';
+  const paths = {
+    people:'M15 18v-1.2a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3V18M9 8.2a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6ZM21 18v-1.2a3 3 0 0 0-2.2-2.9M14.5 2.8a3 3 0 0 1 0 5.4',
+    doc:'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4',
+    box:'M21 8 12 3 3 8l9 5 9-5ZM3 8v8l9 5 9-5V8M12 13v8',
+    chat:'M21 11.5a7.5 7.5 0 0 1-10.8 6.7L4 20l1.9-5.9A7.5 7.5 0 1 1 21 11.5Z',
+    truck:'M3 16V6h11v10M14 9h4l3 3v4h-7M7.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6ZM17.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6Z',
+    clip:'M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1ZM8 6H6.5A1.5 1.5 0 0 0 5 7.5v12A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 17.5 6H16M9 12h6M9 16h4',
+    dot:'M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z',
+    check:'m4 12.5 5 5L20 6.5'
+  };
+  const svg = document.createElementNS(NS,'svg');
+  svg.setAttribute('viewBox','0 0 24 24');
+  if(size){ svg.setAttribute('width',size); svg.setAttribute('height',size); }
+  svg.setAttribute('fill','none');
+  svg.setAttribute('stroke','currentColor');
+  svg.setAttribute('stroke-width','2');
+  svg.setAttribute('stroke-linecap','round');
+  svg.setAttribute('stroke-linejoin','round');
+  svg.setAttribute('aria-hidden','true');
+  const p = document.createElementNS(NS,'path');
+  p.setAttribute('d', paths[name] || paths.dot);
+  svg.appendChild(p);
+  return svg;
+}
 function fmtMinutes(m){
   if(m < 60) return m + ' דק׳';
   const h = m/60;
   return (Number.isInteger(h) ? h : h.toFixed(1).replace('.0','')) + ' ש׳';
 }
-function fteText(fte){
-  const n = Math.round(fte * 10) / 10;
-  return n === 1 ? 'משרה אחת' : nf(n) + (n > 1 ? ' משרות' : ' משרה');
+function fmtHours(h){
+  return nf(h) + ' ש׳';
 }
-/* grammar has to agree, or the headline reads as a typo on a shared screen */
+/* The growth frame is never detached from the number. Percent below one
+   position, "משרה ועוד 70%" above it — Galli's own wording, 2026-11-21. */
 function freeText(fte){
-  const n = Math.round(fte * 10) / 10;
-  return fteText(fte) + (n > 1 ? ' פנויות לפרויקטים' : ' פנויה לפרויקטים');
+  const pct = Math.max(0, Math.round(fte * 100));
+  const full = Math.floor(pct / 100);
+  const rem = pct - full * 100;
+  if(full === 0) return rem + '% משרה פנוי למשימות חשובות אחרות';
+  const head = full === 1 ? 'משרה' : nf(full) + ' משרות';
+  if(rem === 0) return head + (full === 1 ? ' פנויה' : ' פנויות') + ' למשימות חשובות אחרות';
+  return head + ' ועוד ' + rem + '% פנויים למשימות חשובות אחרות';
 }
 
-function render(regions){
-  const all = !regions;
-  const has = r => all || regions.indexOf(r) !== -1;
+function render(){
   const res = compute(state);
-  if(ui.screen === 'summary'){ renderSummary(res); $('device').hidden = true; $('summary').hidden = false; return; }
-  $('device').hidden = false; $('summary').hidden = true;
-  if(has('display')) renderDisplay(res);
-  if(has('keys')) renderKeys(res);
-  if(has('tape')) renderTape(res);
-  if(has('groups')) renderGroups();
-  if(has('dream')) renderDream(res);
-  if(has('display')) renderFormula(res);
+  $('screenList').hidden  = ui.screen !== 'list';
+  $('screenTeams').hidden = ui.screen !== 'teams';
+  $('screenDash').hidden  = ui.screen !== 'dash';
+  $('navList').setAttribute('aria-current', ui.screen === 'list' ? 'page' : 'false');
+  $('navDash').setAttribute('aria-current', ui.screen === 'dash' ? 'page' : 'false');
+  $('navTeams').setAttribute('aria-current', ui.screen === 'teams' ? 'page' : 'false');
+  if(ui.screen === 'list')  renderList(res);
+  if(ui.screen === 'teams') renderTeams(res);
+  if(ui.screen === 'dash')  renderDash(res);
+  renderFormula();
+  if(ui.draft) renderSheet(ui.draft);
 }
-/* The three questions are always live: there is never a button to press before
-   the calculator will accept input, however the empty state was reached. */
-function normalize(){
-  const tasks = allTasks();
-  if(!tasks.length){
-    const g = ensureGroup();
-    const t = newTask('', 0, 'day', null);
-    g.tasks.push(t);
-    ui.activeTaskId = t.id;
-  }else if(!findTask(ui.activeTaskId)){
-    ui.activeTaskId = tasks[0].t.id;
-  }
-}
-function apply(fn, regions){ fn(); normalize(); save(); render(regions); }
 
-/* ---- display ---- */
-function renderDisplay(res){
-  const t = res.totals;
-  /* "Empty" means the user has not entered anything yet — never merely a small
-     number. Telling someone to write a task while their task is on the screen is
-     the calculator calling itself broken. */
-  const empty = !res.rows.some(r => r.minutes > 0);
-  const num = $('bigNum');
-  num.textContent = empty ? '0' : nf(t.freedMonth);
-  $('bigUnit').textContent = 'שעות בחודש';
-  $('subLine').textContent = empty
-    ? 'כתבו משימה או בחרו דוגמה כדי להתחיל'
-    : freeText(t.fte) + ' · ' + nf(t.freedYear) + ' שעות בשנה';
-  const active = ui.activeTaskId ? findTask(ui.activeTaskId) : null;
-  $('histline').textContent = (!empty && active)
-    ? historyLine(active.t, active.g)
-    : (empty ? '' : nf(Math.round(t.hoursToday)) + ' שעות היום · ' + nf(t.freedMonth) + ' מתפנות');
-  // a blank task that contributes nothing must not keep the figure marked provisional
-  const anyUnrefined = res.rows.some(r => r.minutes > 0 && !r.refined);
-  $('estLabel').hidden = empty || !anyUnrefined;
-  renderRing(t.fte, empty, res);
-  if(!empty && t.freedMonth !== lastShownNumber) rollNumber(num);
-  lastShownNumber = t.freedMonth;
+/* ---- the list: one row per task, the cart total at its end ---- */
+function renderList(res){
+  const host = $('screenList');
+  host.textContent = '';
+  const card = el('div','card');
+
+  if(!res.rows.length){
+    const e = el('div','empty');
+    e.appendChild(el('h3', null, 'הרשימה ריקה'));
+    e.appendChild(el('p', null, 'הוסיפו משימה קטנה שחוזרת על עצמה, והיא תתקפל לשורה אחת עם השעות שהיא מחזירה לחודש.'));
+    const go = el('button','btn','+ משימה ראשונה');
+    go.type = 'button';
+    go.id = 'emptyAdd';
+    go.addEventListener('click', () => openSheet(null));
+    e.appendChild(go);
+    const demo = el('button','btn ghost','טעינת דוגמה');
+    demo.type = 'button';
+    demo.id = 'emptyDemo';
+    demo.style.marginInlineStart = '8px';
+    demo.addEventListener('click', loadDemo);
+    e.appendChild(demo);
+    card.appendChild(e);
+    host.appendChild(card);
+    host.appendChild(discoveryBox());
+    return;
+  }
+
+  const head = el('div','cardhead');
+  head.appendChild(el('h2', null, 'הרשימה'));
+  const onCount = res.rows.filter(r => r.on && r.minutes > 0).length;
+  head.appendChild(el('span','sub', onCount + ' מתוך ' + res.rows.length + ' בחישוב'));
+  card.appendChild(head);
+
+  res.rows.forEach(r => {
+    const row = el('div','row' + (r.on ? '' : ' off'));
+
+    const tick = el('button','tick');
+    tick.type = 'button';
+    tick.setAttribute('role','checkbox');
+    tick.setAttribute('aria-checked', r.on ? 'true' : 'false');
+    tick.setAttribute('aria-label', (r.on ? 'להוציא מהחישוב: ' : 'להחזיר לחישוב: ') + (r.name || 'משימה ללא שם'));
+    tick.appendChild(svgIcon('check'));
+    tick.addEventListener('click', ev => {
+      ev.stopPropagation();
+      apply(() => { const f = findTask(r.id); if(f) f.t.on = !f.t.on; });
+    });
+
+    const meta = domainMeta(r.dom);
+    const ico = el('span','ico');
+    ico.style.background = meta.color;
+    ico.appendChild(svgIcon(meta.icon));
+
+    /* The name and the small print are isolated from each other: a name that ends
+       in Latin letters, like "עדכון CRM", otherwise drags the next number across
+       the boundary and the row reads scrambled. */
+    const main = el('div','rowmain');
+    const nm = el('bdi','nm', r.name || 'משימה ללא שם');
+    const mt = el('bdi','meta');
+    mt.textContent = fmtMinutes(r.minutes) + ' · ' + FREQ_SHORT[r.freq] +
+      (r.people > 1 ? ' · ×' + r.people + ' אנשים' : '') + ' · ' + Math.round(r.auto*100) + '%' +
+      (state.groups.length > 1 ? ' · ' + r.groupName : '');
+    main.appendChild(nm);
+    main.appendChild(mt);
+
+    const open = el('button','rowmain');
+    open.type = 'button';
+    open.style.cssText = 'background:none;border:0;padding:0;text-align:start;min-width:0';
+    open.appendChild(main);
+    open.addEventListener('click', () => openSheet(r.id));
+
+    const hrs = el('span','hrs');
+    hrs.appendChild(el('bdi', null, fmtHours(r.freedShown)));
+
+    /* icon, name, hours, tick — the order of a shopping list: what the line IS
+       sits at the start, what you toggle sits at the end. */
+    row.appendChild(ico);
+    row.appendChild(open);
+    row.appendChild(hrs);
+    row.appendChild(tick);
+    card.appendChild(row);
+  });
+
+  const tot = el('div','total');
+  const left = el('div');
+  left.appendChild(el('div','lbl','סה״כ מתפנה בחודש'));
+  const big = el('div','big');
+  big.appendChild(el('bdi', null, nf(res.totals.freedMonth)));
+  left.appendChild(big);
+  left.appendChild(el('div','unit','שעות בחודש'));
+  left.appendChild(el('div','free', freeText(res.totals.fte) + ' · ' + nf(res.totals.freedYear) + ' שעות בשנה'));
+  tot.appendChild(left);
+  tot.appendChild(el('span','grow'));
+  const ringWrap = el('div');
+  ringWrap.style.cssText = 'display:flex;align-items:center;gap:6px;flex:none';
+  fillPositions(ringWrap, res.totals.fte, res.totals.freedMonthExact === 0, 46);
+  tot.appendChild(ringWrap);
+  card.appendChild(tot);
+
+  host.appendChild(card);
+  host.appendChild(discoveryBox());
 }
-function historyLine(t, g){
-  const factor = t.freq === 'day' ? DAYS_MONTH + ' ימים'
-    : t.freq === 'week' ? WEEKS_MONTH + ' שבועות'
-    : t.freq === 'month' ? 'פעם בחודש' : 'פעם ברבעון';
-  const people = g.people > 1 ? ' × ' + g.people + ' אנשים' : '';
-  return fmtMinutes(t.minutes) + ' × ' + factor + people + ' × ' + Math.round(t.auto*100) + '%';
+
+function discoveryBox(){
+  const d = document.createElement('details');
+  d.className = 'disc';
+  const s = document.createElement('summary');
+  s.textContent = 'לא בטוחים מה עוד להוסיף?';
+  d.appendChild(s);
+  const ul = document.createElement('ul');
+  DISCOVERY.forEach(q => ul.appendChild(el('li', null, q)));
+  d.appendChild(ul);
+  const add = el('button','inline-link','+ להוסיף משימה');
+  add.type = 'button';
+  add.addEventListener('click', () => openSheet(null));
+  d.appendChild(add);
+  return d;
 }
-function rollNumber(node){
-  if(window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches) return;
-  node.animate(
-    [{transform:'translateY(14%)', opacity:.35}, {transform:'none', opacity:1}],
-    {duration:280, easing:'cubic-bezier(.4,0,.2,1)'}
-  );
-}
-/* The ring is ONE full-time position. Gold = freed. Never more than 100% of itself.
-   ONE renderer, used by both the display and the summary: when the summary had its
-   own copy it capped silently at four rings, so 5.2 positions were drawn as 4.2 while
-   the words beside them said 5.2. */
-function fillRings(wrap, fte, empty){
+
+/* ---- positions: a person per whole position, a ring for the remainder ---- */
+function fillPositions(wrap, fte, empty, size){
   wrap.textContent = '';
-  // the rings are drawn from the SAME rounded figure the screen writes in words,
-  // so "0.2 משרה" and the ring never disagree in front of a client
-  const shownFte = Math.round(fte * 10) / 10;
-  const full = Math.floor(shownFte + 1e-9);
-  const partial = shownFte - full;
-  for(let i=0; i<Math.min(full,4); i++) wrap.appendChild(ringSvg(1, ''));
-  if(full < 4 || partial > 0.005) wrap.appendChild(ringSvg(empty ? 0 : partial, empty ? '' : Math.round(partial*100) + '%'));
-  if(full > 4) wrap.appendChild(el('span','ringmore','+' + (full-4) + ' משרות'));
+  const pct = Math.max(0, Math.round(fte * 100));
+  const full = Math.floor(pct / 100);
+  const rem = pct - full * 100;
+  for(let i=0; i<Math.min(full,4); i++) wrap.appendChild(personSvg(size));
+  if(full > 4) wrap.appendChild(el('span','posmore','+' + (full-4)));
+  if(empty || rem > 0 || full === 0) wrap.appendChild(ringSvg(empty ? 0 : rem/100, empty ? '' : rem + '%', size));
 }
-function renderRing(fte, empty, res){
-  const wrap = $('ringWrap');
-  fillRings(wrap, fte, empty);
-  const label = empty ? 'אין עדיין זמן שהתפנה'
-    : freeText(fte) + ', מתוך משרה מלאה. ' + (res.dream.chips[0] || res.dream.text || 'זמן לצמיחה');
-  wrap.setAttribute('role','img');
-  wrap.setAttribute('aria-label', label);
-}
-function ringSvg(frac, centre){
+function personSvg(size){
   const NS = 'http://www.w3.org/2000/svg';
-  const size = 76, r = 30, c = 2*Math.PI*r;
+  const s = size || 46;
   const svg = document.createElementNS(NS,'svg');
-  svg.setAttribute('width', size); svg.setAttribute('height', size);
-  svg.setAttribute('viewBox','0 0 '+size+' '+size);
+  svg.setAttribute('width', s*0.72); svg.setAttribute('height', s);
+  svg.setAttribute('viewBox','0 0 34 46');
   svg.setAttribute('aria-hidden','true');
-  const mk = (stroke, dash, op) => {
-    const ci = document.createElementNS(NS,'circle');
-    ci.setAttribute('cx', size/2); ci.setAttribute('cy', size/2); ci.setAttribute('r', r);
-    ci.setAttribute('fill','none'); ci.setAttribute('stroke', stroke);
-    ci.setAttribute('stroke-width','9'); ci.setAttribute('stroke-linecap','round');
-    if(dash) ci.setAttribute('stroke-dasharray', dash);
-    ci.setAttribute('transform','rotate(-90 '+(size/2)+' '+(size/2)+')');
-    if(op) ci.setAttribute('opacity', op);
-    return ci;
-  };
-  svg.appendChild(mk('#FFFFFF', null, '.18'));                                     // the rest of the position
-  const f = Math.max(0, Math.min(1, frac));
-  if(f > 0) svg.appendChild(mk('var(--gold)', (c*f) + ' ' + (c*(1-f) + 1)));       // the opening
+  const head = document.createElementNS(NS,'circle');
+  head.setAttribute('cx','17'); head.setAttribute('cy','12'); head.setAttribute('r','8.5');
+  head.setAttribute('fill','var(--gold)');
+  const body = document.createElementNS(NS,'path');
+  body.setAttribute('d','M17 24c-8 0-14 5.2-14 12.4V44h28v-7.6C31 29.2 25 24 17 24Z');
+  body.setAttribute('fill','var(--gold)');
+  svg.appendChild(head); svg.appendChild(body);
+  return svg;
+}
+function ringSvg(frac, centre, size){
+  const NS = 'http://www.w3.org/2000/svg';
+  const s = size || 46, r = s/2 - 5, c = 2*Math.PI*r;
+  const svg = document.createElementNS(NS,'svg');
+  svg.setAttribute('width', s); svg.setAttribute('height', s);
+  svg.setAttribute('viewBox','0 0 '+s+' '+s);
+  svg.setAttribute('aria-hidden','true');
+  const base = document.createElementNS(NS,'circle');
+  base.setAttribute('cx',s/2); base.setAttribute('cy',s/2); base.setAttribute('r',r);
+  base.setAttribute('fill','none'); base.setAttribute('stroke','rgba(255,255,255,.18)');
+  base.setAttribute('stroke-width','5');
+  svg.appendChild(base);
+  if(frac > 0){
+    const arc = document.createElementNS(NS,'circle');
+    arc.setAttribute('cx',s/2); arc.setAttribute('cy',s/2); arc.setAttribute('r',r);
+    arc.setAttribute('fill','none'); arc.setAttribute('stroke','var(--gold)');
+    arc.setAttribute('stroke-width','5'); arc.setAttribute('stroke-linecap','round');
+    arc.setAttribute('stroke-dasharray', (c*frac) + ' ' + c);
+    arc.setAttribute('transform','rotate(-90 '+(s/2)+' '+(s/2)+')');
+    svg.appendChild(arc);
+  }
   if(centre){
-    const txt = document.createElementNS(NS,'text');
-    txt.setAttribute('x', size/2); txt.setAttribute('y', size/2 + 5);
-    txt.setAttribute('text-anchor','middle');
-    txt.setAttribute('fill','#FFFFFF');
-    txt.setAttribute('font-size','17'); txt.setAttribute('font-weight','800');
-    txt.textContent = centre;
-    svg.appendChild(txt);
+    const t = document.createElementNS(NS,'text');
+    t.setAttribute('x',s/2); t.setAttribute('y',s/2);
+    t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
+    t.setAttribute('font-size', Math.round(s*0.26));
+    t.setAttribute('font-weight','800'); t.setAttribute('fill','#fff');
+    t.setAttribute('font-family','Heebo, sans-serif');
+    t.textContent = centre;
+    svg.appendChild(t);
   }
   return svg;
 }
 
-/* ---- keys (the task editor) ---- */
-function renderKeys(res){
-  const box = $('taskEditor');
-  box.textContent = '';
-  const active = ui.activeTaskId ? findTask(ui.activeTaskId) : null;
-  if(!active){ box.appendChild(newTaskPrompt()); return; }
-  const {t, g} = active;
+/* ---- teams: the ONLY place a headcount is entered ---- */
+function renderTeams(res){
+  const host = $('screenTeams');
+  host.textContent = '';
+  const card = el('div','card');
+  const head = el('div','cardhead');
+  head.appendChild(el('h2', null, 'צוותים ותפקידים'));
+  head.appendChild(el('span','sub','כמה אנשים עושים את המשימות'));
+  card.appendChild(head);
 
-  // 1. what is the task
-  const b1 = el('div','qblock');
-  b1.appendChild(el('p','qlabel','מה המשימה?'));
-  const inp = el('input','field');
-  inp.type = 'text'; inp.value = t.name;
-  inp.placeholder = 'למשל: מיון קורות חיים';
-  inp.setAttribute('aria-label','שם המשימה');
-  inp.addEventListener('input', () => {
-    apply(() => { t.name = str(inp.value, LIMITS.names); }, ['display','tape','dream']);
+  if(!state.groups.length){
+    const e = el('div','empty');
+    e.appendChild(el('p', null, 'עוד אין צוותים. הצוות הראשון נוצר כשמוסיפים משימה.'));
+    card.appendChild(e);
+  }
+  state.groups.forEach(g => {
+    const row = el('div','team');
+    const name = document.createElement('input');
+    name.type = 'text';
+    name.value = g.name;
+    name.maxLength = LIMITS.names;
+    name.setAttribute('aria-label','שם הצוות או התפקיד');
+    name.addEventListener('input', () => {
+      apply(() => { g.name = name.value.slice(0, LIMITS.names); }, true);
+    });
+    row.appendChild(name);
+
+    const step = el('div','stepper');
+    const minus = el('button', null, '−');
+    minus.type = 'button'; minus.setAttribute('aria-label','פחות אנשים');
+    const num = document.createElement('input');
+    num.type = 'text'; num.inputMode = 'numeric'; num.value = g.people;
+    num.setAttribute('aria-label','מספר אנשים ב' + g.name);
+    const plus = el('button', null, '+');
+    plus.type = 'button'; plus.setAttribute('aria-label','עוד אנשים');
+    minus.addEventListener('click', () => apply(() => { g.people = Math.max(1, g.people - 1); }));
+    plus.addEventListener('click',  () => apply(() => { g.people = Math.min(LIMITS.people[1], g.people + 1); }));
+    num.addEventListener('input', () => {
+      apply(() => { g.people = Math.round(clamp(num.value, LIMITS.people[0], LIMITS.people[1])); }, true);
+    });
+    step.appendChild(minus); step.appendChild(num); step.appendChild(plus);
+    row.appendChild(step);
+    row.appendChild(el('span','teamcount', g.tasks.length + ' משימות'));
+
+    if(state.groups.length > 1){
+      const del = el('button','inline-link','מחיקה');
+      del.type = 'button';
+      del.addEventListener('click', () => deleteGroup(g.id));
+      row.appendChild(del);
+    }
+    card.appendChild(row);
   });
-  b1.appendChild(inp);
-  const chips = el('div','keyrow');
-  chips.style.marginTop = '8px';
-  HOOK_CHIPS.forEach(([n,m,f]) => {
-    const b = el('button','key chip sm', n);
+
+  const foot = el('div');
+  foot.style.padding = '14px 16px';
+  const add = el('button','btn ghost block','+ צוות או תפקיד');
+  add.type = 'button';
+  add.addEventListener('click', () => apply(() => { state.groups.push(newGroup('צוות חדש')); }));
+  foot.appendChild(add);
+  foot.appendChild(el('p','hint','מספר האנשים מכפיל את כל משימות הצוות, בהנחה שכולם עושים אותן באותו זמן. שינוי כאן מעדכן מיד את כל הרשימה.'));
+  card.appendChild(foot);
+  host.appendChild(card);
+}
+
+/* ---- dashboard: the four blocks Galli picked, in that order ---- */
+function renderDash(res){
+  const host = $('screenDash');
+  host.textContent = '';
+  const t = res.totals;
+  const card = el('div','card');
+
+  const top = el('div','block');
+  top.appendChild(el('h3', null, 'הזמן שחוזר לצוות'));
+  const n = el('div','dash-num');
+  n.appendChild(el('bdi', null, nf(t.freedMonth)));
+  top.appendChild(n);
+  top.appendChild(el('div','dash-sub','שעות בחודש · ' + nf(t.freedYear) + ' שעות בשנה'));
+  card.appendChild(top);
+
+  const pos = el('div','block');
+  pos.appendChild(el('h3', null, 'כמה משרה זה'));
+  const prow = el('div','posrow');
+  prow.style.cssText = 'background:var(--deep);border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px;color:#fff';
+  const icons = el('div');
+  icons.style.cssText = 'display:flex;align-items:center;gap:8px;flex:none';
+  fillPositions(icons, t.fte, t.freedMonthExact === 0, 46);
+  prow.appendChild(icons);
+  /* the words live inside the dark panel, beside the people they describe */
+  const cap = el('div','poscap');
+  cap.style.cssText = 'margin:0;color:#C7D0DD;flex:1;min-width:0';
+  cap.appendChild(document.createTextNode(freeText(t.fte) + '. '));
+  const dreamText = res.dream.chips.concat(res.dream.text ? [res.dream.text] : []).join(' · ');
+  const bb = el('b', null, dreamText || 'זמן לצמיחה');
+  bb.style.color = 'var(--gold)';
+  cap.appendChild(bb);
+  prow.appendChild(cap);
+  pos.appendChild(prow);
+  card.appendChild(pos);
+
+  const ranked = res.live.slice().sort((a,b) => b.freedMonth - a.freedMonth).slice(0,6);
+  if(ranked.length){
+    const rb = el('div','block');
+    rb.appendChild(el('h3', null, 'איפה הזמן יושב'));
+    const max = ranked[0].freedMonth || 1;
+    ranked.forEach((r,i) => {
+      const item = el('div','bar-item' + (i === 0 ? ' lead' : ''));
+      const line = el('div','bar-top');
+      line.appendChild(el('bdi', null, r.name || 'משימה ללא שם'));
+      const v = el('span','v');
+      v.appendChild(el('bdi', null, fmtHours(r.freedShown)));
+      line.appendChild(v);
+      item.appendChild(line);
+      const track = el('div','bar-track');
+      const fill = el('div','bar-fill');
+      fill.style.width = Math.max(4, Math.round(r.freedMonth / max * 100)) + '%';
+      track.appendChild(fill);
+      item.appendChild(track);
+      rb.appendChild(item);
+    });
+    card.appendChild(rb);
+  }
+
+  if(res.byGroup.length){
+    const gb = el('div','block');
+    gb.appendChild(el('h3', null, 'לפי צוות'));
+    const max = res.byGroup[0].freed || 1;
+    res.byGroup.forEach(g => {
+      const item = el('div','bar-item');
+      const line = el('div','bar-top');
+      line.appendChild(el('bdi', null, g.name + ' · ' + g.people + ' אנשים'));
+      const v = el('span','v');
+      v.appendChild(el('bdi', null, fmtHours(Math.round(g.freed))));
+      line.appendChild(v);
+      item.appendChild(line);
+      const track = el('div','bar-track');
+      const fill = el('div','bar-fill');
+      fill.style.width = Math.max(4, Math.round(g.freed / max * 100)) + '%';
+      track.appendChild(fill);
+      item.appendChild(track);
+      gb.appendChild(item);
+    });
+    card.appendChild(gb);
+  }
+
+  const db = el('div','block');
+  db.appendChild(el('h3', null, 'מה הייתם עושים עם הזמן הזה?'));
+  const chips = el('div','chips');
+  DREAM_CHIPS.forEach(c => {
+    const b = el('button','chip sm', c);
     b.type = 'button';
+    b.setAttribute('aria-pressed', state.dream.chips.includes(c) ? 'true' : 'false');
     b.addEventListener('click', () => apply(() => {
-      t.name = n; t.minutes = m; t.freq = f; t.src = n;
+      const i = state.dream.chips.indexOf(c);
+      if(i === -1) state.dream.chips.push(c); else state.dream.chips.splice(i,1);
     }));
     chips.appendChild(b);
   });
-  b1.appendChild(chips);
-  b1.appendChild(el('p','hint','זמנים לדוגמה, משנים לפי מה שקורה אצלכם'));
-  box.appendChild(b1);
+  db.appendChild(chips);
+  const free = document.createElement('input');
+  free.type = 'text'; free.className = 'field'; free.style.marginTop = '10px';
+  free.placeholder = 'או כתבו בעצמכם';
+  free.maxLength = 400;
+  free.value = state.dream.text;
+  free.setAttribute('aria-label','מה הייתם עושים עם הזמן');
+  free.addEventListener('input', () => apply(() => { state.dream.text = free.value.slice(0,400); }, true));
+  db.appendChild(free);
+  card.appendChild(db);
 
-  // 2. how long
-  const b2 = el('div','qblock');
-  b2.appendChild(el('p','qlabel','כמה זמן היא לוקחת בכל פעם?'));
-  const row = el('div','keyrow');
+  const act = el('div','block');
+  const share = el('button','btn block','קישור לתרחיש');
+  share.type = 'button'; share.id = 'btnShare';
+  share.addEventListener('click', doShare);
+  act.appendChild(share);
+  const copy = el('button','btn ghost block','העתקת סיכום');
+  copy.type = 'button'; copy.id = 'btnCopy';
+  copy.style.marginTop = '8px';
+  copy.addEventListener('click', doCopy);
+  act.appendChild(copy);
+  card.appendChild(act);
+
+  host.appendChild(card);
+}
+
+function renderFormula(){
+  $('formula').textContent = 'משרה מלאה = ' + FTE_MONTH + ' שעות בחודש (' + DAYS_MONTH +
+    ' ימי עבודה, יום של ' + DAY_HOURS + ' שעות). משימה יומית מוכפלת ב-' + DAYS_MONTH +
+    ', שבועית ב-' + WEEKS_MONTH + '. זמנים לדוגמה בקטלוג, משנים לפי מה שקורה אצלכם.';
+}
+
+/* ---- the sheet: everything about one item, with a live number on top ---- */
+function openSheet(id){
+  const f = id ? findTask(id) : null;
+  if(id && !f) return;
+  ui.editId = id;
+  ui.draft = f
+    ? {name:f.t.name, minutes:f.t.minutes, freq:f.t.freq, auto:f.t.auto,
+       dom:f.t.dom, on:f.t.on !== false, groupId:f.g.id}
+    : {name:'', minutes:0, freq:'day', auto:0.7, dom:null, on:true,
+       groupId:(state.groups[0] ? state.groups[0].id : null)};
+  $('scrim').hidden = false;
+  document.body.style.overflow = 'hidden';
+  renderSheet(ui.draft);
+  const inp = $('sheet').querySelector('input');
+  if(inp) inp.focus();
+}
+function closeSheet(){
+  ui.draft = null; ui.editId = null;
+  $('scrim').hidden = true;
+  $('sheet').textContent = '';
+  document.body.style.overflow = '';
+}
+/* The draft is computed on its own, so the number at the top of the sheet moves on
+   every press — the list screen is a list, but adding an item is still a calculator. */
+function draftHours(d){
+  const g = findGroup(d.groupId);
+  const people = g ? g.people : 1;
+  return (d.minutes/60) * freqFactor(d.freq) * people * d.auto;
+}
+function renderSheet(d){
+  const sheet = $('sheet');
+  const active = document.activeElement;
+  const keep = active && sheet.contains(active) ? active.getAttribute('data-k') : null;
+  const caret = (keep && active.selectionStart != null) ? active.selectionStart : null;
+  sheet.textContent = '';
+
+  const head = el('div','sheethead');
+  const ht = el('div');
+  ht.appendChild(el('div','t', ui.editId ? 'עדכון משימה' : 'משימה חדשה'));
+  const hv = el('div','n');
+  const hrs = draftHours(d);
+  hv.appendChild(el('bdi', null, hrs > 0 && hrs < 10 ? nf(Math.round(hrs*10)/10) : nf(Math.round(hrs))));
+  ht.appendChild(hv);
+  ht.appendChild(el('div','u','שעות בחודש מהמשימה הזאת'));
+  head.appendChild(ht);
+  head.appendChild(el('span','grow')).style.flex = '1';
+  const x = el('button','icobtn','✕');
+  x.type = 'button'; x.id = 'sheetClose';
+  x.setAttribute('aria-label','סגירה');
+  x.addEventListener('click', closeSheet);
+  head.appendChild(x);
+  const hid = el('span','sr','משימה');
+  hid.id = 'sheetTitle';
+  head.appendChild(hid);
+  sheet.appendChild(head);
+
+  const body = el('div','sheetbody');
+
+  /* 1 — what the task is. The free field is the main control: anything typed here
+     becomes a task, whether or not it appears among the ready-made keys. */
+  const q1 = el('div','q');
+  const l1 = el('label', null, 'מה המשימה?');
+  l1.setAttribute('for','fName');
+  q1.appendChild(l1);
+  const name = document.createElement('input');
+  name.type = 'text'; name.className = 'field'; name.id = 'fName';
+  name.setAttribute('data-k','name');
+  name.placeholder = 'כתבו משימה, או בחרו מהרשימה';
+  name.maxLength = LIMITS.names;
+  name.value = d.name;
+  name.addEventListener('input', () => {
+    d.name = name.value.slice(0, LIMITS.names);
+    const guess = domainOf(d.name);
+    if(guess !== null) d.dom = guess;
+    renderSheet(d);
+  });
+  q1.appendChild(name);
+  const c1 = el('div','chips');
+  c1.style.marginTop = '10px';
+  QUICK.forEach(q => {
+    const b = el('button','chip sm', q[0]);
+    b.type = 'button';
+    b.setAttribute('aria-pressed', d.name === q[0] ? 'true' : 'false');
+    b.addEventListener('click', () => {
+      d.name = q[0]; d.minutes = q[1]; d.freq = q[2]; d.dom = q[3];
+      renderSheet(d);
+    });
+    c1.appendChild(b);
+  });
+  q1.appendChild(c1);
+  body.appendChild(q1);
+
+  /* 2 — how long it takes. The frequency is a button INSIDE the question, so the
+     assumption is never hidden in a line underneath. */
+  const q2 = el('div','q');
+  const l2 = el('div','qlabel');
+  l2.appendChild(document.createTextNode('כמה זמן היא לוקחת'));
+  const fb = el('button','freqbtn', FREQ_ONCE[d.freq]);
+  fb.type = 'button'; fb.id = 'fFreq';
+  fb.setAttribute('aria-label','תדירות: ' + FREQ_ONCE[d.freq] + ', לשינוי');
+  fb.addEventListener('click', () => {
+    d.freq = FREQS[(FREQS.indexOf(d.freq) + 1) % FREQS.length];
+    renderSheet(d);
+  });
+  l2.appendChild(fb);
+  l2.appendChild(document.createTextNode('?'));
+  q2.appendChild(l2);
+  const c2 = el('div','chips');
   TIME_KEYS.forEach(m => {
-    const b = el('button','key' + (t.minutes === m ? ' on' : ''), fmtMinutes(m));
+    const b = el('button','chip', fmtMinutes(m));
     b.type = 'button';
-    b.setAttribute('aria-pressed', t.minutes === m ? 'true' : 'false');
-    b.addEventListener('click', () => apply(() => { t.minutes = m; }));
-    row.appendChild(b);
+    b.setAttribute('aria-pressed', d.minutes === m ? 'true' : 'false');
+    b.addEventListener('click', () => { d.minutes = m; renderSheet(d); });
+    c2.appendChild(b);
   });
-  b2.appendChild(row);
-  const st = el('div','stepper');
-  st.style.marginTop = '8px';
-  const minus = el('button','key','−'); minus.type='button'; minus.setAttribute('aria-label','פחות רבע שעה');
-  const plus  = el('button','key','+'); plus.type='button';  plus.setAttribute('aria-label','עוד רבע שעה');
-  const val = el('span','val', fmtMinutes(t.minutes));
-  minus.addEventListener('click', () => apply(() => { t.minutes = Math.max(0, t.minutes - 15); }));
-  plus.addEventListener('click',  () => apply(() => { t.minutes = Math.min(LIMITS.minutes[1], t.minutes + 15); }));
-  st.appendChild(minus); st.appendChild(val); st.appendChild(plus);
-  b2.appendChild(st);
-  // the daily assumption is never hidden
-  const freqLink = el('button','inline-link', FREQ_LABEL[t.freq] + ' · לשינוי');
-  freqLink.type = 'button';
-  freqLink.addEventListener('click', () => { ui.refineOpen = true; render(['keys']); setTimeout(() => { const f = $('freqRow'); if(f) f.scrollIntoView({block:'center', behavior:'smooth'}); }, 0); });
-  b2.appendChild(freqLink);
-  const h = timeHint(t, g, res);
-  if(h) b2.appendChild(el('p','hint warn', h));
-  box.appendChild(b2);
-
-  // 3. how many people — only while the hook still owns the number
-  const b3 = el('div','qblock');
-  if(hookOwnsPeople()){
-    b3.appendChild(el('p','qlabel','כמה אנשים עושים את זה?'));
-    const st2 = el('div','stepper');
-    const m2 = el('button','key','−'); m2.type='button'; m2.setAttribute('aria-label','פחות אדם אחד');
-    const p2 = el('button','key','+'); p2.type='button'; p2.setAttribute('aria-label','עוד אדם אחד');
-    const v2 = el('span','val', nf(g.people));
-    m2.addEventListener('click', () => apply(() => { g.people = Math.max(1, g.people - 1); }));
-    p2.addEventListener('click', () => apply(() => { g.people = Math.min(LIMITS.people[1], g.people + 1); }));
-    st2.appendChild(m2); st2.appendChild(v2); st2.appendChild(p2);
-    b3.appendChild(st2);
-  }else{
-    const line = el('div','row-split');
-    line.appendChild(el('span','pill', nf(g.people) + (g.people === 1 ? ' אדם' : ' אנשים') + ' · ' + g.name));
-    const move = el('button','inline-link','שינוי מספר האנשים בכרטיס הצוות');
-    move.type = 'button';
-    move.addEventListener('click', () => { ui.groupsOpen = true; render(['groups','keys']); $('groupsCard').scrollIntoView({block:'center', behavior:'smooth'}); });
-    line.appendChild(move);
-    b3.appendChild(line);
+  q2.appendChild(c2);
+  const mins = document.createElement('input');
+  mins.type = 'text'; mins.inputMode = 'numeric'; mins.className = 'field';
+  mins.style.marginTop = '10px';
+  mins.setAttribute('data-k','mins');
+  mins.setAttribute('aria-label','מספר דקות');
+  mins.placeholder = 'או מספר דקות משלכם';
+  mins.value = d.minutes ? String(d.minutes) : '';
+  mins.addEventListener('input', () => {
+    d.minutes = Math.round(clamp(mins.value, LIMITS.minutes[0], LIMITS.minutes[1]));
+    renderSheet(d);
+  });
+  q2.appendChild(mins);
+  const g2 = findGroup(d.groupId);
+  const weekly = (d.minutes/60) * freqFactor(d.freq) / WEEKS_MONTH;
+  if(weekly > 42){
+    q2.appendChild(el('p','hint warn','זה יותר מ-42 שעות בשבוע לאדם אחד. אולי מדובר בכמה אנשים — אפשר להגדיר את הצוות במסך "צוותים".'));
   }
-  box.appendChild(b3);
+  body.appendChild(q2);
 
-  // which team does this task belong to (only once more than one exists)
-  if(state.groups.length > 1){
-    const b4 = el('div','qblock');
-    b4.appendChild(el('p','qlabel','לאיזה צוות המשימה שייכת?'));
-    const gr = el('div','keyrow');
-    gr.id = 'groupPicker';
-    state.groups.forEach(other => {
-      const on = other.id === g.id;
-      const b = el('button','key chip sm' + (on ? ' on' : ''), other.name + ' · ' + nf(other.people) + (other.people === 1 ? ' אדם' : ' אנשים'));
-      b.type = 'button'; b.setAttribute('aria-pressed', on ? 'true' : 'false');
-      if(!on) b.addEventListener('click', () => apply(() => {
-        const i = g.tasks.indexOf(t);
-        if(i !== -1) g.tasks.splice(i,1);
-        other.tasks.push(t);
-        flash(t.id);
-      }));
-      gr.appendChild(b);
-    });
-    b4.appendChild(gr);
-    b4.appendChild(el('p','hint','מעבר לצוות אחר משנה את מספר האנשים שמכפיל את המשימה.'));
-    box.appendChild(b4);
-  }
-
-  // refine
-  if(!ui.refineOpen){
-    const b = el('button','key wide primary','לדייק את החישוב');
+  /* 3 — how much of it can run by itself. */
+  const q3 = el('div','q');
+  q3.appendChild(el('div','qlabel','כמה מזה אפשר להפוך לאוטומטי?'));
+  const c3 = el('div','chips');
+  AUTOS.slice().reverse().forEach(a => {
+    const b = el('button','chip', AUTO_LABEL[a] + ' (' + Math.round(a*100) + '%)');
     b.type = 'button';
-    b.addEventListener('click', () => { ui.refineOpen = true; apply(() => { t.refined = true; }, ['keys','display']); });
-    box.appendChild(b);
-  }else{
-    const d = el('div','drawer');
-    d.appendChild(el('h3',null,'לדייק את החישוב'));
-    d.appendChild(el('p','qlabel','באיזו תדירות?'));
-    const fr = el('div','keyrow'); fr.id = 'freqRow';
-    FREQS.forEach(f => {
-      const b = el('button','key' + (t.freq === f ? ' on' : ''), FREQ_LABEL[f]);
-      b.type = 'button'; b.setAttribute('aria-pressed', t.freq === f ? 'true' : 'false');
-      b.addEventListener('click', () => apply(() => { t.freq = f; t.refined = true; }));
-      fr.appendChild(b);
-    });
-    d.appendChild(fr);
-    d.appendChild(el('p','qlabel','כמה ממנה אפשר להפוך לאוטומטי?'));
-    const ar = el('div','keyrow');
-    [0.9,0.7,0.5,0.25].forEach(a => {
-      const b = el('button','key' + (t.auto === a ? ' on' : ''), AUTO_LABEL[a] + ' (' + Math.round(a*100) + '%)');
-      b.type = 'button'; b.setAttribute('aria-pressed', t.auto === a ? 'true' : 'false');
-      b.addEventListener('click', () => apply(() => { t.auto = a; t.refined = true; }));
-      ar.appendChild(b);
-    });
-    d.appendChild(ar);
-    const link = el('button','inline-link','לא בטוחים בזמן?');
-    link.type = 'button';
-    link.addEventListener('click', () => { ui.questionsOpen = true; render(['keys']); $('questionsCard').scrollIntoView({block:'center', behavior:'smooth'}); });
-    d.appendChild(link);
-    box.appendChild(d);
-  }
-
-  // delete — never offered for a task the user has not started
-  if(!isBlank(t) || allTasks().length > 1){
-    const del = el('button','inline-link','מחיקת המשימה');
-    del.type = 'button';
-    del.addEventListener('click', () => deleteTask(t.id));
-    box.appendChild(del);
-  }
-
-  // one primary action at a time: "לדייק" first, and only then "+ עוד משימה"
-  $('btnMore').className = 'key wide ' + (ui.refineOpen ? 'primary' : 'ghost');
-  $('questionsCard').hidden = !ui.questionsOpen;
-  $('groupsCard').hidden = !ui.groupsOpen;
-  if(ui.questionsOpen) renderQuestions();
-  if(ui.groupsOpen) renderGroups();
-}
-function newTaskPrompt(){
-  const d = el('div','qblock');
-  d.appendChild(el('p','qlabel','מה המשימה?'));
-  const b = el('button','key wide primary','+ משימה ראשונה');
-  b.type = 'button';
-  b.addEventListener('click', addTask);
-  d.appendChild(b);
-  return d;
-}
-function timeHint(t, g, res){
-  if(t.minutes > 0 && t.minutes < 10 && t.freq === 'day')
-    return 'גם 10 דקות ביום הן 3.6 שעות בחודש.';
-  if(t.src){
-    const ref = catalogMinutes(t.src);
-    if(ref && t.minutes > 0 && (t.minutes < ref/4 || t.minutes > ref*4))
-      return 'רק ' + fmtMinutes(t.minutes) + '? שווה לשאול: כמה פעמים זה קורה?';
-  }
-  const perPerson = g.tasks.reduce((a,x) => a + (x.minutes/60)*freqFactor(x.freq), 0) / WEEKS_MONTH;
-  if(perPerson > 42) return 'יותר משבוע עבודה מלא. כדאי לבדוק את ההערכות.';
-  return '';
-}
-function catalogMinutes(name){
-  for(const d of CATALOG) for(const r of d.roles) for(const t of r.tasks) if(t[0] === name) return t[1];
-  for(const c of HOOK_CHIPS) if(c[0] === name) return c[1];
-  return 0;
-}
-
-/* ---- tape ---- */
-function renderTape(res){
-  const box = $('tape');
-  box.textContent = '';
-  const rows = res.rows.filter(r => r.minutes > 0);
-  if(!rows.length) return;
-  rows.forEach(r => {
-    const row = el('button','taperow' + (r.id === res.biggestId ? ' big' : '') + (r.id === ui.activeTaskId ? ' open' : '') + (r.id === ui.flashId ? ' flash' : ''));
-    row.type = 'button';
-    if(r.id === res.biggestId) row.appendChild(el('span','dot'));
-    const nm = el('span','nm');
-    nm.appendChild(document.createTextNode(r.name || 'משימה ללא שם'));
-    const meta = el('span','meta');
-    // the row already carries its own headcount; looking it up again made drawing
-    // the tape scan every task once per row
-    meta.textContent = ' · ' + fmtMinutes(r.minutes) + ' ' + FREQ_SHORT[r.freq] +
-      (r.people > 1 ? ' · ×' + r.people + ' אנשים' : '') + ' · ' + Math.round(r.auto*100) + '%';
-    nm.appendChild(meta);
-    row.appendChild(nm);
-    const hrs = el('span','hrs');
-    hrs.appendChild(el('bdi', null, nf(r.freedShown)));
-    hrs.appendChild(document.createTextNode(' ש׳'));
-    row.appendChild(hrs);
-    row.addEventListener('click', () => { ui.activeTaskId = r.id; render(['keys','tape','display']); $('keys').scrollIntoView({block:'start', behavior:'smooth'}); });
-    box.appendChild(row);
+    b.setAttribute('aria-pressed', d.auto === a ? 'true' : 'false');
+    b.addEventListener('click', () => { d.auto = a; renderSheet(d); });
+    c3.appendChild(b);
   });
-  const tot = el('div','tapetotal');
-  tot.appendChild(el('span', null, 'סה״כ מתפנה בחודש'));
-  const v = el('span');
-  v.appendChild(el('bdi', null, nf(res.totals.freedMonth)));
-  v.appendChild(document.createTextNode(' ש׳'));
-  tot.appendChild(v);
-  box.appendChild(tot);
-}
+  q3.appendChild(c3);
+  q3.appendChild(el('p','hint','הערכה. אפשר לשנות בכל רגע ולראות איך המספר זז.'));
+  body.appendChild(q3);
 
-/* ---- guiding questions ---- */
-function renderQuestions(){
-  const box = $('questionsCard');
-  box.textContent = '';
-  const solo = state.mode === 'solo';
-  const head = el('div','row-split');
-  head.appendChild(el('h3', null, 'שאלות שעוזרות למצוא משימות'));
-  const modeBtn = el('button','key sm', solo ? 'אני לבד' : 'שיחה עם עובד');
-  modeBtn.type = 'button';
-  modeBtn.addEventListener('click', () => apply(() => { state.mode = solo ? 'talk' : 'solo'; }, ['keys','dream','display']));
-  head.appendChild(modeBtn);
-  box.appendChild(head);
-
-  const one = el('button','inline-link', ui.qOneByOne ? 'להציג את כל השאלות' : 'אחת-אחת');
-  one.type = 'button';
-  one.addEventListener('click', () => { ui.qOneByOne = !ui.qOneByOne; ui.qIndex = 0; render(['keys']); });
-  box.appendChild(one);
-
-  const list = questionList(solo);
-  const render1 = (q, idx) => {
-    const d = el('div','qblock');
-    d.appendChild(el('p','qlabel', q));
-    const inp = el('input','field');
-    inp.type = 'text'; inp.placeholder = 'כתבו בקצרה'; inp.setAttribute('aria-label', q);
-    const add = el('button','key sm','+ להוסיף כמשימה');
-    add.type = 'button';
-    add.style.marginTop = '8px';
-    add.addEventListener('click', () => {
-      const name = str(inp.value.trim(), LIMITS.names);
-      if(!name) return;
-      addTask(name);
-      inp.value = '';
-    });
-    d.appendChild(inp); d.appendChild(add);
-    return d;
-  };
-  if(ui.qOneByOne){
-    const i = Math.max(0, Math.min(list.length-1, ui.qIndex));
-    box.appendChild(render1(list[i], i));
-    const nav = el('div','keyrow');
-    const prev = el('button','key sm','הקודמת'); prev.type='button';
-    const next = el('button','key sm','הבאה ←'); next.type='button';
-    const skip = el('button','inline-link','דילוג'); skip.type='button';
-    prev.disabled = i === 0;
-    prev.addEventListener('click', () => { ui.qIndex = i-1; render(['keys']); });
-    next.addEventListener('click', () => { ui.qIndex = Math.min(list.length-1, i+1); render(['keys']); });
-    skip.addEventListener('click', () => { ui.qIndex = Math.min(list.length-1, i+1); render(['keys']); });
-    nav.appendChild(next); nav.appendChild(prev); nav.appendChild(skip);
-    box.appendChild(nav);
-    box.appendChild(el('p','hint', (i+1) + ' מתוך ' + list.length));
-  }else{
-    list.forEach((q,i) => box.appendChild(render1(q,i)));
-  }
-  const close = el('button','inline-link','סגירה');
-  close.type = 'button';
-  close.addEventListener('click', () => { ui.questionsOpen = false; render(['keys']); });
-  box.appendChild(close);
-}
-function questionList(solo){
-  const out = GENERAL_Q.map(p => solo ? p[1] : p[0]);
-  const domains = new Set(state.groups.map(g => g.domain).filter(Boolean));
-  CATALOG.forEach(d => { if(domains.has(d.domain)) out.push(d.q); });
-  return out;
-}
-
-/* ---- groups + catalog ---- */
-function renderGroups(){
-  const box = $('groupsCard');
-  if(!box || box.hidden) return;
-  box.textContent = '';
-  box.appendChild(el('h3', null, 'צוותים ותפקידים'));
+  /* 4 — which team. Names only: the headcount lives on the teams screen. */
+  const q4 = el('div','q');
+  q4.appendChild(el('div','qlabel','לאיזה צוות המשימה שייכת?'));
+  const c4 = el('div','chips');
   state.groups.forEach(g => {
-    const card = el('div','qblock');
-    const nameInput = el('input','field');
-    nameInput.type = 'text'; nameInput.value = g.name;
-    nameInput.setAttribute('aria-label','שם הצוות או התפקיד');
-    nameInput.addEventListener('input', () => {
-      // never 'keys' or 'groups' here: renderKeys rebuilds this very input
-      apply(() => { g.name = str(nameInput.value, LIMITS.names); markExplicit(g); }, ['display','tape']);
-    });
-    card.appendChild(nameInput);
-
-    const st = el('div','stepper');
-    st.style.marginTop = '8px';
-    const m = el('button','key','−'); m.type='button'; m.setAttribute('aria-label','פחות אדם אחד');
-    const p = el('button','key','+'); p.type='button'; p.setAttribute('aria-label','עוד אדם אחד');
-    const v = el('span','val', nf(g.people));
-    m.addEventListener('click', () => apply(() => { g.people = Math.max(1, g.people - 1); }));
-    p.addEventListener('click', () => apply(() => { g.people = Math.min(LIMITS.people[1], g.people + 1); }));
-    st.appendChild(m); st.appendChild(v); st.appendChild(p);
-    card.appendChild(st);
-    card.appendChild(el('p','hint','מספר האנשים מכפיל את כל משימות הצוות הזה.'));
-
-    const dr = el('div','keyrow');
-    CATALOG.forEach(d => {
-      const b = el('button','key chip sm' + (g.domain === d.domain ? ' on' : ''), d.domain);
-      b.type = 'button';
-      b.addEventListener('click', () => apply(() => { g.domain = (g.domain === d.domain) ? null : d.domain; markExplicit(g); }, ['groups','keys','display']));
-      dr.appendChild(b);
-    });
-    card.appendChild(dr);
-
-    if(g.domain) card.appendChild(catalogPicker(g));
-
-    if(state.groups.length > 1){
-      const del = el('button','inline-link','מחיקת הצוות ומשימותיו');
-      del.type = 'button';
-      del.addEventListener('click', () => deleteGroup(g.id));
-      card.appendChild(del);
-    }
-    box.appendChild(card);
+    const b = el('button','chip sm', g.name);
+    b.type = 'button';
+    b.setAttribute('aria-pressed', d.groupId === g.id ? 'true' : 'false');
+    b.addEventListener('click', () => { d.groupId = g.id; renderSheet(d); });
+    c4.appendChild(b);
   });
-  const add = el('button','key wide ghost','+ צוות או תפקיד חדש');
-  add.type = 'button';
-  add.addEventListener('click', () => apply(() => {
-    state.groups.forEach(markExplicit);
-    const g = newGroup('צוות חדש', false);
+  const nb = el('button','chip sm','+ צוות חדש');
+  nb.type = 'button';
+  nb.addEventListener('click', () => {
+    const g = newGroup('צוות חדש');
     state.groups.push(g);
-  }));
-  box.appendChild(add);
-  const close = el('button','inline-link','סגירה');
-  close.type = 'button';
-  close.addEventListener('click', () => { ui.groupsOpen = false; render(['keys']); });
-  box.appendChild(close);
-}
-function catalogPicker(g){
-  const d = CATALOG.find(x => x.domain === g.domain);
-  const wrap = el('div','qblock');
-  wrap.appendChild(el('p','qlabel','משימות מוכנות להוספה'));
-  const search = el('input','field');
-  search.type = 'search'; search.placeholder = 'חיפוש משימה'; search.setAttribute('aria-label','חיפוש משימה בקטלוג');
-  wrap.appendChild(search);
-  const list = el('div','keyrow');
-  list.style.marginTop = '8px';
-  const draw = () => {
-    list.textContent = '';
-    const q = search.value.trim();
-    d.roles.forEach(r => {
-      r.tasks.forEach(([n,m,f]) => {
-        if(q && n.indexOf(q) === -1 && r.role.indexOf(q) === -1) return;
-        const b = el('button','key chip sm', n + ' · ' + fmtMinutes(m) + ' · ' + FREQ_SHORT[f]);
-        b.type = 'button';
-        b.addEventListener('click', () => apply(() => {
-          const t = newTask(n, m, f, n);
-          g.tasks.push(t);
-          ui.activeTaskId = t.id;
-          flash(t.id);
-        }));
-        list.appendChild(b);
-      });
-    });
-  };
-  search.addEventListener('input', draw);
-  draw();
-  wrap.appendChild(list);
-  wrap.appendChild(el('p','hint','זמנים לדוגמה, משנים לפי מה שקורה אצלכם'));
-  return wrap;
-}
-
-/* ---- the closing question ---- */
-function renderDream(res){
-  const box = $('dreamCard');
-  const t = res.totals;
-  if(!res.rows.length || t.freedMonth === 0){ box.hidden = true; return; }
-  box.hidden = false;
-  box.textContent = '';
-  const solo = state.mode === 'solo';
-  const h = el('h2');
-  h.style.cssText = 'font-size:20px;font-weight:800;margin:0 0 4px';
-  h.appendChild(document.createTextNode(solo ? 'מה היית רוצה לעשות עם ה-' : 'מה הייתם רוצים לעשות עם ה-'));
-  const b = el('bdi'); b.textContent = nf(t.freedMonth);
-  b.style.cssText = 'color:var(--gold-dark);font-weight:800';
-  h.appendChild(b);
-  h.appendChild(document.createTextNode(solo ? ' שעות בחודש שהתפנו לך עכשיו?' : ' שעות בחודש שהתפנו לצוות?'));
-  box.appendChild(h);
-  box.appendChild(el('div','goldline'));
-  if(!solo) box.appendChild(el('p','hint','שווה לשאול גם את העובד מה הוא היה רוצה לקחת על עצמו'));
-  const row = el('div','keyrow');
-  DREAM_CHIPS.forEach(c => {
-    const on = state.dream.chips.indexOf(c) !== -1;
-    const btn = el('button','key chip sm' + (on ? ' on' : ''), c);
-    btn.type = 'button'; btn.setAttribute('aria-pressed', on ? 'true' : 'false');
-    btn.addEventListener('click', () => apply(() => {
-      const i = state.dream.chips.indexOf(c);
-      if(i === -1) state.dream.chips.push(c); else state.dream.chips.splice(i,1);
-    }, ['dream','display']));
-    row.appendChild(btn);
+    d.groupId = g.id;
+    save(); renderSheet(d);
   });
-  box.appendChild(row);
-  const inp = el('input','field');
-  inp.type = 'text'; inp.style.marginTop = '8px';
-  inp.value = state.dream.text;
-  inp.placeholder = 'או כתבו בעצמכם';
-  inp.setAttribute('aria-label','מה הייתם רוצים לעשות עם הזמן שהתפנה');
-  inp.addEventListener('input', () => { state.dream.text = str(inp.value, 400); save(); render(['display']); });
-  box.appendChild(inp);
-}
+  c4.appendChild(nb);
+  q4.appendChild(c4);
+  if(g2 && g2.people > 1)
+    q4.appendChild(el('p','hint','המשימה מוכפלת ב-' + g2.people + ' אנשים. את הכמות משנים במסך "צוותים".'));
+  else
+    q4.appendChild(el('p','hint','את מספר האנשים בכל צוות מגדירים פעם אחת, במסך "צוותים".'));
+  body.appendChild(q4);
 
-function renderFormula(res){
-  const f = $('formula');
-  f.textContent = 'משרה מלאה = ' + FTE_MONTH + ' שעות בחודש (42 שעות בשבוע). חודש = ' + DAYS_MONTH +
-    ' ימי עבודה = ' + WEEKS_MONTH + ' שבועות. מספר האנשים מכפיל את כל משימות הצוות, בהנחה שכולם עושים אותן באותו זמן. ' +
-    'זמנים לדוגמה בקטלוג, משנים לפי מה שקורה אצלכם.';
-}
+  sheet.appendChild(body);
 
-/* ---- summary ---- */
-function renderSummary(res){
-  const box = $('summary');
-  box.textContent = '';
-  const t = res.totals;
-  const head = el('div','brand');
-  const svg = document.createElementNS('http://www.w3.org/2000/svg','svg');
-  svg.setAttribute('class','mark'); svg.setAttribute('aria-hidden','true');
-  const use = document.createElementNS('http://www.w3.org/2000/svg','use');
-  use.setAttribute('href','#mkBars'); svg.appendChild(use);
-  head.appendChild(svg);
-  const wm = el('span','wm');
-  wm.appendChild(document.createTextNode('w'));
-  const em = el('em'); em.textContent = 'ai'; wm.appendChild(em);
-  wm.appendChild(document.createTextNode('ves'));
-  head.appendChild(wm);
-  box.appendChild(head);
-
-  box.appendChild(el('h1', null, 'הזמן שחוזר לצוות'));
-  box.appendChild(el('div','goldline'));
-  const n = el('div','sum-num'); n.appendChild(el('bdi', null, nf(t.freedMonth)));
-  box.appendChild(n);
-  box.appendChild(el('div','sum-sub', 'שעות בחודש · ' + freeText(t.fte) + ' · ' + nf(t.freedYear) + ' שעות בשנה'));
-
-  const ringBox = el('div','sum-block');
-  ringBox.style.cssText = 'background:var(--deep);border-radius:20px;padding:18px;display:flex;align-items:center;gap:16px;color:#fff';
-  const rw = el('div');
-  rw.id = 'sumRings';
-  fillRings(rw, t.fte, t.freedMonthExact === 0);
-  rw.style.cssText = 'display:flex;gap:6px;align-items:center';
-  ringBox.appendChild(rw);
-  const dreamText = state.dream.chips.concat(state.dream.text ? [state.dream.text] : []).join(' · ');
-  const cap = el('div');
-  cap.appendChild(el('div', null, 'מתוך משרה מלאה, החלק בזהב הוא מה שהתפנה'));
-  const d2 = el('div', null, dreamText || 'זמן לצמיחה');
-  d2.style.cssText = 'color:var(--gold);font-weight:800;margin-top:4px';
-  cap.appendChild(d2);
-  ringBox.appendChild(cap);
-  box.appendChild(ringBox);
-
-  const mb = el('div','sum-block');
-  mb.appendChild(el('h2', null, 'ההר'));
-  mb.appendChild(mountain(res));
-  box.appendChild(mb);
-
-  const top = res.rows.slice().sort((a,b) => b.freedMonth - a.freedMonth).slice(0,3);
-  if(top.length){
-    const tb = el('div','sum-block');
-    tb.appendChild(el('h2', null, 'שלוש האבנים הגדולות'));
-    const max = top[0].freedMonth || 1;
-    top.forEach((r,i) => {
-      const line = el('div');
-      line.style.marginTop = '12px';
-      const lab = el('div','row-split');
-      lab.appendChild(el('span', null, r.name || 'משימה ללא שם'));
-      const vv = el('span'); vv.appendChild(el('bdi', null, nf(r.freedShown))); vv.appendChild(document.createTextNode(' ש׳ בחודש'));
-      lab.appendChild(vv);
-      line.appendChild(lab);
-      const bar = el('div','bar' + (i === 0 ? ' gold' : ''));
-      const fill = el('i'); fill.style.width = Math.max(4, (r.freedMonth/max)*100) + '%';
-      bar.appendChild(fill);
-      line.appendChild(bar);
-      tb.appendChild(line);
-    });
-    box.appendChild(tb);
+  const foot = el('div','sheetfoot');
+  if(ui.editId){
+    const del = el('button','btn ghost','מחיקה');
+    del.type = 'button'; del.id = 'sheetDelete';
+    del.style.flex = '0 0 auto';
+    del.addEventListener('click', () => { const id = ui.editId; closeSheet(); deleteTask(id); });
+    foot.appendChild(del);
   }
+  const ok = el('button','btn', ui.editId ? 'שמירה' : 'הוספה לרשימה');
+  ok.type = 'button'; ok.id = 'sheetSave';
+  ok.addEventListener('click', commitDraft);
+  foot.appendChild(ok);
+  sheet.appendChild(foot);
 
-  if(dreamText){
-    const db = el('div','sum-block');
-    db.appendChild(el('h2', null, 'מה נעשה עם הזמן'));
-    db.appendChild(el('div','sum-sub', dreamText));
-    box.appendChild(db);
+  if(keep){
+    const again = sheet.querySelector('[data-k="' + keep + '"]');
+    if(again){
+      again.focus();
+      if(caret != null && again.setSelectionRange){
+        try{ again.setSelectionRange(caret, caret); }catch(e){}
+      }
+    }
   }
-  const back = el('button','key wide primary','חזרה לעריכה');
-  back.type = 'button';
-  back.addEventListener('click', () => { ui.screen = 'calc'; render(); });
-  box.appendChild(back);
 }
-/* Stones pile up to the exact height of the freed hours, on the same scale as the
-   dashed "one full position" line, so the picture and the number agree. */
-function mountain(res){
-  const NS = 'http://www.w3.org/2000/svg';
-  const W = 640, H = 300, base = H - 28;
-  const svg = document.createElementNS(NS,'svg');
-  svg.setAttribute('viewBox','0 0 '+W+' '+H);
-  svg.setAttribute('width','100%'); svg.setAttribute('role','img');
-  const total = res.totals.freedMonthExact;
-  svg.setAttribute('aria-label','ערימת אבנים בגובה ' + nf(res.totals.freedMonth) + ' שעות בחודש, מול קו של משרה מלאה אחת');
-  const scaleMax = Math.max(total, FTE_MONTH) * 1.18;
-  const yFor = hours => base - (hours/scaleMax) * (base - 16);
-
-  const stones = res.rows.slice().filter(r => r.freedMonth > 0).sort((a,b) => b.freedMonth - a.freedMonth);
-  let cum = 0;
-  stones.forEach((r,i) => {
-    const y0 = yFor(cum), y1 = yFor(cum + r.freedMonth);
-    cum += r.freedMonth;
-    const cy = (y0 + y1)/2;
-    const hh = Math.max(14, Math.abs(y0 - y1));
-    const spread = 1 - (cum/Math.max(total,1)) * 0.6;
-    const cx = W/2 + (i % 2 === 0 ? -1 : 1) * (i === 0 ? 0 : 26 + (i*9)) * spread;
-    const rx = Math.max(26, Math.min(130, 30 + Math.sqrt(r.freedMonth) * 11)) * spread;
-    const p = document.createElementNS(NS,'path');
-    const ry = hh/2 + 8;
-    p.setAttribute('d',
-      'M '+(cx-rx)+' '+cy+
-      ' C '+(cx-rx*0.96)+' '+(cy-ry*1.12)+' '+(cx-rx*0.34)+' '+(cy-ry*1.3)+' '+cx+' '+(cy-ry)+
-      ' C '+(cx+rx*0.44)+' '+(cy-ry*1.28)+' '+(cx+rx)+' '+(cy-ry*0.74)+' '+(cx+rx)+' '+cy+
-      ' C '+(cx+rx*0.98)+' '+(cy+ry*0.86)+' '+(cx+rx*0.4)+' '+(cy+ry)+' '+cx+' '+(cy+ry)+
-      ' C '+(cx-rx*0.46)+' '+(cy+ry*1.04)+' '+(cx-rx)+' '+(cy+ry*0.8)+' '+(cx-rx)+' '+cy+' Z');
-    p.setAttribute('fill', r.id === res.biggestId ? 'var(--gold)' : (i % 2 ? 'var(--teal-ink)' : 'var(--teal)'));
-    p.setAttribute('stroke','#fff'); p.setAttribute('stroke-width','2');
-    svg.appendChild(p);
+function commitDraft(){
+  const d = ui.draft;
+  if(!d) return;
+  if(!d.name.trim() && !d.minutes){ closeSheet(); return; }
+  const editId = ui.editId;
+  closeSheet();
+  apply(() => {
+    let g = findGroup(d.groupId) || ensureGroup();
+    if(editId){
+      const f = findTask(editId);
+      if(f){
+        if(f.g.id !== g.id){
+          f.g.tasks.splice(f.g.tasks.indexOf(f.t), 1);
+          g.tasks.push(f.t);
+        }
+        f.t.name = d.name; f.t.minutes = d.minutes; f.t.freq = d.freq;
+        f.t.auto = d.auto; f.t.dom = d.dom; f.t.on = d.on;
+      }
+    }else{
+      if(allTasks().length >= LIMITS.tasks){ toast('הרשימה מלאה'); return; }
+      const t = newTask(d.name, d.minutes, d.freq, d.dom);
+      t.auto = d.auto;
+      g.tasks.push(t);
+    }
   });
-
-  const line = document.createElementNS(NS,'line');
-  const ly = yFor(FTE_MONTH);
-  line.setAttribute('x1','8'); line.setAttribute('x2', W-8);
-  line.setAttribute('y1', ly); line.setAttribute('y2', ly);
-  line.setAttribute('stroke','var(--mute)'); line.setAttribute('stroke-width','2');
-  line.setAttribute('stroke-dasharray','8 7');
-  svg.appendChild(line);
-  const lab = document.createElementNS(NS,'text');
-  lab.setAttribute('x', W-78); lab.setAttribute('y', ly - 8);
-  lab.setAttribute('text-anchor','middle'); lab.setAttribute('direction','rtl');
-  lab.setAttribute('fill','var(--mute)');
-  lab.setAttribute('font-size','13'); lab.setAttribute('font-weight','700');
-  lab.textContent = 'משרה מלאה אחת';
-  svg.appendChild(lab);
-  return svg;
+  ui.screen = 'list';
+  render();
 }
 
 /* ============================================================
    6. EVENTS
    ============================================================ */
-function isBlank(t){ return t && !t.name.trim() && t.minutes === 0; }
-function addTask(name){
-  const cur = ui.activeTaskId ? findTask(ui.activeTaskId) : null;
-  if(typeof name !== 'string' && cur && isBlank(cur.t)){
-    const inp0 = $('taskEditor').querySelector('input');
-    if(inp0) inp0.focus();
-    return;
-  }
-  /* The new task joins the team the user is standing in, not groups[0] — otherwise
-     "+ עוד משימה" quietly moves it to the first team and multiplies it by the wrong
-     headcount. */
-  const g = (cur && cur.g) || ensureGroup();
-  apply(() => {
-    const t = newTask(typeof name === 'string' ? name : '', 0, 'day', null);
-    g.tasks.push(t);
-    ui.activeTaskId = t.id;
-    flash(t.id);
-  });
-  const inp = $('taskEditor').querySelector('input');
-  if(inp) inp.focus();
+/* Every mutation goes through here: mutate, persist, redraw. `quiet` skips the
+   redraw for keystrokes inside a field the user is still typing in. */
+function apply(fn, quiet){
+  fn();
+  save();
+  if(!quiet) render();
 }
-function flash(id){
-  ui.flashId = id;
-  setTimeout(() => { ui.flashId = null; render(['tape']); }, 1200);
+function snapshot(){ return JSON.parse(JSON.stringify(pack(state))); }
+function applyState(next, msg){
+  const prev = snapshot();
+  state = next;
+  save(); render();
+  offerUndo(msg, prev);
+}
+function toast(msg){
+  $('snackText').textContent = msg;
+  $('snackBtn').hidden = true;
+  $('snack').hidden = false;
+  clearTimeout(snackTimer);
+  snackTimer = setTimeout(() => { $('snack').hidden = true; }, 3200);
+}
+function offerUndo(msg, prevPacked){
+  undoSnapshot = prevPacked;
+  $('snackText').textContent = msg;
+  $('snackBtn').hidden = false;
+  $('snack').hidden = false;
+  clearTimeout(snackTimer);
+  clearTimeout(undoTimer);
+  snackTimer = setTimeout(() => { $('snack').hidden = true; }, 10000);
+  undoTimer = setTimeout(() => { undoSnapshot = null; }, 10000);
+}
+function doUndo(){
+  if(!undoSnapshot) return;
+  const back = sanitize(unpack(undoSnapshot));
+  undoSnapshot = null;
+  $('snack').hidden = true;
+  if(back){ state = back; save(); render(); }
 }
 function deleteTask(id){
   const prev = snapshot();
@@ -1588,10 +1515,6 @@ function deleteTask(id){
       const i = g.tasks.findIndex(t => t.id === id);
       if(i !== -1){ g.tasks.splice(i,1); break; }
     }
-    if(ui.activeTaskId === id){
-      const left = allTasks();
-      ui.activeTaskId = left.length ? left[left.length-1].t.id : null;
-    }
   });
   offerUndo('המשימה נמחקה', prev);
 }
@@ -1599,143 +1522,142 @@ function deleteGroup(id){
   const prev = snapshot();
   apply(() => {
     const i = state.groups.findIndex(g => g.id === id);
-    if(i !== -1) state.groups.splice(i,1);
-    // deleting never promotes a named group back into the hook
-    if(!findTask(ui.activeTaskId)){
-      const left = allTasks();
-      ui.activeTaskId = left.length ? left[0].t.id : null;
+    if(i === -1) return;
+    const dead = state.groups.splice(i,1)[0];
+    if(dead.tasks.length){
+      const host = state.groups[0] || (state.groups.push(newGroup('הצוות שלי')), state.groups[0]);
+      dead.tasks.forEach(t => host.tasks.push(t));
     }
   });
-  offerUndo('הצוות נמחק', prev);
+  offerUndo('הצוות נמחק, המשימות עברו לצוות הראשון', prev);
 }
-function snapshot(){ return JSON.stringify(pack(state)); }
-function restore(json){
-  const s = sanitize(unpack(JSON.parse(json)));
-  if(s){ state = s; const first = allTasks(); ui.activeTaskId = first.length ? first[0].t.id : null; save(); render(); }
-}
-function offerUndo(text, prev){
-  undoSnapshot = prev;
-  $('snackText').textContent = text;
-  $('snackBtn').hidden = false;   // a toast may have hidden it and cleared its restore timer
-  $('snack').hidden = false;
-  clearTimeout(undoTimer);
-  undoTimer = setTimeout(() => { $('snack').hidden = true; undoSnapshot = null; }, 10000);
-}
-$('snackBtn').addEventListener('click', () => {
-  if(undoSnapshot) restore(undoSnapshot);
-  undoSnapshot = null; $('snack').hidden = true; clearTimeout(undoTimer);
-});
-
-$('btnMore').addEventListener('click', () => addTask());
-$('btnQuestions').addEventListener('click', () => { ui.questionsOpen = !ui.questionsOpen; render(['keys']); });
-$('btnGroups').addEventListener('click', () => { ui.groupsOpen = !ui.groupsOpen; render(['keys','groups']); });
-$('btnSummary').addEventListener('click', () => { ui.screen = 'summary'; render(); window.scrollTo(0,0); });
-$('btnDemo').addEventListener('click', () => { const prev = snapshot(); apply(loadDemo); offerUndo('נטען תרחיש לדוגמה', prev); });
-$('btnReset').addEventListener('click', () => {
+function loadDemo(){
   const prev = snapshot();
-  apply(() => { state = emptyState(); ui.activeTaskId = null; ui.refineOpen = false; ui.groupsOpen = false; ui.questionsOpen = false; });
-  offerUndo('נפתח תרחיש חדש', prev);
-});
-$('btnCopy').addEventListener('click', async () => {
-  const text = summaryText();
-  try{ await navigator.clipboard.writeText(text); toast('הסיכום הועתק'); }
-  catch(e){ window.prompt('העתיקו את הטקסט', text); }
-});
-let selfHash = false;
-$('btnShare').addEventListener('click', async () => {
-  const url = shareUrl();
-  if(url.length > 1800){ toast('התרחיש גדול מדי לקישור. אפשר להעתיק סיכום במקום.'); return; }
-  // only arm the guard when the assignment will actually fire hashchange,
-  // otherwise the flag latches and swallows the next incoming link
-  const nextHash = 's=' + b64urlEncode(JSON.stringify(pack(state)));
-  if(location.hash !== '#' + nextHash){
-    selfHash = true;
-    location.hash = nextHash;
-  }
-  try{ await navigator.clipboard.writeText(url); toast('הקישור הועתק'); }
-  catch(e){ window.prompt('העתיקו את הקישור', url); }
-});
-function toast(text){
-  $('snackText').textContent = text;
-  $('snackBtn').hidden = true;
-  $('snack').hidden = false;
-  clearTimeout(undoTimer);
-  undoTimer = setTimeout(() => { $('snack').hidden = true; $('snackBtn').hidden = false; }, 4000);
+  const s = emptyState();
+  const a = newGroup('רכזות גיוס'); a.people = 2;
+  [['מיון קורות חיים',120,'day',0],
+   ['תיאום ראיונות עם מועמדים ומראיינים',45,'day',0],
+   ['שליחת עדכונים ותשובות למועמדים',30,'day',0]].forEach(x => {
+    const t = newTask(x[0],x[1],x[2],x[3]); a.tasks.push(t);
+  });
+  const b = newGroup('מנהלת חשבונות'); b.people = 1;
+  [['הקלדת חשבוניות ספקים',90,'day',1],
+   ['גבייה ותזכורות ללקוחות',60,'day',1],
+   ['התאמות בנק',180,'week',1]].forEach(x => {
+    const t = newTask(x[0],x[1],x[2],x[3]); b.tasks.push(t);
+  });
+  const c = newGroup('נציגות שירות'); c.people = 3;
+  [['מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day',3],
+   ['תיעוד פניות במערכת',45,'day',3],
+   ['עדכון CRM אחרי פגישות ושיחות',45,'day',3],
+   ['ניתוב פניות לגורם הנכון',30,'day',3]].forEach(x => {
+    const t = newTask(x[0],x[1],x[2],x[3]); c.tasks.push(t);
+  });
+  s.groups.push(a,b,c);
+  state = s;
+  ui.screen = 'list';
+  save(); render();
+  offerUndo('נטען תרחיש לדוגמה', prev);
+}
+function resetAll(){
+  const prev = snapshot();
+  state = emptyState();
+  ui.screen = 'list';
+  save(); render();
+  offerUndo('תרחיש חדש', prev);
 }
 function summaryText(){
   const res = compute(state);
-  const t = res.totals;
-  const lines = [];
-  lines.push('*' + nf(t.freedMonth) + ' שעות בחודש חוזרות לצוות*');
-  lines.push(fteText(t.fte) + ' פנויה לפרויקטים · ' + nf(t.freedYear) + ' שעות בשנה');
+  const lines = ['מחשבון האבנים הקטנות · WAIVES', ''];
+  lines.push('סה״כ מתפנה בחודש: ' + nf(res.totals.freedMonth) + ' שעות');
+  lines.push(freeText(res.totals.fte));
+  lines.push(nf(res.totals.freedYear) + ' שעות בשנה');
   lines.push('');
-  res.rows.slice().sort((a,b) => b.freedMonth - a.freedMonth).forEach(r => {
-    lines.push('• ' + (r.name || 'משימה') + ' — ' + nf(r.freedShown) + ' ש׳ בחודש');
+  res.live.slice().sort((a,b) => b.freedMonth - a.freedMonth).forEach(r => {
+    lines.push('· ' + (r.name || 'משימה ללא שם') + ' — ' + fmtHours(r.freedShown) + ' בחודש');
   });
-  const dream = state.dream.chips.concat(state.dream.text ? [state.dream.text] : []).join(' · ');
-  if(dream){ lines.push(''); lines.push('מה נעשה עם הזמן: ' + dream); }
+  const dream = res.dream.chips.concat(res.dream.text ? [res.dream.text] : []).join(' · ');
+  if(dream){ lines.push(''); lines.push('הזמן הזה הולך ל: ' + dream); }
   lines.push('');
-  lines.push('מחשבון האבנים הקטנות · WAIVES');
+  lines.push('משרה מלאה = ' + FTE_MONTH + ' שעות בחודש (' + DAYS_MONTH + ' ימי עבודה, יום של ' + DAY_HOURS + ' שעות).');
   return lines.join('\n');
 }
-function loadDemo(){
-  state = emptyState();
-  const mk = (name, domain, people, tasks) => {
-    const g = newGroup(name, false);
-    g.domain = domain; g.people = people;
-    tasks.forEach(([n,m,f,a]) => {
-      const t = newTask(n, m, f, n);
-      t.auto = a; t.refined = true;
-      g.tasks.push(t);
-    });
-    state.groups.push(g);
-  };
-  mk('רכזות גיוס','משאבי אנוש וגיוס',2,[
-    ['מיון קורות חיים',120,'day',0.7],
-    ['תיאום ראיונות עם מועמדים ומראיינים',45,'day',0.9],
-    ['שליחת עדכונים ותשובות למועמדים',30,'day',0.9],
-    ['עדכון סטטוס מועמדים בטבלה או במערכת',30,'day',0.9]]);
-  mk('מנהלת חשבונות','כספים והנהלת חשבונות',1,[
-    ['הקלדת חשבוניות ספקים',90,'day',0.9],
-    ['גבייה ותזכורות ללקוחות',60,'day',0.7],
-    ['התאמות בנק',180,'week',0.5]]);
-  mk('נציגות שירות','שירות, מכירות ושיווק',3,[
-    ['מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day',0.5],
-    ['תיעוד פניות במערכת',45,'day',0.9],
-    ['ניתוב פניות לגורם הנכון',30,'day',0.9]]);
-  const first = allTasks();
-  ui.activeTaskId = first.length ? first[0].t.id : null;
-  ui.refineOpen = true;
+let selfHash = false;
+function doShare(){
+  const url = shareUrl();
+  if(url.length > 1900){
+    doCopy();
+    toast('התרחיש ארוך מדי לקישור, הסיכום הועתק במקום');
+    return;
+  }
+  const nextHash = 's=' + url.split('#s=')[1];
+  if(location.hash !== '#' + nextHash) selfHash = true;
+  location.hash = nextHash;
+  copyText(url, 'הקישור הועתק', 'הקישור בשורת הכתובת');
+}
+function doCopy(){ copyText(summaryText(), 'הסיכום הועתק', 'לא הצלחנו להעתיק'); }
+function copyText(text, good, bad){
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(() => toast(good), () => toast(bad));
+  }else{
+    try{
+      const ta = document.createElement('textarea');
+      ta.value = text; ta.setAttribute('readonly','');
+      ta.style.cssText = 'position:fixed;top:-1000px';
+      document.body.appendChild(ta); ta.select();
+      document.execCommand('copy'); document.body.removeChild(ta);
+      toast(good);
+    }catch(e){ toast(bad); }
+  }
 }
 
-/* ============================================================
-   7. BOOT — the hash is validated before anything local is touched
-   ============================================================ */
-(function boot(){
-  const local = loadLocal();
-  const fromHash = readHash();
-  if(fromHash && fromHash !== 'bad'){
-    state = fromHash;
-    if(local){
-      setTimeout(() => offerUndo('נפתח תרחיש מקישור', JSON.stringify(pack(local))), 400);
-    }
-  }else{
-    if(fromHash === 'bad') setTimeout(() => toast('הקישור לא נקרא, נפתח התרחיש שלך'), 300);
-    state = local || emptyState();
-  }
-  const tasks = allTasks();
-  if(tasks.length){
-    ui.activeTaskId = tasks[0].t.id;
-    if(tasks.some(x => x.t.refined)) ui.refineOpen = true;
-  }else{
-    // the three questions are live from the first second — never a button to press first
-    const g = ensureGroup();
-    const t = newTask('', 0, 'day', null);
-    g.tasks.push(t);
-    ui.activeTaskId = t.id;
-  }
+function go(screen){
+  ui.screen = screen;
+  closeMenu();
   render();
-})();
+  window.scrollTo(0,0);
+}
+function closeMenu(){
+  ui.menuOpen = false;
+  $('menu').hidden = true;
+  $('btnMenu').setAttribute('aria-expanded','false');
+}
+function buildMenu(){
+  const m = $('menu');
+  m.textContent = '';
+  [['טעינת דוגמה', loadDemo],
+   ['קישור לתרחיש', doShare],
+   ['העתקת סיכום', doCopy],
+   ['תרחיש חדש', resetAll]].forEach(([label, fn]) => {
+    const b = el('button', null, label);
+    b.type = 'button';
+    b.setAttribute('role','menuitem');
+    b.addEventListener('click', () => { closeMenu(); fn(); });
+    m.appendChild(b);
+  });
+}
+
+$('btnNew').addEventListener('click', () => { closeMenu(); openSheet(null); });
+$('btnMenu').addEventListener('click', () => {
+  ui.menuOpen = !ui.menuOpen;
+  $('menu').hidden = !ui.menuOpen;
+  $('btnMenu').setAttribute('aria-expanded', ui.menuOpen ? 'true' : 'false');
+});
+document.addEventListener('click', ev => {
+  if(!ui.menuOpen) return;
+  if($('menu').contains(ev.target) || $('btnMenu').contains(ev.target)) return;
+  closeMenu();
+});
+$('navList').addEventListener('click', () => go('list'));
+$('navDash').addEventListener('click', () => go('dash'));
+$('navTeams').addEventListener('click', () => go('teams'));
+$('snackBtn').addEventListener('click', doUndo);
+$('scrim').addEventListener('click', ev => { if(ev.target === $('scrim')) closeSheet(); });
+document.addEventListener('keydown', ev => {
+  if(ev.key !== 'Escape') return;
+  if(ui.draft) closeSheet();
+  else if(ui.menuOpen) closeMenu();
+});
 
 /* A shared link opened in a tab that is already on the page is a navigation the
    browser handles without reloading — the scenario must still load. */
@@ -1746,19 +1668,39 @@ window.addEventListener('hashchange', () => {
   if(incoming === 'bad'){ toast('הקישור לא נקרא, נפתח התרחיש שלך'); return; }
   const prev = snapshot();
   state = incoming;
-  const tasks = allTasks();
-  ui.activeTaskId = tasks.length ? tasks[0].t.id : null;
-  ui.screen = 'calc';
-  save();
-  render();
+  ui.screen = 'list';
+  closeSheet();
+  save(); render();
   offerUndo('נפתח תרחיש מקישור', prev);
 });
 
-/* exposed for QA only */
+/* ============================================================
+   7. BOOT — the hash is validated before anything local is touched
+   ============================================================ */
+function boot(){
+  buildMenu();
+  const hash = readHash();
+  const local = loadLocal();
+  if(hash && hash !== 'bad'){
+    state = hash;
+    save(); render();
+    if(local && local.groups.some(g => g.tasks.length))
+      offerUndo('נפתח תרחיש מקישור', pack(local));
+  }else{
+    state = local || emptyState();
+    render();
+    if(hash === 'bad') toast('הקישור לא נקרא, נפתח התרחיש שלך');
+  }
+}
+boot();
+
+/* Exposed for the automated checks only. Nothing in the page reads this. */
 window.__waives = {
   get state(){ return state; },
+  get ui(){ return ui; },
   compute: () => compute(state),
-  shareUrl, summaryText, sanitize, unpack, pack, b64urlEncode, b64urlDecode
+  shareUrl, summaryText, sanitize, unpack, pack, b64urlEncode, b64urlDecode,
+  freeText, FTE_MONTH, DAYS_MONTH, WEEKS_MONTH
 };
 </script>
 </body>
