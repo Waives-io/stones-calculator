@@ -9,6 +9,7 @@ const SHEKEL = String.fromCharCode(8362);
 const ROOT = path.join(__dirname, '..');
 const SHOTS = path.join(__dirname, 'shots');
 const PORT = 8777;
+const TIME_KEYS = [15, 30, 45, 60, 120];
 
 let pass = 0, fail = 0;
 const failures = [];
@@ -33,6 +34,11 @@ const enc = obj => Buffer.from(JSON.stringify(obj),'utf8').toString('base64')
 
 /* --- helpers that read the SCREEN, not the internals --- */
 const numOf = s => Number(String(s).replace(/[^\d.]/g,''));
+function minLabel(m){
+  if(m < 60) return m + ' דק׳';
+  const h = m/60;
+  return (Number.isInteger(h) ? h : h.toFixed(1).replace('.0','')) + ' ש׳';
+}
 async function listNums(p){
   return p.evaluate(() => {
     const n = e => Number(e.textContent.replace(/[^\d.]/g,''));
@@ -43,34 +49,47 @@ async function listNums(p){
       on:   r.querySelector('.tick').getAttribute('aria-checked') === 'true'
     }));
     const live = rows.filter(r => r.on);
-    const tot = document.querySelector('.total .big');
+    const tot = document.querySelector('.totalrow .tvalue');
+    const groups = [...document.querySelectorAll('.ghead')].map(g => ({
+      name: g.querySelector('.gname').textContent,
+      tot:  n(g.querySelector('.gtot')),
+      open: g.getAttribute('aria-expanded') === 'true'
+    }));
     return {
-      rows, live,
+      rows, live, groups,
       sum: Math.round(live.reduce((a,r) => a + r.hrs, 0) * 10) / 10,
       total: tot ? n(tot) : null,
-      free: (document.querySelector('.total .free') || {}).textContent || ''
+      label: (document.querySelector('.totalrow .tlabel') || {}).textContent || ''
     };
   });
 }
-async function addTask(p, o){
+async function openSheet(p){
   await p.locator('#btnNew').click();
   await p.waitForSelector('#sheet #fName');
-  if(o.chip) await p.locator('#sheet .chip', {hasText: o.chip}).first().click();
-  if(o.name){ await p.locator('#fName').fill(''); await p.locator('#fName').type(o.name, {delay:5}); }
-  if(o.freq){
-    for(let i=0; i<4; i++){
-      const cur = (await p.locator('#fFreq').textContent()).trim();
-      if(cur === o.freq) break;
-      await p.locator('#fFreq').click();
+}
+async function addTask(p, o){
+  await openSheet(p);
+  if(o.chip) await p.locator('#sheet .chip', {hasText:o.chip}).first().click();
+  if(o.name) await p.locator('#fName').fill(o.name);
+  if(o.freq) await p.selectOption('#fFreq', o.freq);
+  if(o.minutes !== undefined){
+    if(TIME_KEYS.indexOf(o.minutes) !== -1){
+      await p.locator('#sheet .chip', {hasText: minLabel(o.minutes)}).first().click();
+    }else{
+      await p.locator('#fOther').click();
+      await p.locator('#fMinutes').fill(String(o.minutes));
     }
   }
-  if(o.minutes !== undefined){
-    const box = p.locator('#sheet input[aria-label="מספר דקות"]');
-    await box.fill(''); await box.type(String(o.minutes), {delay:5});
+  if(o.auto) await p.locator('#sheet .chip', {hasText:o.auto}).first().click();
+  if(o.newGroup){
+    await p.locator('#fNewGroup').fill(o.newGroup);
+    await p.locator('#fAddGroup').click();
+    await p.waitForTimeout(120);
+  }else if(o.group){
+    await p.locator('#sheet .chip', {hasText:o.group}).first().click();
   }
-  if(o.auto) await p.locator('#sheet .chip', {hasText: o.auto}).first().click();
   await p.locator('#sheetSave').click();
-  await p.waitForTimeout(150);
+  await p.waitForTimeout(160);
 }
 
 async function main(){
@@ -82,7 +101,8 @@ async function main(){
 
   const browser = await chromium.launch();
   const consoleErrors = [];
-  const ctx = await browser.newContext({viewport:{width:1280, height:900}, locale:'he-IL'});
+  const ctx = await browser.newContext({viewport:{width:1280, height:900}, locale:'he-IL',
+                                        permissions:['clipboard-read','clipboard-write']});
   const page = await ctx.newPage();
   page.on('console', m => { if(m.type() === 'error') consoleErrors.push(m.text()); });
   page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
@@ -90,483 +110,582 @@ async function main(){
     await p.goto(url);
     await p.evaluate(() => { try{ localStorage.clear(); }catch(e){} });
     await p.goto(url);
-    await p.waitForTimeout(150);
+    await p.waitForTimeout(160);
   };
   await fresh(page);
+  const screenText = [];
+  /* innerText, not textContent: textContent would also scan the page's own
+     <script>, so this would be testing the source instead of the screen. */
+  const snapText = async p => { screenText.push(await p.evaluate(() => document.body.innerText)); };
 
   /* ---------------------------------------------------------- */
-  section('1. המסך הראשון הוא רשימה');
-  ok('רשימה ריקה מזמינה להוסיף',
-     (await page.locator('.empty h3').textContent()).includes('ריקה'));
-  ok('יש כפתור "משימה ראשונה"', await page.locator('#emptyAdd').isVisible());
-  ok('יש כפתור דוגמה גם במצב ריק', await page.locator('#emptyDemo').isVisible());
-  ok('כפתור "חדש" קיים בסרגל העליון', await page.locator('#btnNew').isVisible());
-  const newBox = await page.locator('#btnNew').boundingBox();
-  const titleBox = await page.locator('.top h1').boundingBox();
-  ok('כפתור "חדש" יושב בצד שמאל, משמאל לכותרת',
-     newBox.x < titleBox.x, JSON.stringify({newX:newBox.x, titleX:titleBox.x}));
-  ok('סרגל תחתון עם שלושה מסכים',
-     (await page.locator('nav.bar button').count()) === 3);
-  ok('אין שורות עדיין', (await page.locator('.row').count()) === 0);
+  section('1 · הרשימה היא המסך הראשון');
+  ok('הכותרת היא מחשבון האבנים הקטנות',
+     (await page.locator('#appTitle').textContent()).indexOf('מחשבון האבנים הקטנות') === 0);
+  ok('כפתור "חדש" קיים', await page.locator('#btnNew').isVisible());
+  ok('כפתור "חדש" בצד שמאל למעלה', await page.evaluate(() => {
+    const b = document.getElementById('btnNew').getBoundingClientRect();
+    return b.left < window.innerWidth/2 && b.top < 90;
+  }));
+  ok('המסך הפתוח הוא הרשימה', !(await page.locator('#screenList').isHidden()));
+  ok('מסך הגדרות מוסתר', await page.locator('#screenSet').isHidden());
+  ok('מסך דשבורד מוסתר', await page.locator('#screenDash').isHidden());
+  ok('אין טופס על מסך הרשימה', (await page.locator('#screenList input').count()) === 0);
+  ok('מצב ריק מסביר מה לעשות',
+     (await page.locator('#screenList').textContent()).indexOf('הרשימה ריקה') !== -1);
+  ok('יש כפתור משימה ראשונה', await page.locator('#emptyAdd').isVisible());
+  ok('יש כפתור טעינת דוגמה', await page.locator('#emptyDemo').isVisible());
+  ok('שלושה מסכים בסרגל התחתון', (await page.locator('nav.bar button').count()) === 3);
+  ok('הסרגל התחתון מוביל להגדרות', await page.locator('#navSet').isVisible());
+  await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('2. הוספה: הטופס הוא המחשבון');
-  await page.locator('#btnNew').click();
-  await page.waitForSelector('#sheet #fName');
-  const n0 = numOf(await page.locator('#sheet .n').textContent());
-  ok('הטופס נפתח עם 0', n0 === 0, String(n0));
+  section('2 · הגיליון הוא המחשבון');
+  await openSheet(page);
+  ok('הגיליון נפתח עם שאלה ראשונה',
+     (await page.locator('#sheet').textContent()).indexOf('מה המשימה?') !== -1);
+  ok('מספר חי בראש הגיליון', await page.locator('#sheet .sheethead .n').isVisible());
+  ok('המספר מתחיל באפס', numOf(await page.locator('#sheet .sheethead .n').textContent()) === 0);
   await page.locator('#sheet .chip', {hasText:'מיון קורות חיים'}).first().click();
-  const n1 = numOf(await page.locator('#sheet .n').textContent());
-  ok('לחיצה על משימה מוכנה מזיזה את המספר מיד', n1 > 0, String(n1));
-  await page.locator('#sheet .chip', {hasText:'חצי (50%)'}).first().click();
-  const n2 = numOf(await page.locator('#sheet .n').textContent());
-  ok('לחיצה על אחוז אוטומציה מזיזה את המספר', n2 !== n1, n1 + ' → ' + n2);
-  const freqBefore = (await page.locator('#fFreq').textContent()).trim();
-  await page.locator('#fFreq').click();
-  const freqAfter = (await page.locator('#fFreq').textContent()).trim();
-  const n3 = numOf(await page.locator('#sheet .n').textContent());
-  ok('התדירות היא כפתור בתוך השאלה ומשנה את המספר',
-     freqBefore !== freqAfter && n3 !== n2, freqBefore + ' → ' + freqAfter);
-  const qLabel = (await page.locator('#sheet .qlabel').first().textContent()).trim();
-  ok('השאלה כוללת את המילים "כמה זמן היא לוקחת"', qLabel.includes('כמה זמן היא לוקחת'), qLabel);
-  ok('סימן השאלה נשאר צמוד לשאלה', qLabel.endsWith('?'), qLabel);
-  ok('אין שורת "לשינוי" נפרדת מתחת',
-     !(await page.locator('#sheet').textContent()).includes('לשינוי'));
+  const afterPick = numOf(await page.locator('#sheet .sheethead .n').textContent());
+  ok('המספר זז אחרי בחירת משימה מוכנה (' + afterPick + ')', afterPick === 28);
+  await page.locator('#sheet .chip', {hasText:'כמעט הכול'}).first().click();
+  ok('המספר זז אחרי שינוי אוטומציה',
+     numOf(await page.locator('#sheet .sheethead .n').textContent()) === 36);
+  ok('התדירות היא תפריט בחירה, לא כפתור מדלג',
+     await page.evaluate(() => document.getElementById('fFreq').tagName === 'SELECT'));
+  ok('בתפריט התדירות ארבע אפשרויות', (await page.locator('#fFreq option').count()) === 4);
+  ok('התדירות יושבת בתוך השאלה', await page.evaluate(() => {
+    const l = document.getElementById('fFreq').closest('.qlabel');
+    return !!l && l.textContent.indexOf('כמה זמן היא לוקחת') === 0;
+  }));
+  await page.selectOption('#fFreq', 'week');
+  ok('בחירת "פעם בשבוע" משנה את המספר',
+     near(numOf(await page.locator('#sheet .sheethead .n').textContent()), 8.1));
+  await page.selectOption('#fFreq', 'day');
+  ok('יש שאלת שיוך', (await page.locator('#sheet').textContent()).indexOf('למי משויכת המשימה?') !== -1);
+  ok('השאלות בגיליון לא מניחות צוות',
+     (await page.locator('#sheet .qlabel').allTextContents()).join(' ').indexOf('צוות') === -1);
   await page.locator('#sheetClose').click();
-  ok('סגירה בלי שמירה לא הוסיפה שורה', (await page.locator('.row').count()) === 0);
+  await page.waitForTimeout(140);
+  ok('הגיליון נסגר', await page.locator('#scrim').isHidden());
 
   /* ---------------------------------------------------------- */
-  section('3. משימה חופשית שלא ברשימה המוכנה');
-  await addTask(page, {name:'סידור תיקיות בשרת', minutes:40, freq:'פעם ביום', auto:'רוב (70%)'});
-  ok('משימה שנכתבה ביד נכנסה לרשימה', (await page.locator('.row').count()) === 1);
+  section('3 · תיבת הדקות מופיעה רק ב"אחר"');
+  await openSheet(page);
+  ok('תיבת דקות לא קיימת מראש', (await page.locator('#fMinutes').count()) === 0);
+  await page.locator('#sheet .chip', {hasText:'30 דק׳'}).first().click();
+  ok('אחרי לחיצה על 30 דק׳ אין תיבה נוספת עם 30', (await page.locator('#fMinutes').count()) === 0);
+  ok('הכפתור 30 דק׳ מסומן', await page.evaluate(() => {
+    const b = [...document.querySelectorAll('#sheet .chip')].filter(x => x.textContent.trim() === '30 דק׳')[0];
+    return !!b && b.getAttribute('aria-pressed') === 'true';
+  }));
+  ok('יש כפתור "אחר"', await page.locator('#fOther').isVisible());
+  await page.locator('#fOther').click();
+  ok('"אחר" פותח תיבת דקות', await page.locator('#fMinutes').isVisible());
+  await page.locator('#fMinutes').fill('25');
+  await page.waitForTimeout(120);
+  ok('הדקות החופשיות נכנסות לחישוב',
+     near(numOf(await page.locator('#sheet .sheethead .n').textContent()), 5.8));
+  ok('"אחר" מסומן', (await page.locator('#fOther').getAttribute('aria-pressed')) === 'true');
+  await page.locator('#sheet .chip', {hasText:'45 דק׳'}).first().click();
+  ok('חזרה לכפתור מוכן סוגרת את התיבה', (await page.locator('#fMinutes').count()) === 0);
+  await page.locator('#sheetClose').click();
+
+  /* ---------------------------------------------------------- */
+  section('4 · משימה שנכתבת ביד');
+  await fresh(page);
+  await addTask(page, {name:'מענה לטלפונים של הסניף', minutes:30, freq:'day', auto:'רוב'});
   let L = await listNums(page);
-  ok('השם נשמר כפי שנכתב', L.rows[0].name === 'סידור תיקיות בשרת', L.rows[0].name);
-  // 40 דק׳ × 20 ימים × אדם אחד × 70% = 9.33
-  ok('החישוב למשימה חופשית נכון', near(L.rows[0].hrs, 9.3), String(L.rows[0].hrs));
+  ok('משימה חופשית נכנסת לרשימה', L.rows.length === 1);
+  ok('השם נשמר', L.rows[0].name === 'מענה לטלפונים של הסניף');
+  ok('החישוב נכון (7 ש׳)', L.rows[0].hrs === 7);
+  ok('המשימה הצטרפה לרשימה המוכנה',
+     await page.evaluate(() => window.__waives.lib[0].name === 'מענה לטלפונים של הסניף'));
+  await openSheet(page);
+  ok('היא מופיעה ככפתור מוכן בגיליון',
+     (await page.locator('#sheet .chips').first().textContent()).indexOf('מענה לטלפונים של הסניף') !== -1);
+  await page.locator('#sheetClose').click();
+  ok('הרשימה המוכנה נשמרת במפתח נפרד',
+     await page.evaluate(() => !!localStorage.getItem('waives.stones.lib')));
 
   /* ---------------------------------------------------------- */
-  section('4. בדיקת חישוב מדויקת (20 ימים, 4.5 שבועות, משרה 180)');
+  section('5 · חישוב מדויק לפי הקבועים');
   const calc = await page.evaluate(() => {
-    const W = window.__waives;
-    const mk = (minutes, freq, people, auto) =>
-      (minutes/60) * (freq==='day'?W.DAYS_MONTH:freq==='week'?W.WEEKS_MONTH:freq==='month'?1:1/3) * people * auto;
-    return {
-      fte:W.FTE_MONTH, days:W.DAYS_MONTH, weeks:W.WEEKS_MONTH,
-      a:mk(120,'day',1,0.7), b:mk(45,'day',4,0.9), c:mk(180,'week',1,0.5), d:mk(600,'quarter',1,0.7),
-      words:[W.freeText(0.16), W.freeText(1.69), W.freeText(1), W.freeText(2), W.freeText(0)]
-    };
+    const w = window.__waives;
+    return {fte:w.FTE_MONTH, days:w.DAYS_MONTH, weeks:w.WEEKS_MONTH};
   });
-  ok('משרה מלאה = 180 שעות', calc.fte === 180, String(calc.fte));
-  ok('חודש = 20 ימי עבודה', calc.days === 20, String(calc.days));
-  ok('חודש = 4.5 שבועות', calc.weeks === 4.5, String(calc.weeks));
-  ok('120 דק׳ ליום, אדם אחד, 70% = 28 שעות', near(calc.a, 28), String(calc.a));
-  ok('45 דק׳ ליום, 4 אנשים, 90% = 54 שעות', near(calc.b, 54), String(calc.b));
-  ok('180 דק׳ לשבוע, 50% = 6.75 שעות', near(calc.c, 6.75), String(calc.c));
-  ok('600 דק׳ לרבעון, 70% = 2.33 שעות', near(calc.d, 2.333, 0.01), String(calc.d));
+  ok('משרה מלאה = 180 שעות', calc.fte === 180);
+  ok('20 ימי עבודה בחודש', calc.days === 20);
+  ok('4.5 שבועות בחודש', calc.weeks === 4.5);
+  const one = async (o, expect, label) => {
+    await fresh(page);
+    await addTask(page, o);
+    const r = await listNums(page);
+    ok(label + ' (' + r.rows[0].hrs + ')', near(r.rows[0].hrs, expect));
+  };
+  await one({name:'יומי', minutes:60, freq:'day', auto:'כמעט הכול'}, 18, 'שעה ביום × 20 × 0.9 = 18');
+  await one({name:'שבועי', minutes:120, freq:'week', auto:'חצי'}, 4.5, 'שעתיים בשבוע × 4.5 × 0.5 = 4.5');
+  await one({name:'חודשי', minutes:120, freq:'month', auto:'רוב'}, 1.4, 'שעתיים בחודש × 0.7 = 1.4');
+  await one({name:'רבעוני', minutes:120, freq:'quarter', auto:'רוב'}, 0.5, 'שעתיים ברבעון = כחצי שעה בחודש');
+  await addTask(page, {name:'עוד אחת', minutes:45, freq:'day', auto:'רוב'});
+  await addTask(page, {name:'ועוד אחת', minutes:15, freq:'week', auto:'חצי'});
+  L = await listNums(page);
+  ok('הסכום על המסך = סכום השורות (' + L.total + ')', near(L.total, L.sum, 0.051));
+  await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('5. הרשימה חייבת להסתדר (קריאה מהמסך)');
+  section('6 · הרשימה מסתכמת, כפי שהיא נקראת מהמסך');
   await fresh(page);
   await page.locator('#emptyDemo').click();
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(220);
   L = await listNums(page);
-  ok('הדוגמה טענה 10 משימות', L.rows.length === 10, String(L.rows.length));
-  ok('סכום השורות = הסה' + '״' + 'כ שעל המסך', L.sum === L.total, L.sum + ' ≠ ' + L.total);
-  ok('הסה' + '״' + 'כ של הדוגמה הוא 303', L.total === 303, String(L.total));
-  ok('השורה הגדולה ביותר היא 84 שעות',
-     Math.max.apply(null, L.rows.map(r => r.hrs)) === 84);
-  ok('הכותרת סופרת כמה בחישוב',
-     (await page.locator('.cardhead .sub').textContent()).includes('10 מתוך 10'));
+  ok('הדוגמה טוענת עשר משימות', L.rows.length === 10);
+  ok('סכום הדוגמה 303 שעות (' + L.total + ')', L.total === 303);
+  ok('השורות מסתכמות בדיוק לסכום', near(L.sum, L.total, 0.051));
+  ok('שורת הסכום כתובה "סה״כ מתפנה החודש"', L.label.indexOf('סה״כ מתפנה החודש') === 0);
+  ok('שורת הסכום לא מדברת על שנה', L.label.indexOf('שנה') === -1);
+  ok('שורת הסכום לא מדברת על אחוז משרה',
+     (await page.locator('.totalrow').textContent()).indexOf('משרה') === -1);
+  ok('הסכום בצד שמאל של השורה', await page.evaluate(() => {
+    const row = document.querySelector('.totalrow').getBoundingClientRect();
+    const v = document.querySelector('.totalrow .tvalue').getBoundingClientRect();
+    return (v.left - row.left) < row.width/2;
+  }));
+  ok('שורת הסכום באותו משקל כמו השורות מעליה', await page.evaluate(() => {
+    const a = parseFloat(getComputedStyle(document.querySelector('.totalrow .tvalue')).fontSize);
+    const b = parseFloat(getComputedStyle(document.querySelector('.row .hrs')).fontSize);
+    return Math.abs(a - b) <= 2;
+  }));
+  await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('6. תיבת הסימון מוציאה ומכניסה לסכום');
-  const before = L.total;
-  const firstHrs = L.rows[0].hrs;
-  await page.locator('.row .tick').first().click();
-  await page.waitForTimeout(180);
-  let L2 = await listNums(page);
-  ok('הורדת סימון מורידה את הסכום', L2.total === before - firstHrs,
-     before + ' - ' + firstHrs + ' ≠ ' + L2.total);
-  ok('השורה נשארת על המסך', L2.rows.length === 10);
-  ok('השורה מסומנת כלא-פעילה', L2.rows[0].on === false);
-  ok('הסכום עדיין מסתדר עם מה שמסומן', L2.sum === L2.total, L2.sum + ' ≠ ' + L2.total);
-  ok('הכותרת מעדכנת 9 מתוך 10',
-     (await page.locator('.cardhead .sub').textContent()).includes('9 מתוך 10'));
-  await page.locator('.row .tick').first().click();
-  await page.waitForTimeout(180);
-  L2 = await listNums(page);
-  ok('החזרת הסימון מחזירה את הסכום', L2.total === before, String(L2.total));
+  section('7 · תיבת הסימון מכניסה ומוציאה מהסכום');
+  const before7 = (await listNums(page)).total;
+  const firstRow = page.locator('.row').first();
+  const firstHrs = numOf(await firstRow.locator('.hrs').textContent());
+  await firstRow.locator('.tick').click();
+  await page.waitForTimeout(160);
+  L = await listNums(page);
+  ok('הסרת סימון מקטינה את הסכום', L.total === before7 - firstHrs);
+  ok('השורה נשארת על המסך', L.rows.length === 10);
+  ok('השורה שהוסרה לא נספרת', L.live.length === 9);
+  ok('השורות המסומנות מסתכמות לסכום', near(L.sum, L.total, 0.051));
+  await firstRow.locator('.tick').click();
+  await page.waitForTimeout(160);
+  ok('החזרת הסימון מחזירה את הסכום', (await listNums(page)).total === before7);
 
   /* ---------------------------------------------------------- */
-  section('7. צוותים: כמות האנשים יושבת רק שם');
-  await page.locator('#btnNew').click();
-  await page.waitForSelector('#sheet #fName');
-  const sheetTxt = await page.locator('#sheet').textContent();
-  const peopleFields = await page.locator('#sheet input[aria-label*="אנשים"]').count();
-  await page.locator('#sheetClose').click();
-  ok('בטופס הפריט אין שדה מספר אנשים', peopleFields === 0, String(peopleFields));
-  ok('הטופס מפנה למסך צוותים', sheetTxt.includes('צוותים'), 'לא נמצאה הפניה');
-  await page.locator('#navTeams').click();
-  await page.waitForTimeout(200);
-  ok('מסך הצוותים מציג שלושה צוותים', (await page.locator('.team').count()) === 3);
-  const stepper = page.locator('.team').first().locator('.stepper input');
-  const peopleBefore = Number(await stepper.inputValue());
-  await page.locator('.team').first().locator('.stepper button').last().click();
-  await page.waitForTimeout(200);
-  ok('הוספת אדם מעדכנת את הצוות',
-     Number(await stepper.inputValue()) === peopleBefore + 1,
-     peopleBefore + ' → ' + (await stepper.inputValue()));
+  section('8 · שיוך: נקרא בשם שלה, ולא נוצר לבד');
+  await fresh(page);
+  await openSheet(page);
+  ok('ברירת המחדל היא "לא משויכת"', await page.evaluate(() => {
+    const b = [...document.querySelectorAll('#sheet .chip')].filter(x => x.textContent.trim() === 'לא משויכת')[0];
+    return !!b && b.getAttribute('aria-pressed') === 'true';
+  }));
+  await page.locator('#fName').fill('בדיקה בלי שיוך');
+  await page.locator('#sheet .chip', {hasText:'30 דק׳'}).first().click();
+  await page.locator('#sheetSave').click();
+  await page.waitForTimeout(160);
+  ok('לא נוצר שיוך מעצמו', await page.evaluate(() => window.__waives.state.groups.length === 0));
+  L = await listNums(page);
+  ok('משימה בלי שיוך נספרת פעם אחת', L.rows[0].hrs === 7);
+  ok('אין כותרות שיוך כשאין שיוכים', L.groups.length === 0);
+  await addTask(page, {name:'השוואת הצעות מחיר', minutes:60, freq:'week', newGroup:'צוות רכש'});
+  ok('שיוך חדש נוצר רק כשכותבים אותו',
+     await page.evaluate(() => window.__waives.state.groups.length === 1 &&
+                               window.__waives.state.groups[0].name === 'צוות רכש'));
+  await addTask(page, {name:'מענה לעובדים', minutes:30, freq:'day', newGroup:'צוות רכש'});
+  ok('שם שכבר קיים לא יוצר שיוך כפול',
+     await page.evaluate(() => window.__waives.state.groups.length === 1));
+  ok('שיוך חדש מתחיל באדם אחד',
+     await page.evaluate(() => window.__waives.state.groups[0].people === 1));
+
+  /* ---------------------------------------------------------- */
+  section('9 · היררכיה לפי שיוך, עם כיווץ');
+  L = await listNums(page);
+  ok('יש כותרת לשיוך', L.groups.some(g => g.name.indexOf('צוות רכש') !== -1));
+  ok('יש כותרת "ללא שיוך"', L.groups.some(g => g.name.indexOf('ללא שיוך') !== -1));
+  ok('כותרת השיוך מראה סכום שעות', L.groups[0].tot > 0);
+  ok('כל השורות גלויות בהתחלה', L.rows.length === 3);
+  const totalBefore9 = L.total;
+  await page.locator('.ghead').first().click();
+  await page.waitForTimeout(170);
+  L = await listNums(page);
+  ok('כיווץ מסתיר את הפירוט', L.rows.length === 1);
+  ok('הכותרת המכווצת עדיין מראה את הסכום', L.groups[0].tot > 0);
+  ok('הסכום הכולל לא זז בכיווץ', L.total === totalBefore9);
+  await page.locator('.ghead').first().click();
+  await page.waitForTimeout(170);
+  ok('פתיחה מחזירה את הפירוט', (await listNums(page)).rows.length === 3);
+
+  /* ---------------------------------------------------------- */
+  section('10 · הגדרות: שם העסק, שיוכים, רשימה מוכנה');
+  await page.locator('#navSet').click();
+  await page.waitForTimeout(170);
+  ok('המסך נקרא הגדרות', (await page.locator('#navSet').textContent()).indexOf('הגדרות') !== -1);
+  ok('אין יותר מסך בשם צוותים', (await page.locator('nav.bar').textContent()).indexOf('צוותים') === -1);
+  ok('יש שדה שם עסק', await page.locator('#fBiz').isVisible());
+  await page.locator('#fBiz').fill('משרד עורכי דין לוי');
+  await page.waitForTimeout(160);
+  ok('שם העסק מצטרף לכותרת',
+     (await page.locator('#appTitle').textContent()).indexOf('משרד עורכי דין לוי') !== -1);
+  ok('השיוך מופיע בהגדרות',
+     (await page.locator('#screenSet .setrow input[type=text]').first().inputValue()) === 'צוות רכש');
+  ok('מספר האנשים מוגדר בהגדרות', await page.locator('.stepper').first().isVisible());
+  await page.locator('.stepper button').first().click();
+  await page.waitForTimeout(170);
+  ok('אפשר להוסיף אנשים לשיוך',
+     await page.evaluate(() => window.__waives.state.groups[0].people === 2));
+  ok('כפתור שיוך חדש קיים', await page.locator('#btnAddGroup').isVisible());
+  ok('הרשימה המוכנה מוצגת בהגדרות',
+     (await page.locator('#screenSet').textContent()).indexOf('המשימות המוכנות') !== -1);
+  const libBefore = await page.evaluate(() => window.__waives.lib.length);
+  await page.locator('#screenSet [aria-label^="הסרת"]').first().click();
+  await page.waitForTimeout(170);
+  ok('אפשר להסיר משימה מוכנה שלא רלוונטית',
+     await page.evaluate(l => window.__waives.lib.length === l - 1, libBefore));
   await page.locator('#navList').click();
+  await page.waitForTimeout(160);
+  ok('יש משימות לפני תרחיש חדש',
+     (await page.evaluate(() => window.__waives.state.tasks.length)) === 3);
+  await page.locator('#btnMenu').click();
+  await page.locator('#menu button', {hasText:'תרחיש חדש'}).click();
   await page.waitForTimeout(200);
-  const L3 = await listNums(page);
-  ok('הוספת אדם העלתה את הסכום ברשימה', L3.total > before, before + ' → ' + L3.total);
-  ok('השורה מראה את מספר האנשים שהיא מוכפלת בו',
-     L3.rows[0].meta.includes('×3 אנשים'), L3.rows[0].meta);
-  await page.locator('#navTeams').click();
-  await page.waitForTimeout(150);
-  await page.locator('.team').first().locator('.stepper button').first().click();
-  await page.waitForTimeout(200);
+  ok('תרחיש חדש מרוקן את הרשימה',
+     await page.evaluate(() => window.__waives.state.tasks.length === 0));
+  ok('תרחיש חדש לא מחזיר את הרשימה המוכנה המקורית',
+     await page.evaluate(l => window.__waives.lib.length === l - 1, libBefore));
+  ok('תרחיש חדש מנקה גם את שם העסק',
+     (await page.locator('#appTitle').textContent()).indexOf('לוי') === -1);
+  await page.locator('#navSet').click();
+  await page.waitForTimeout(160);
+  await page.locator('#btnLibReset').click();
+  await page.waitForTimeout(170);
+  ok('אפשר להחזיר את הרשימה המוכנה המקורית',
+     await page.evaluate(() => window.__waives.lib.length === 10));
   await page.locator('#navList').click();
-  await page.waitForTimeout(200);
-  ok('הורדת אדם מחזירה את הסכום', (await listNums(page)).total === before);
 
   /* ---------------------------------------------------------- */
-  section('8. שם צוות נכתב במלואו בלי לאבד פוקוס');
-  await page.locator('#navTeams').click();
-  await page.waitForTimeout(200);
-  const tname = page.locator('.team input[aria-label="שם הצוות או התפקיד"]').first();
-  await tname.fill('');
-  await tname.type('רכזות גיוס וקליטה', {delay: 12});
-  ok('שם צוות ארוך נכתב במלואו',
-     (await tname.inputValue()) === 'רכזות גיוס וקליטה' &&
-     await tname.evaluate(e => e === document.activeElement),
-     await tname.inputValue());
+  section('11 · האייקון מתאים למשימה');
+  const iconOf = n => page.evaluate(x => window.__waives.iconFor(x), n);
+  ok('מענה לטלפונים → טלפון', (await iconOf('מענה לטלפונים')) === 'phone');
+  ok('הקלדת חשבוניות → כספים', (await iconOf('הקלדת חשבוניות ספקים')) === 'money');
+  ok('תיאום פגישות ביומן → יומן', (await iconOf('תיאום פגישות ביומן')) === 'calendar');
+  ok('מיון קורות חיים → אנשים', (await iconOf('מיון קורות חיים')) === 'people');
+  ok('עדכון CRM → נתונים', (await iconOf('עדכון CRM אחרי פגישות')) === 'data');
+  ok('תיאום משלוחים → משלוח', (await iconOf('תיאום משלוחים מול מובילים')) === 'truck');
+  ok('הפקת דוחות → גרף', (await iconOf('הפקת דוחות חודשיים')) === 'chart');
+  ok('מענה לשאלות חוזרות → שיחה', (await iconOf('מענה לשאלות חוזרות')) === 'chat');
+  ok('עדכון מלאי → קרטון', (await iconOf('עדכון מלאי')) === 'box');
+  ok('משימה בלי מילה מוכרת מקבלת אייקון קבוע', (await iconOf('משהו אחר לגמרי')) === 'clip');
+  await fresh(page);
+  await addTask(page, {name:'מענה לטלפונים', minutes:30, freq:'day'});
+  ok('האייקון על השורה הוא של טלפון', await page.evaluate(() => {
+    const d = document.querySelector('.row .ico path').getAttribute('d');
+    return d.indexOf('M15.8 21') === 0;
+  }));
 
   /* ---------------------------------------------------------- */
-  section('9. עריכה ומחיקה של שורה');
-  await page.locator('#navList').click();
-  await page.waitForTimeout(200);
+  section('12 · עריכה, מחיקה, ביטול');
   await page.locator('.row .rowmain').first().click();
   await page.waitForSelector('#sheet #fName');
   ok('לחיצה על שורה פותחת אותה לעריכה',
-     (await page.locator('#fName').inputValue()).length > 0);
-  ok('בעריכה מופיע כפתור מחיקה', await page.locator('#sheetDelete').isVisible());
-  await page.locator('#sheet .chip', {hasText:'חצי (50%)'}).first().click();
+     (await page.locator('#fName').inputValue()) === 'מענה לטלפונים');
+  ok('הגיליון מראה "עדכון משימה"',
+     (await page.locator('#sheet .sheethead .t').textContent()).indexOf('עדכון') !== -1);
+  await page.locator('#fName').fill('מענה לטלפונים ולמיילים');
   await page.locator('#sheetSave').click();
-  await page.waitForTimeout(200);
-  const L4 = await listNums(page);
-  ok('העריכה שינתה את השורה', L4.rows[0].meta.includes('50%'), L4.rows[0].meta);
-  ok('העריכה שינתה את הסכום', L4.total < before, before + ' → ' + L4.total);
+  await page.waitForTimeout(170);
+  L = await listNums(page);
+  ok('העריכה נשמרה', L.rows[0].name === 'מענה לטלפונים ולמיילים');
+  ok('עריכה לא מוסיפה שורה', L.rows.length === 1);
   await page.locator('.row .rowmain').first().click();
   await page.waitForSelector('#sheetDelete');
   await page.locator('#sheetDelete').click();
-  await page.waitForTimeout(200);
-  ok('המחיקה הורידה שורה', (await page.locator('.row').count()) === 9);
+  await page.waitForTimeout(180);
+  ok('המחיקה עובדת', (await listNums(page)).rows.length === 0);
   ok('מוצע ביטול', await page.locator('#snackBtn').isVisible());
   await page.locator('#snackBtn').click();
-  await page.waitForTimeout(200);
-  ok('הביטול החזיר את השורה', (await page.locator('.row').count()) === 10);
+  await page.waitForTimeout(180);
+  ok('הביטול מחזיר את המשימה', (await listNums(page)).rows.length === 1);
+  await openSheet(page);
+  ok('במשימה חדשה אין כפתור מחיקה', (await page.locator('#sheetDelete').count()) === 0);
+  await page.locator('#sheetClose').click();
 
   /* ---------------------------------------------------------- */
-  section('10. שמירה, רענון וקישור לתרחיש');
-  await fresh(page);
-  await addTask(page, {chip:'עדכון CRM'});
-  const mine = (await listNums(page)).total;
+  section('13 · שמירה, רענון, קישור');
   await page.reload();
-  await page.waitForTimeout(250);
-  ok('התרחיש שורד רענון', (await listNums(page)).total === mine, String(mine));
-  const hashPart = await page.evaluate(() => window.__waives.shareUrl().split('#')[1]);
-  ok('הקישור מכיל s=', hashPart.indexOf('s=') === 0, hashPart.slice(0,12));
-  const ctxB = await browser.newContext({viewport:{width:1280, height:900}, locale:'he-IL'});
-  const pageB = await ctxB.newPage();
-  await pageB.goto(url + '#' + hashPart);
-  await pageB.waitForTimeout(250);
-  ok('הקישור נפתח עם אותו מספר', (await listNums(pageB)).total === mine);
-  await ctxB.close();
+  await page.waitForTimeout(220);
+  ok('הרשימה שורדת רענון', (await listNums(page)).rows.length === 1);
+  const share = await page.evaluate(() => window.__waives.shareUrl());
+  ok('הקישור נבנה', share.indexOf('#s=') !== -1);
+  await page.locator('#btnMenu').click();
+  ok('בתפריט יש קישור לתרחיש',
+     (await page.locator('#menu').textContent()).indexOf('קישור לתרחיש') !== -1);
+  ok('אין בתפריט "העתקת סיכום"',
+     (await page.locator('#menu').textContent()).indexOf('העתקת סיכום') === -1);
+  await page.locator('#menu button', {hasText:'קישור לתרחיש'}).click();
+  await page.waitForTimeout(260);
+  const toast = await page.locator('#snackText').textContent();
+  ok('ההודעה אומרת שהקישור הועתק ("' + toast + '")', toast.indexOf('הועתק') !== -1);
+  ok('אין כפתור שיתוף נוסף על המסך', (await page.locator('#screenList #btnShare').count()) === 0);
+  ok('המילים "העתקת סיכום" לא קיימות באפליקציה',
+     (await page.evaluate(() => document.body.innerText)).indexOf('העתקת סיכום') === -1);
+  await page.goto(url);
+  await page.waitForTimeout(160);
+  await page.goto(url + '#' + share.split('#')[1]);
+  await page.waitForTimeout(240);
+  ok('קישור נפתח עם אותה משימה', (await listNums(page)).rows.length === 1);
+  ok('קישור מציע ביטול', await page.locator('#snackBtn').isVisible());
 
   /* ---------------------------------------------------------- */
-  section('11. שם עם אותיות לטיניות נקרא ונשמר נכון');
-  await fresh(page);
-  await addTask(page, {name:'עדכון CRM אחרי פגישות', minutes:45, auto:'רוב (70%)'});
-  const round = await page.evaluate(() => {
-    const W = window.__waives;
-    const back = W.sanitize(W.unpack(JSON.parse(W.b64urlDecode(W.shareUrl().split('#s=')[1]))));
-    return back.groups[0].tasks[0].name;
-  });
-  ok('שם עם עברית ולטינית חוזר זהה', round === 'עדכון CRM אחרי פגישות', round);
-  const metaTxt = (await listNums(page)).rows[0].meta.trim();
-  ok('הפירוט מתחיל בדקות ולא נגרר אל השם', /^45 דק/.test(metaTxt), metaTxt);
-
-  /* ---------------------------------------------------------- */
-  section('12. קישור עוין או שבור');
-  const hostile = [
-    ['קישור חתוך', 'eyJ2IjoyLCJnIjpb'],
-    ['לא base64 בכלל', '!!!!'],
-    ['דקות שליליות', enc({v:2,g:[{n:'צ',p:1,t:[{n:'רע',m:-500,f:0,a:2,o:1}]}]})],
-    ['מיליארד אנשים', enc({v:2,g:[{n:'צ',p:1e9,t:[{n:'רע',m:60,f:0,a:2,o:1}]}]})],
-    ['אוטומציה 99', enc({v:2,g:[{n:'צ',p:1,t:[{n:'רע',m:60,f:0,a:99,o:1}]}]})],
-    ['תדירות לא מוכרת', enc({v:2,g:[{n:'צ',p:1,t:[{n:'רע',m:60,f:77,a:2,o:1}]}]})],
-    ['הזרקת תגית', enc({v:2,g:[{n:'צ',p:1,t:[{n:'<img src=x onerror=alert(1)>',m:60,f:0,a:2,o:1}]}]})],
-    ['תחום לא קיים', enc({v:2,g:[{n:'צ',p:1,t:[{n:'רע',m:60,f:0,a:2,o:1,dm:99}]}]})],
-    ['קישור מהגרסה הישנה', enc({v:1,m:'talk',g:[{n:'צוות ישן',d:null,p:2,i:0,t:[{n:'משימה ישנה',m:60,f:0,a:2,r:1,s:null}]}]})]
+  section('14 · קישורים עוינים');
+  const bad = [
+    {},
+    {v:3, g:'nope', t:'nope'},
+    {v:3, g:[{n:'x', p:-5}], t:[{n:'y', m:99999, f:9, a:9, gi:7}]},
+    {v:3, g:[{n:'<img src=x onerror=alert(1)>', p:2}], t:[{n:'<script>bad()</script>', m:30, f:0, a:2, gi:0}]},
+    {v:1, g:[{n:'צוות ותק', p:2, t:[{n:'משימה מגרסה ראשונה', m:60, f:0, a:2}]}]}
   ];
-  for(const pair of hostile){
-    const label = pair[0], h = pair[1];
-    const c = await browser.newContext({viewport:{width:1280, height:900}, locale:'he-IL'});
-    const p = await c.newPage();
-    const errs = [];
-    p.on('pageerror', e => errs.push(e.message));
-    await p.goto(url + '#s=' + h);
-    await p.waitForTimeout(250);
-    const st = await p.evaluate(() => {
-      const r = window.__waives.compute();
-      return {
-        total: r.totals.freedMonth,
-        people: window.__waives.state.groups.map(g => g.people),
-        autos: r.rows.map(x => x.auto),
-        freqs: r.rows.map(x => x.freq),
-        imgs: document.querySelectorAll('img').length,
-        alive: !!document.querySelector('nav.bar')
-      };
-    });
-    ok(label + ': הדף חי ולא נשבר', st.alive && errs.length === 0, errs.join('; '));
-    ok(label + ': אין ערך מופרך',
-       Number.isFinite(st.total) && st.total >= 0 &&
-       st.people.every(x => x >= 1 && x <= 999) &&
-       st.autos.every(a => [0.25,0.5,0.7,0.9].indexOf(a) !== -1) &&
-       st.freqs.every(f => ['day','week','month','quarter'].indexOf(f) !== -1),
-       JSON.stringify(st));
-    ok(label + ': שום תגית לא הוזרקה', st.imgs === 0);
-    await c.close();
+  for(let i=0; i<bad.length; i++){
+    await page.goto(url + '#s=' + enc(bad[i]));
+    await page.waitForTimeout(220);
+    ok('קישור פגום ' + (i+1) + ' לא מפיל את הדף',
+       await page.evaluate(() => !!document.getElementById('btnNew')));
   }
-  const oldLink = await browser.newContext({viewport:{width:1280, height:900}, locale:'he-IL'});
-  const pOld = await oldLink.newPage();
-  await pOld.goto(url + '#s=' + enc({v:1,m:'talk',g:[{n:'צוות ישן',d:null,p:2,i:0,t:[{n:'משימה ישנה',m:60,f:0,a:2,r:1,s:null}]}]}));
-  await pOld.waitForTimeout(250);
-  const oldL = await listNums(pOld);
-  ok('קישור מהגרסה הישנה נפתח עם המשימה שלו',
-     oldL.rows.length === 1 && oldL.rows[0].name === 'משימה ישנה', JSON.stringify(oldL.rows));
-  ok('משימה מקישור ישן נספרת בחישוב', oldL.rows[0].on === true);
-  await oldLink.close();
+  await page.goto(url + '#s=' + enc(bad[3]));
+  await page.waitForTimeout(220);
+  ok('קוד בתוך שם נשאר טקסט',
+     (await page.locator('.row .nm').first().textContent()).indexOf('<script>') === 0);
+  ok('לא נפתח חלון התראה', consoleErrors.filter(e => /alert/.test(e)).length === 0);
+  await page.goto(url + '#s=' + enc(bad[4]));
+  await page.waitForTimeout(220);
+  L = await listNums(page);
+  ok('קישור מגרסה ראשונה עדיין נפתח', L.rows.length === 1);
+  ok('משימה מגרסה ראשונה נספרת', L.rows[0].on === true);
+  ok('מספר האנשים הישן נשמר', L.rows[0].meta.indexOf('×2') !== -1);
+  ok('משימה מגרסה ראשונה קיבלה אייקון',
+     await page.evaluate(() => !!document.querySelector('.row .ico path')));
+  await page.goto(url + '#s=zzzzzz');
+  await page.waitForTimeout(240);
+  ok('קישור שלא נקרא מסביר את עצמו',
+     (await page.locator('#snackText').textContent()).indexOf('לא נקרא') !== -1);
 
   /* ---------------------------------------------------------- */
-  section('13. קישור נכנס לא מוחק את התרחיש המקומי');
-  await fresh(page);
-  await addTask(page, {name:'התרחיש שלי', minutes:60, auto:'רוב (70%)'});
-  const mineTotal = (await listNums(page)).total;
-  const other = enc({v:2,g:[{n:'צוות אחר',p:4,t:[{n:'משימה מקישור',m:60,f:0,a:2,o:1}]}]});
-  await page.evaluate(h => { location.hash = 's=' + h; }, other);
-  await page.waitForTimeout(300);
-  ok('קישור נכנס נטען גם בלשונית פתוחה',
-     (await listNums(page)).rows[0].name === 'משימה מקישור');
-  ok('מוצע לחזור לתרחיש שלי', await page.locator('#snackBtn').isVisible());
-  await page.locator('#snackBtn').click();
-  await page.waitForTimeout(250);
-  ok('הביטול החזיר את התרחיש המקומי', (await listNums(page)).total === mineTotal);
-
-  /* ---------------------------------------------------------- */
-  section('14. אחסון חסום (גלישה פרטית)');
-  const ctxP = await browser.newContext({viewport:{width:390, height:844}, locale:'he-IL'});
-  await ctxP.addInitScript(() => {
-    const boom = () => { throw new Error('denied'); };
+  section('15 · אחסון חסום');
+  const ctx2 = await browser.newContext({viewport:{width:420, height:900}, locale:'he-IL'});
+  const p2 = await ctx2.newPage();
+  await p2.addInitScript(() => {
     try{
-      Object.defineProperty(window, 'localStorage', {
-        configurable:true,
-        get(){ return {getItem:boom, setItem:boom, removeItem:boom, clear:boom}; }
-      });
+      Object.defineProperty(window, 'localStorage', { get(){ throw new Error('blocked'); } });
     }catch(e){}
   });
-  const pageP = await ctxP.newPage();
-  const perr = [];
-  pageP.on('pageerror', e => perr.push(e.message));
-  await pageP.goto(url);
-  await pageP.waitForTimeout(250);
-  await pageP.locator('#emptyDemo').click();
-  await pageP.waitForTimeout(300);
-  ok('בלי אחסון הכול עדיין עובד',
-     (await listNums(pageP)).total === 303 && perr.length === 0,
-     perr.join('; ') || String((await listNums(pageP)).total));
-  await ctxP.close();
+  const errs2 = [];
+  p2.on('pageerror', e => errs2.push(e.message));
+  await p2.goto(url);
+  await p2.waitForTimeout(240);
+  ok('האפליקציה עולה גם בלי אחסון', await p2.evaluate(() => !!document.getElementById('btnNew')));
+  await addTask(p2, {name:'בדיקה בלי אחסון', minutes:30, freq:'day'});
+  ok('אפשר להוסיף משימה בלי אחסון', (await listNums(p2)).rows.length === 1);
+  ok('אין שגיאות בלי אחסון', errs2.length === 0, errs2.join(' | '));
+  await ctx2.close();
 
   /* ---------------------------------------------------------- */
-  section('15. הדשבורד');
+  section('16 · דשבורד: באנר אחד');
   await fresh(page);
   await page.locator('#emptyDemo').click();
-  await page.waitForTimeout(250);
+  await page.waitForTimeout(220);
   await page.locator('#navDash').click();
-  await page.waitForTimeout(300);
-  const dash = await page.evaluate(() => {
-    const heads = [...document.querySelectorAll('#screenDash h3')].map(h => h.textContent);
+  await page.waitForTimeout(220);
+  ok('הדשבורד נפתח', !(await page.locator('#screenDash').isHidden()));
+  ok('הרשימה מוסתרת', await page.locator('#screenList').isHidden());
+  ok('יש באנר אחד, לא שניים', (await page.locator('#screenDash .banner').count()) === 1);
+  const ban = await page.evaluate(() => {
+    const b = document.querySelector('#screenDash .banner');
+    const sides = [...b.querySelectorAll('.side')];
     return {
-      heads,
-      people: document.querySelectorAll('#screenDash .posrow svg').length,
-      rings: [...document.querySelectorAll('#screenDash .posrow text')].map(t => t.textContent),
-      num: Number(document.querySelector('.dash-num').textContent.replace(/[^\d.]/g,'')),
-      sub: document.querySelector('.dash-sub').textContent,
-      bars: document.querySelectorAll('#screenDash .bar-item').length,
-      cap: document.querySelector('#screenDash .poscap').textContent
+      count: sides.length,
+      right: sides[0].innerText,
+      left: sides[1].innerText,
+      rx: sides[0].getBoundingClientRect().right,
+      lx: sides[1].getBoundingClientRect().right
     };
   });
-  ok('הדשבורד מציג את אותו מספר', dash.num === 303, String(dash.num));
-  ok('שעות בחודש ובשנה', dash.sub.indexOf('3,641') !== -1 && dash.sub.indexOf('שעות בשנה') !== -1, dash.sub);
-  ok('יש בלוק "כמה משרה זה"', dash.heads.some(h => h.indexOf('כמה משרה') !== -1), dash.heads.join(' | '));
-  ok('יש בלוק "איפה הזמן יושב"', dash.heads.some(h => h.indexOf('איפה הזמן') !== -1));
-  ok('יש פילוח לפי צוות', dash.heads.some(h => h.indexOf('לפי צוות') !== -1));
-  ok('יש את השאלה על הזמן', dash.heads.some(h => h.indexOf('מה הייתם עושים') !== -1));
-  ok('משרה שלמה מצוירת כאדם, והשארית כגלגל',
-     dash.people === 2 && dash.rings.length === 1 && dash.rings[0] === '69%',
-     JSON.stringify({people:dash.people, rings:dash.rings}));
-  ok('הכיתוב ליד האייקונים מסכים עם הגלגל',
-     dash.cap.indexOf('משרה ועוד 69%') !== -1, dash.cap);
-  ok('יש מדרג משימות ופילוח צוותים', dash.bars >= 8, String(dash.bars));
-  ok('כפתורי שיתוף יושבים בדשבורד',
-     await page.locator('#btnShare').isVisible() && await page.locator('#btnCopy').isVisible());
-  const summary = await page.evaluate(() => window.__waives.summaryText());
-  ok('הסיכום להעתקה נושא את אותו מספר', summary.indexOf('303') !== -1, summary.slice(0,80));
+  ok('בבאנר שני צדדים', ban.count === 2);
+  ok('בצד ימין השעות בחודש', ban.right.indexOf('שעות בחודש') !== -1);
+  ok('בצד ימין גם השעות בשנה', ban.right.indexOf('שעות בשנה') !== -1);
+  ok('בצד שמאל אחוז המשרה', ban.left.indexOf('%') !== -1);
+  ok('הצד הימני אכן מימין', ban.rx > ban.lx);
+  ok('המספר בבאנר הוא 303', numOf(ban.right.split('\n')[0]) === 303);
+  ok('אחוז המשרה 169%', ban.left.indexOf('169%') !== -1);
+  ok('משרה מצוירת כאיש', (await page.locator('#screenDash .banner svg circle[fill]').count()) > 0);
+  ok('יש גלגל להשארית', await page.evaluate(() =>
+     [...document.querySelectorAll('#screenDash .banner svg circle')]
+       .some(c => c.getAttribute('stroke-dasharray'))));
+  ok('הניסוח "משרה ועוד 69%"', ban.left.indexOf('משרה ועוד 69%') !== -1);
+  ok('באנר קטן שואל מה אפשרי בזמן שהתפנה',
+     (await page.locator('.dreambar').textContent()).indexOf('מה אפשרי בזמן שהתפנה?') === 0);
+  await page.locator('#screenDash .chip', {hasText:'פרויקט חדש שמחכה'}).first().click();
+  await page.waitForTimeout(180);
+  ok('מה שסומן מופיע בבאנר הקטן',
+     (await page.locator('.dreambar').textContent()).indexOf('פרויקט חדש שמחכה') !== -1);
+  ok('יש פירוט איפה הזמן יושב',
+     (await page.locator('#screenDash').textContent()).indexOf('איפה הזמן יושב') !== -1);
+  ok('יש פירוט לפי שיוך',
+     (await page.locator('#screenDash').textContent()).indexOf('לפי שיוך') !== -1);
+  await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('16. הניסוח — אחוזי משרה, לא שברים');
-  ok('מתחת למשרה: אחוזים', calc.words[0] === '16% משרה פנוי למשימות חשובות אחרות', calc.words[0]);
-  ok('מעל משרה: "משרה ועוד"', calc.words[1] === 'משרה ועוד 69% פנויים למשימות חשובות אחרות', calc.words[1]);
-  ok('בדיוק משרה אחת', calc.words[2] === 'משרה פנויה למשימות חשובות אחרות', calc.words[2]);
-  ok('בדיוק שתי משרות', calc.words[3] === '2 משרות פנויות למשימות חשובות אחרות', calc.words[3]);
-  ok('אפס: עדיין משפט שלם', calc.words[4] === '0% משרה פנוי למשימות חשובות אחרות', calc.words[4]);
+  section('17 · ניסוח');
   await page.locator('#navList').click();
-  await page.waitForTimeout(200);
-  ok('השורה בעגלה מצמידה את המסגרת למספר',
-     (await listNums(page)).free.indexOf('למשימות חשובות אחרות') !== -1,
-     (await listNums(page)).free);
+  await page.waitForTimeout(170);
+  const words = (await page.evaluate(() => window.__waives.freeText(0.2)))
+    + ' | ' + (await page.evaluate(() => window.__waives.freeText(1.7)))
+    + ' | ' + (await page.evaluate(() => window.__waives.freeText(2)));
+  ok('מתחת למשרה: אחוז משרה פנוי', words.indexOf('20% משרה פנוי למשימות חשובות אחרות') !== -1);
+  ok('מעל משרה: משרה ועוד אחוזים', words.indexOf('משרה ועוד 70% פנויים') !== -1);
+  ok('שתי משרות בלשון רבים', words.indexOf('2 משרות פנויות') !== -1);
+  ok('אין "0 משרה פנויה"', words.indexOf('0 משרה פנויה') === -1);
+  ok('הכפתור שואל "לא בטוחים מה להוסיף"',
+     (await page.locator('#btnTips').textContent()).indexOf('לא בטוחים מה להוסיף') === 0);
+  await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('17. המסר — אין אבנים, אין ₪, אין מילות קיצוץ');
-  const src = fs.readFileSync(path.join(ROOT,'index.html'),'utf8');
-  const screenText = [];
-  for(const s of ['#navList','#navDash','#navTeams']){
-    await page.locator(s).click();
-    await page.waitForTimeout(220);
-    // innerText, not textContent: textContent would also scan the page's own
-    // <script>, so this would be testing the source instead of the screen.
-    screenText.push(await page.evaluate(() => document.body.innerText));
+  section('18 · אין אבנים, אין ₪, אין קיצוץ');
+  const src = await page.evaluate(() => document.documentElement.outerHTML);
+  const seen = screenText.join('\n');
+  ok('אין ציור אבנים בקוד', !/function mountain|mountain\(|stoneSvg|pebble|cairn/i.test(src));
+  ok('המילה אבנים נשארת רק בשם הכלי',
+     (seen.match(/אבנים/g) || []).length === (seen.match(/מחשבון האבנים הקטנות/g) || []).length);
+  ok('אין סימן שקל על המסך', seen.indexOf(SHEKEL) === -1);
+  ok('אין המילה קיצוץ', seen.indexOf('קיצוץ') === -1 && src.indexOf('קיצוץ') === -1);
+  ok('אין המילה פיטורים', seen.indexOf('פיטורים') === -1 && src.indexOf('פיטורים') === -1);
+  ok('אין "חיסכון בכוח אדם"', seen.indexOf('חיסכון בכוח אדם') === -1);
+  ok('אין "התייעלות"', seen.indexOf('התייעלות') === -1);
+  ok('המסר הוא זמן שמתפנה', seen.indexOf('מתפנה') !== -1);
+
+  /* ---------------------------------------------------------- */
+  section('19 · הגלילה נשארת במקום, וחלון הטיפים');
+  await fresh(page);
+  await page.locator('#emptyDemo').click();
+  await page.waitForTimeout(220);
+  await page.setViewportSize({width:420, height:700});
+  await page.waitForTimeout(170);
+  await page.evaluate(() => window.scrollTo(0, 400));
+  await page.waitForTimeout(140);
+  const y0 = await page.evaluate(() => window.scrollY);
+  ok('אפשר לגלול למטה (' + y0 + ')', y0 > 200);
+  await page.locator('.row .tick').nth(4).click();
+  await page.waitForTimeout(220);
+  const y1 = await page.evaluate(() => window.scrollY);
+  ok('לחיצה על תיבת סימון לא קופצת לראש הדף (' + y1 + ')', Math.abs(y1 - y0) < 40);
+  await page.locator('.row .rowmain').nth(4).click();
+  await page.waitForSelector('#sheet #fName');
+  await page.locator('#sheetClose').click();
+  await page.waitForTimeout(220);
+  ok('פתיחה וסגירה של משימה לא קופצות לראש הדף',
+     Math.abs((await page.evaluate(() => window.scrollY)) - y0) < 60);
+  await page.evaluate(() => window.scrollTo(0, 600));
+  await page.locator('#btnTips').click();
+  await page.waitForTimeout(220);
+  ok('הטיפים נפתחים בחלון צף', !(await page.locator('#scrim2').isHidden()));
+  const tipTxt = await page.locator('#sheet2').textContent();
+  ok('בחלון יש שש שאלות', (await page.locator('#sheet2 .tips li').count()) === 6);
+  ok('הטיפים בלשון רבים', tipTxt.indexOf('עשיתם') !== -1 && tipTxt.indexOf('אתם') !== -1);
+  ok('אין בטיפים לשון יחיד מגדרית', !/תעשה |עשית |אתה |אתך |בודק /.test(tipTxt));
+  ok('מהחלון אפשר להוסיף משימה', await page.locator('#tipsAdd').isVisible());
+  await page.locator('#tipsClose').click();
+  await page.waitForTimeout(240);
+  ok('סגירת הטיפים מחזירה לראש הדף', (await page.evaluate(() => window.scrollY)) === 0);
+  ok('החלון נסגר', await page.locator('#scrim2').isHidden());
+  await page.locator('#btnTips').click();
+  await page.waitForTimeout(180);
+  await page.locator('#tipsAdd').click();
+  await page.waitForTimeout(220);
+  ok('"הוספת משימה" מהטיפים פותח את הגיליון', await page.locator('#fName').isVisible());
+  await page.locator('#sheetClose').click();
+  await page.setViewportSize({width:1280, height:900});
+
+  /* ---------------------------------------------------------- */
+  section('20 · כיווניות, נגישות, רוחב');
+  ok('הדף בעברית מימין לשמאל', await page.evaluate(() =>
+     document.documentElement.lang === 'he' && document.documentElement.dir === 'rtl'));
+  ok('לכל תיבת סימון יש תיאור', await page.evaluate(() =>
+     [...document.querySelectorAll('.tick')].every(t => (t.getAttribute('aria-label') || '').length > 3)));
+  ok('לכל תיבת סימון יש מצב', await page.evaluate(() =>
+     [...document.querySelectorAll('.tick')].every(t => t.hasAttribute('aria-checked'))));
+  ok('לכותרת השיוך יש מצב פתיחה', await page.evaluate(() =>
+     [...document.querySelectorAll('.ghead')].every(g => g.hasAttribute('aria-expanded'))));
+  ok('לכל שדה יש תיאור', await page.evaluate(() =>
+     [...document.querySelectorAll('input,select')].every(i =>
+       i.getAttribute('aria-label') || (i.id && document.querySelector('label[for="' + i.id + '"]')))));
+  ok('הסרגל התחתון מסומן למקרא', await page.evaluate(() =>
+     document.querySelector('nav.bar').hasAttribute('aria-label')));
+  ok('המסך הפעיל מסומן', await page.evaluate(() =>
+     document.getElementById('navList').getAttribute('aria-current') === 'page'));
+  for(const w of [360, 420, 768, 1280]){
+    await page.setViewportSize({width:w, height:900});
+    await page.waitForTimeout(160);
+    const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
+    ok('אין גלילה אופקית ברוחב ' + w + ' (' + over + ')', over <= 1);
   }
-  const all = screenText.join(' ');
-  const banned = ['קיצוץ','פיטור','חיסכון בכוח אדם', SHEKEL].filter(w => all.indexOf(w) !== -1);
-  ok('אין מילים אסורות על המסך', banned.length === 0, banned.join(', '));
-  ok('אין מילים אסורות בקוד', !new RegExp(SHEKEL + '|קיצוץ|פיטור').test(src));
-  ok('אין קוד שמצייר אבנים או הר',
-     !/function mountain|mountain\(|stoneSvg|pebble|cairn/i.test(src));
-  ok('אין מקטע "ההר" בשום מקום', all.indexOf('ההר') === -1 && src.indexOf('ההר') === -1);
-  ok('המילה "אבנים" מופיעה פעם אחת בכל מסך — שם הכלי בלבד',
-     screenText.every(t => (t.match(/אבנים/g) || []).length === 1),
-     screenText.map(t => (t.match(/אבנים/g) || []).length).join(','));
+  ok('אין שגיאות בקונסול', consoleErrors.length === 0, consoleErrors.slice(0,3).join(' | '));
 
   /* ---------------------------------------------------------- */
-  section('18. RTL, נגישות ומיקוד');
+  section('21 · צילומי מסך');
+  const shots = [];
+  const shot = async (n, w) => {
+    await page.setViewportSize({width:w || 420, height:900});
+    await page.waitForTimeout(240);
+    await page.screenshot({path:path.join(SHOTS, n + '.png'), fullPage:true});
+    shots.push(n);
+  };
+  await fresh(page);
+  await shot('01-empty');
+  await page.locator('#emptyDemo').click();
+  await page.waitForTimeout(240);
+  await shot('02-list');
+  await page.locator('.ghead').first().click();
+  await page.waitForTimeout(180);
+  await shot('03-collapsed');
+  await page.locator('.ghead').first().click();
+  await page.waitForTimeout(180);
+  await openSheet(page);
+  await shot('04-sheet');
+  await page.locator('#fOther').click();
+  await page.waitForTimeout(180);
+  await shot('05-other');
+  await page.locator('#sheetClose').click();
+  await page.locator('#btnTips').click();
+  await page.waitForTimeout(220);
+  await shot('06-tips');
+  await page.locator('#tipsClose').click();
+  await page.locator('#navDash').click();
+  await page.waitForTimeout(240);
+  await shot('07-dash');
+  await page.locator('#navSet').click();
+  await page.waitForTimeout(240);
+  await shot('08-settings');
   await page.locator('#navList').click();
-  await page.waitForTimeout(200);
-  const a11y = await page.evaluate(() => {
-    const ticks = [...document.querySelectorAll('.tick')];
-    return {
-      dir: document.documentElement.dir,
-      lang: document.documentElement.lang,
-      ticksRole: ticks.every(t => t.getAttribute('role') === 'checkbox'),
-      ticksLabel: ticks.every(t => (t.getAttribute('aria-label') || '').length > 3),
-      navCurrent: document.getElementById('navList').getAttribute('aria-current'),
-      bdi: document.querySelectorAll('.row .nm').length === document.querySelectorAll('.row bdi.nm').length,
-      titled: document.title.length > 5
-    };
-  });
-  ok('הדף מוגדר עברית ו-RTL', a11y.dir === 'rtl' && a11y.lang === 'he');
-  ok('לכל תיבת סימון יש תפקיד ותווית', a11y.ticksRole && a11y.ticksLabel);
-  ok('הסרגל התחתון מסמן איפה אנחנו', a11y.navCurrent === 'page');
-  ok('שמות המשימות מבודדים ב-bdi', a11y.bdi);
-  ok('לדף יש כותרת', a11y.titled);
-  await page.keyboard.press('Tab');
-  const focused = await page.evaluate(() => document.activeElement.tagName);
-  ok('ניווט במקלדת מגיע לאלמנט', focused === 'BUTTON' || focused === 'A' || focused === 'INPUT', focused);
-  await page.locator('#btnNew').click();
-  await page.waitForTimeout(200);
-  ok('הטופס הוא dialog עם תווית',
-     (await page.locator('#sheet').getAttribute('role')) === 'dialog' &&
-     !!(await page.locator('#sheet').getAttribute('aria-labelledby')));
-  await page.keyboard.press('Escape');
-  await page.waitForTimeout(200);
-  ok('Escape סוגר את הטופס', await page.locator('#scrim').isHidden());
+  await page.waitForTimeout(220);
+  await shot('09-list-desktop', 1280);
+  await page.locator('#navDash').click();
+  await page.waitForTimeout(240);
+  await shot('10-dash-desktop', 1280);
+  ok('עשרה צילומי מסך נשמרו (' + shots.length + ')', shots.length === 10);
+  ok('כל הצילומים קיימים על הדיסק',
+     shots.every(n => fs.existsSync(path.join(SHOTS, n + '.png'))));
 
-  /* ---------------------------------------------------------- */
-  section('19. אין גלישה אופקית');
-  for(const trio of [[320,700,'320'],[390,844,'390'],[768,1000,'768'],[1280,900,'1280']]){
-    const c = await browser.newContext({viewport:{width:trio[0], height:trio[1]}, locale:'he-IL'});
-    const p = await c.newPage();
-    await p.goto(url);
-    await p.evaluate(() => { try{ localStorage.clear(); }catch(e){} });
-    await p.goto(url);
-    await p.locator('#emptyDemo').click();
-    await p.waitForTimeout(300);
-    const over = await p.evaluate(() => {
-      const d = document.documentElement;
-      const wide = [];
-      document.querySelectorAll('*').forEach(e => {
-        const r = e.getBoundingClientRect();
-        if(r.width > 0 && (r.right > d.clientWidth + 1 || r.left < -1))
-          wide.push((e.id || e.className || e.tagName) + '');
-      });
-      return {scroll: d.scrollWidth, client: d.clientWidth, wide: wide.slice(0,4)};
-    });
-    ok('אין גלישה אופקית ברוחב ' + trio[2] + 'px',
-       over.scroll <= over.client + 1 && over.wide.length === 0, JSON.stringify(over));
-    await c.close();
-  }
-
-  /* ---------------------------------------------------------- */
-  section('20. צילומי מסך');
-  const shot = async (name, w, h, fn) => {
-    const c = await browser.newContext({viewport:{width:w, height:h}, locale:'he-IL', deviceScaleFactor:2});
-    const p = await c.newPage();
-    await p.goto(url);
-    await p.evaluate(() => { try{ localStorage.clear(); }catch(e){} });
-    await p.goto(url);
-    await p.waitForTimeout(300);
-    await fn(p);
-    await p.waitForTimeout(400);
-    await p.evaluate(() => { const s = document.getElementById('snack'); if(s) s.hidden = true; });
-    await p.screenshot({path: path.join(SHOTS, name + '.png'), fullPage:true});
-    await c.close();
-  };
-  const demoThen = extra => async p => {
-    await p.locator('#emptyDemo').click();
-    await p.waitForTimeout(300);
-    if(extra) await extra(p);
-  };
-  for(const trio of [['mobile',390,844],['desktop',1280,900]]){
-    const tag = trio[0], w = trio[1], h = trio[2];
-    await shot('empty-' + tag, w, h, async () => {});
-    await shot('list-' + tag, w, h, demoThen(null));
-    await shot('sheet-' + tag, w, h, demoThen(async p => {
-      await p.locator('#btnNew').click();
-      await p.waitForSelector('#sheet #fName');
-      await p.locator('#sheet .chip', {hasText:'עדכון CRM'}).first().click();
-      await p.waitForTimeout(250);
-    }));
-    await shot('dash-' + tag, w, h, demoThen(async p => {
-      await p.locator('#navDash').click(); await p.waitForTimeout(300);
-    }));
-    await shot('teams-' + tag, w, h, demoThen(async p => {
-      await p.locator('#navTeams').click(); await p.waitForTimeout(300);
-    }));
-  }
-  const wanted = [];
-  for(const tag of ['mobile','desktop'])
-    for(const n of ['empty','list','sheet','dash','teams']) wanted.push(n + '-' + tag + '.png');
-  const missing = wanted.filter(f => !fs.existsSync(path.join(SHOTS, f)));
-  ok('עשרת צילומי המסך נוצרו', missing.length === 0, missing.join(', '));
-  ok('אין שגיאות קונסולה בכל הריצה', consoleErrors.length === 0, consoleErrors.slice(0,3).join(' | '));
-
-  await ctx.close();
   await browser.close();
   if(srv) srv.close();
 
-  console.log('\n================================');
-  console.log('עברו: ' + pass + '   נכשלו: ' + fail);
-  if(fail){ console.log('\nכשלים:'); failures.forEach(f => console.log('  · ' + f)); process.exit(1); }
+  console.log('\n──────────────────────────────');
+  console.log('עבר: ' + pass + '   נפל: ' + fail);
+  if(failures.length){
+    console.log('\nנפלו:');
+    failures.forEach(f => console.log('  · ' + f));
+  }
+  process.exit(fail ? 1 : 0);
 }
-main().catch(e => { console.error(e); process.exit(1); });
+main().catch(e => { console.error(e); process.exit(2); });

@@ -16,11 +16,14 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
 2. **The tick box adds and removes a row from the total.** An unticked row stays on
    screen with its own number in grey, struck through, outside the sum — so a meeting
    can ask "what if we drop this one" and watch the total move.
-3. **Headcount lives ONLY on the teams screen.** An item picks a team by NAME; it never
-   carries a number of people. Changing a headcount updates the whole list at once.
-4. **Row icons are automatic, by domain.** Six domains, each with its own WAIVES colour.
-   A name typed by hand is matched against the catalog on the way in. Galli never picks
-   an icon.
+3. **Assignment is optional, and named by her (2026-11-21).** The question is
+   "למי משויכת המשימה?" — not a team. Nothing is ever created automatically: she writes
+   "צוות רכש" with three people, or "מנהלת HR" with one, and a task may stay unassigned
+   and count once. Headcount lives only in הגדרות, on the assignment itself.
+4. **Row icons are automatic, matched from the task's own words.** Thirteen icons
+   (telephone, mail, chat, money, chart, calendar, people, document, box, truck, data,
+   search) chosen by keyword, strongest words first, with a fixed default for anything
+   unrecognised. Galli never picks an icon.
 5. **Month basis: 20 working days, 4.5 calendar weeks, a 9-hour day, FTE = 180 h/month.**
    A daily task is multiplied by working days; a weekly task by calendar weeks. The two
    differ on purpose — a month holds about four and a half weeks but you work twenty of
@@ -31,14 +34,30 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
    "משרה ועוד 70% פנויים למשימות חשובות אחרות" above it. Never a bare "0.2 משרה".
 7. **No stones anywhere.** The stones are a figure of speech in the name and nothing
    else. The mountain illustration and every stone drawing are gone for good.
-8. **Dashboard contents**, in order: hours per month and per year · the position icons
-   and ring · the big tasks ranked · a breakdown per team · the closing question
-   ("what would you do with the time") · share and copy.
+8. **The list ends in a plain total row**, the weight of the rows above it: "סה״כ מתפנה
+   החודש" on the right, the number on the left. The year and the share of a position
+   appear on the dashboard only, never twice.
+9. **The dashboard carries ONE banner**: hours per month and per year on the right, the
+   share of a position with its people and ring on the left, and a small band under it —
+   "מה אפשרי בזמן שהתפנה?" with whatever she ticked. Then the big tasks ranked and the
+   breakdown per assignment.
+10. **The ready-made task list is hers to keep and prune.** It lives under its own
+   storage key, a task she types joins it automatically, she can remove what does not fit
+   a given business, and "תרחיש חדש" clears the scenario without bringing the original
+   list back.
+11. **הגדרות replaces צוותים**: the business name (which joins the calculator's title),
+   the assignments with their headcount, and the ready-made list.
+12. **Nothing jumps.** A press keeps the page where it was; only a deliberate move
+   between screens, and closing the tips window, returns to the top.
+13. **One place per action.** The link is copied from the ⋯ menu and says
+   "הקישור הועתק"; "העתקת סיכום" is gone.
 
 ## Approach
-- **State**: `{ v:2, groups:[{id,name,people,tasks:[{id,name,minutes,freq,auto,on,dom}]}],
-  dream:{chips,text} }`. `on` is the tick. `dom` is the domain index, resolved once on
-  the way in and stored BY VALUE so an old link keeps its icon after the catalog changes.
+- **State**: `{ v:3, biz, groups:[{id,name,people}], tasks:[{id,name,minutes,freq,auto,on,
+  icon,gid}], dream:{chips,text} }`. Tasks are FLAT and `gid` may be null, because an
+  organisation is not necessarily made of teams. `on` is the tick. `icon` is stored BY
+  VALUE so an old link keeps its icon after the keyword table changes. The ready-made
+  list is a separate store, `localStorage['waives.stones.lib']`, outside the scenario.
 - **Compute**: one pure function `compute(state) -> result`, nothing derived is stored.
   Order per task: `minutes/60 × freqFactor × people × auto`, exact float, rounded last.
 - **Rounding invariant (the list must add up on screen)**: the per-row hours are rounded
@@ -48,8 +67,9 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
   tasks as 1 and 0. Hours/year and the position figure come from the exact total.
 - **The sheet is the calculator.** Its header carries a live number that moves on every
   press, so the list screen can be a list without the tool stopping being a calculator.
-  The frequency is a button INSIDE the question ("כמה זמן היא לוקחת פעם ביום?"), never a
-  line hidden underneath.
+  The frequency is a dropdown INSIDE the question ("כמה זמן היא לוקחת פעם ביום?"), never a
+  line hidden underneath. The minutes box appears only behind 'אחר': a second box showing
+  the 30 minutes you just pressed is noise.
 - **Persist**: `localStorage['waives.stones.v1']` in try/catch. Share link is `#s=` +
   base64url of a compact NAMED-key object. Encoding goes through `TextEncoder` because
   `btoa` throws on Hebrew. `migrate()` stays in the file forever; a v1 link (no `o`, no
@@ -70,14 +90,16 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
 - `index.html` — the entire tool
 - `PLAN.md` — this file
 - `.nojekyll`, `CNAME` — GitHub Pages
-- `qa/qa.js` — 125 Playwright checks (not deployed)
+- `qa/qa.js` — 187 Playwright checks (not deployed)
 - `design-options/` — the five look directions GPT drew; option 4 was chosen
 
 ## Definition of done
 `node --check` on the extracted JS, then Playwright covering: the exact calculation
 checks under the new constants · the list adds up, read from the screen · the tick box
 moves the total and the list still adds up · the sheet's number moves on every press ·
-headcount exists only on the teams screen and multiplies the list · a hostile or corrupt
+an assignment is never created by itself, headcount lives only in הגדרות and
+multiplies the list · the list is grouped by assignment and each group collapses to its
+total · a press does not scroll the page to the top · the icon matches the task · a hostile or corrupt
 hash (truncated, non-base64, negative minutes, 1e9 people, auto 99, unknown frequency,
 unknown domain, `<img src=x onerror=…>`, and a v1 link) · Hebrew and Latin names survive
 a round trip · an incoming link with Undo · storage denied · the wording at 0, under a

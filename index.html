@@ -17,8 +17,7 @@
   --white:#FFFFFF; --ink:#1B2436; --deep:#04091A; --mute:#54637C;
   --teal:#1A8FA0; --teal-ink:#14707E; --gold:#C9A84C; --gold-dark:#A07830;
   --panel:#F5F7FA; --line:#E3E8EF;
-  --bar:72px;            /* bottom navigation */
-  --sheet-max:560px;
+  --bar:72px; --sheet-max:560px;
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
@@ -29,7 +28,7 @@ body{
   padding-bottom:calc(var(--bar) + env(safe-area-inset-bottom));
 }
 button{font:inherit;color:inherit;cursor:pointer}
-input{font:inherit;color:inherit}
+input,select{font:inherit;color:inherit}
 :focus-visible{outline:3px solid var(--gold); outline-offset:2px; border-radius:10px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
@@ -37,13 +36,13 @@ input{font:inherit;color:inherit}
 .top{
   position:sticky; top:0; z-index:30;
   background:var(--teal-ink); color:#fff;
-  padding:calc(10px + env(safe-area-inset-top)) 16px 10px;
+  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
   display:flex; align-items:center; gap:10px;
   box-shadow:0 1px 0 rgba(0,0,0,.08);
 }
 .top .brand{display:flex;align-items:center;gap:8px;min-width:0}
 .top .mark{width:20px;height:20px;flex:none}
-.top h1{font-size:17px;font-weight:700;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top h1{font-size:16px;font-weight:700;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top .grow{flex:1}
 .icobtn{
   background:rgba(255,255,255,.14); border:0; color:#fff;
@@ -57,77 +56,76 @@ input{font:inherit;color:inherit}
 .newbtn:hover{background:#d8ba63}
 
 /* ---------- page frame ---------- */
-.wrap{max-width:720px;margin:0 auto;padding:16px 14px 24px}
+.wrap{max-width:720px;margin:0 auto;padding:14px 12px 24px}
 .card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.card + .card{margin-top:14px}
+.card + .card{margin-top:12px}
 .cardhead{
-  padding:14px 16px 12px;border-bottom:1px solid var(--line);
+  padding:13px 15px 11px;border-bottom:1px solid var(--line);
   display:flex;align-items:baseline;gap:8px;
 }
 .cardhead h2{margin:0;font-size:15px;font-weight:700}
 .cardhead .sub{font-size:12.5px;color:var(--mute)}
 
 /* ---------- the list ---------- */
-.row{
-  display:flex;align-items:center;gap:12px;width:100%;
-  background:#fff;border:0;border-bottom:1px solid var(--line);
-  padding:12px 14px;text-align:start;
+.ghead{
+  display:flex;align-items:center;gap:10px;width:100%;
+  background:var(--panel);border:0;border-bottom:1px solid var(--line);
+  padding:10px 14px;text-align:start;
 }
-.row:last-of-type{border-bottom:0}
+.ghead .gname{font-weight:700;font-size:14px;flex:1;min-width:0;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.ghead .gsub{font-size:12px;color:var(--mute);font-weight:500}
+.ghead .gtot{font-weight:700;font-size:14px;color:var(--teal-ink);flex:none}
+.caret{width:16px;height:16px;flex:none;color:var(--mute);transition:transform .15s}
+.ghead[aria-expanded="false"] .caret{transform:rotate(-90deg)}
+.row{
+  display:flex;align-items:center;gap:11px;width:100%;
+  background:#fff;border:0;border-bottom:1px solid var(--line);
+  padding:11px 14px;text-align:start;
+}
 .row:hover{background:#FBFCFE}
-.row.off .nm,.row.off .hrs{opacity:.42}
-.ico{width:34px;height:34px;border-radius:10px;display:grid;place-items:center;flex:none;color:#fff}
-.ico svg{width:19px;height:19px}
+.row.off .nm,.row.off .meta{opacity:.42}
+.ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;color:#fff}
+.ico svg{width:18px;height:18px}
 .rowmain{flex:1;min-width:0}
-.nm{font-weight:600;font-size:15px;line-height:1.3;display:block;
+.nm{font-weight:600;font-size:14.5px;line-height:1.3;display:block;
     white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .meta{display:block;font-size:12px;color:var(--mute);margin-top:2px;
       white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hrs{font-weight:700;font-size:15px;color:var(--teal-ink);flex:none;white-space:nowrap}
-.row.off .hrs{color:var(--mute);text-decoration:line-through}
+.hrs{font-weight:700;font-size:14.5px;color:var(--teal-ink);flex:none;white-space:nowrap}
+.row.off .hrs{color:var(--mute);text-decoration:line-through;opacity:.5}
 .tick{
-  width:26px;height:26px;border-radius:8px;border:2px solid var(--line);
+  width:25px;height:25px;border-radius:8px;border:2px solid var(--line);
   background:#fff;flex:none;display:grid;place-items:center;padding:0;
 }
 .tick[aria-checked="true"]{background:var(--teal);border-color:var(--teal)}
-.tick svg{width:15px;height:15px;color:#fff;opacity:0}
+.tick svg{width:14px;height:14px;color:#fff;opacity:0}
 .tick[aria-checked="true"] svg{opacity:1}
 
-/* ---------- cart total ---------- */
-.total{
-  background:var(--deep);color:#fff;padding:16px;
-  display:flex;align-items:center;gap:14px;
+/* ---------- a plain total row, the weight of the rows above it ---------- */
+.totalrow{
+  display:flex;align-items:center;gap:11px;
+  padding:13px 14px;border-top:2px solid var(--ink);background:#fff;
 }
-.total .lbl{font-size:13px;color:#C7D0DD;font-weight:500}
-.total .big{font-size:38px;font-weight:800;line-height:1;letter-spacing:-.5px}
-.total .unit{font-size:12.5px;color:var(--gold);font-weight:700;margin-top:3px}
-.total .grow{flex:1}
-.total .free{font-size:12.5px;color:#C7D0DD;margin-top:7px;line-height:1.45}
+.totalrow .tlabel{flex:1;font-weight:700;font-size:15px}
+.totalrow .tvalue{font-weight:800;font-size:15.5px;color:var(--teal-ink);flex:none}
 
 /* ---------- empty state ---------- */
-.empty{padding:34px 20px;text-align:center}
+.empty{padding:32px 20px;text-align:center}
 .empty h3{margin:0 0 6px;font-size:17px}
 .empty p{margin:0 0 18px;color:var(--mute);font-size:13.5px;line-height:1.6}
-.btn{
-  background:var(--teal);color:#fff;border:0;border-radius:12px;
-  padding:12px 20px;font-weight:700;font-size:15px;
-}
+.btn{background:var(--teal);color:#fff;border:0;border-radius:12px;
+  padding:12px 20px;font-weight:700;font-size:15px}
 .btn:hover{background:var(--teal-ink)}
 .btn.ghost{background:#fff;color:var(--teal-ink);border:1.5px solid var(--line)}
 .btn.ghost:hover{background:var(--panel)}
 .btn.block{display:block;width:100%}
-.btn.gold{background:var(--gold);color:var(--deep)}
-.btn.gold:hover{background:#d8ba63}
+.btn.sm{padding:9px 14px;font-size:13.5px;border-radius:10px}
 
-/* ---------- discovery questions ---------- */
-.disc{margin-top:14px}
-.disc summary{
-  list-style:none;cursor:pointer;color:var(--teal-ink);font-weight:600;font-size:13.5px;
-  padding:10px 2px;
-}
-.disc summary::-webkit-details-marker{display:none}
-.disc ul{margin:4px 0 0;padding:0 18px 0 0}
-.disc li{color:var(--mute);font-size:13px;line-height:1.75}
+.disclink{display:block;width:100%;margin-top:12px;background:#fff;
+  border:1.5px dashed var(--line);border-radius:14px;padding:13px;
+  color:var(--teal-ink);font-weight:600;font-size:13.5px}
+.disclink:hover{border-color:var(--teal);background:#FBFCFE}
 
 /* ---------- bottom navigation ---------- */
 nav.bar{
@@ -142,27 +140,20 @@ nav.bar button{
 }
 nav.bar button svg{width:21px;height:21px}
 nav.bar button[aria-current="page"]{color:var(--teal-ink)}
-nav.bar .pill{font-size:11px;font-weight:700;background:var(--panel);
-  border-radius:20px;padding:1px 7px;color:var(--ink)}
 
-/* ---------- the sheet (new / edit item) ---------- */
+/* ---------- sheets ---------- */
 .scrim{position:fixed;inset:0;background:rgba(4,9,26,.55);z-index:40;display:grid;align-items:end}
 .scrim[hidden]{display:none}
-.sheet{
-  background:#fff;width:100%;max-width:var(--sheet-max);margin:0 auto;
-  border-radius:20px 20px 0 0;max-height:94vh;display:flex;flex-direction:column;
-}
-@media(min-width:700px){
-  .scrim{align-items:center}
-  .sheet{border-radius:20px;max-height:88vh}
-}
-.sheethead{
-  background:var(--deep);color:#fff;padding:16px;border-radius:20px 20px 0 0;
-  display:flex;align-items:center;gap:14px;flex:none;
-}
+.sheet{background:#fff;width:100%;max-width:var(--sheet-max);margin:0 auto;
+  border-radius:20px 20px 0 0;max-height:94vh;display:flex;flex-direction:column}
+@media(min-width:700px){ .scrim{align-items:center} .sheet{border-radius:20px;max-height:88vh} }
+.sheethead{background:var(--deep);color:#fff;padding:15px;border-radius:20px 20px 0 0;
+  display:flex;align-items:center;gap:14px;flex:none}
 .sheethead .t{font-size:13px;color:#C7D0DD;font-weight:600}
 .sheethead .n{font-size:30px;font-weight:800;line-height:1.05}
 .sheethead .u{font-size:12px;color:var(--gold);font-weight:700}
+.sheethead.plain{background:var(--teal-ink)}
+.sheethead.plain h2{margin:0;font-size:17px;font-weight:700}
 .sheetbody{padding:16px;overflow:auto;flex:1}
 .sheetfoot{padding:12px 16px calc(12px + env(safe-area-inset-bottom));
   border-top:1px solid var(--line);display:flex;gap:10px;flex:none;background:#fff;
@@ -170,57 +161,66 @@ nav.bar .pill{font-size:11px;font-weight:700;background:var(--panel);
 .sheetfoot .btn{flex:1}
 
 .q{margin-bottom:20px}
-.q > label,.qlabel{display:flex;align-items:center;gap:6px;flex-wrap:wrap;
+.q > label,.qlabel{display:flex;align-items:center;gap:7px;flex-wrap:wrap;
   font-weight:700;font-size:14.5px;margin-bottom:9px}
-.field{
-  width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;
-  background:var(--panel);font-size:16px;
-}
+.field{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;
+  background:var(--panel);font-size:16px}
 .field:focus{background:#fff;border-color:var(--teal);outline:none}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{
-  background:#fff;border:1.5px solid var(--line);border-radius:11px;
+.chip{background:#fff;border:1.5px solid var(--line);border-radius:11px;
   padding:9px 13px;font-size:13.5px;font-weight:600;color:var(--ink);
-}
+  display:inline-flex;align-items:center;gap:7px}
 .chip:hover{border-color:var(--teal)}
 .chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
 .chip.sm{padding:7px 11px;font-size:12.5px}
-.freqbtn{
+.chip svg{width:15px;height:15px;flex:none}
+select.freqsel{
   background:var(--gold);border:0;color:var(--deep);border-radius:9px;
-  padding:4px 10px;font-weight:700;font-size:14px;
+  padding:5px 26px 5px 10px;font-weight:700;font-size:14px;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2304091A' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:left 7px center;background-size:12px;
 }
-.freqbtn:hover{background:#d8ba63}
+select.freqsel:hover{background-color:#d8ba63}
 .hint{font-size:12.5px;color:var(--mute);margin-top:8px;line-height:1.55}
 .hint.warn{color:var(--gold-dark);font-weight:600}
 .inline-link{background:none;border:0;color:var(--teal-ink);
   text-decoration:underline;font-size:13px;padding:4px 0;font-weight:600}
+.danger{color:var(--gold-dark)}
 
-/* ---------- teams ---------- */
-.team{display:flex;align-items:center;gap:10px;padding:12px 14px;border-bottom:1px solid var(--line)}
-.team:last-child{border-bottom:0}
-.team input[type=text]{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--line);
+/* ---------- settings ---------- */
+.setrow{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
+.setrow:last-child{border-bottom:0}
+.setrow input[type=text]{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--line);
   border-radius:10px;background:var(--panel);font-size:15px}
-.team input[type=text]:focus{background:#fff;border-color:var(--teal);outline:none}
+.setrow input[type=text]:focus{background:#fff;border-color:var(--teal);outline:none}
 .stepper{display:flex;align-items:center;gap:2px;flex:none;
   border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
-.stepper button{background:#fff;border:0;width:34px;height:38px;font-size:19px;font-weight:700;color:var(--teal-ink)}
+.stepper button{background:#fff;border:0;width:32px;height:38px;font-size:19px;font-weight:700;color:var(--teal-ink)}
 .stepper button:hover{background:var(--panel)}
-.stepper input{width:48px;height:38px;border:0;text-align:center;font-weight:700;font-size:15px;background:#fff}
+.stepper input{width:44px;height:38px;border:0;text-align:center;font-weight:700;font-size:15px;background:#fff}
 .stepper input:focus{outline:none;background:var(--panel)}
-.teamcount{font-size:12px;color:var(--mute);flex:none}
+.libname{flex:1;min-width:0;font-size:14px;font-weight:600;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.padbox{padding:13px 15px}
 
 /* ---------- dashboard ---------- */
-.dash-num{font-size:60px;font-weight:800;line-height:.95;color:var(--teal-ink);letter-spacing:-1.5px}
-.dash-sub{color:var(--mute);font-size:14px;margin-top:8px;line-height:1.6}
-.block{padding:18px 16px}
+.banner{background:var(--deep);color:#fff;padding:20px 18px;display:flex;
+  align-items:center;gap:18px;flex-wrap:wrap}
+.banner .side{flex:1;min-width:140px}
+.banner .big{font-size:50px;font-weight:800;line-height:.95;letter-spacing:-1.5px}
+.banner .lbl{font-size:12.5px;color:var(--gold);font-weight:700;margin-top:5px}
+.banner .sub{font-size:13px;color:#C7D0DD;margin-top:7px;line-height:1.5}
+.banner .posrow{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
+.banner .divider{width:1px;align-self:stretch;background:rgba(255,255,255,.14);flex:none}
+.posmore{font-size:13px;font-weight:700;color:var(--gold)}
+.dreambar{background:#0C1324;color:#fff;padding:13px 18px;font-size:13.5px;line-height:1.55}
+.dreambar .k{color:#C7D0DD;font-weight:600}
+.dreambar b{color:var(--gold)}
+.block{padding:16px 15px}
 .block + .block{border-top:1px solid var(--line)}
 .block h3{margin:0 0 12px;font-size:14px;font-weight:700;color:var(--gold-dark)}
-.posrow{display:flex;align-items:center;gap:10px;flex-wrap:wrap}
-.person{width:34px;height:46px;flex:none;color:var(--gold)}
-.posmore{font-size:13px;font-weight:700;color:var(--gold-dark)}
-.poscap{margin-top:10px;font-size:13px;color:var(--mute);line-height:1.6}
-.poscap b{color:var(--gold-dark)}
-.bar-item{margin-bottom:13px}
+.bar-item{margin-bottom:12px}
 .bar-item:last-child{margin-bottom:0}
 .bar-top{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;margin-bottom:5px}
 .bar-top .v{font-weight:700;color:var(--teal-ink);flex:none}
@@ -229,29 +229,25 @@ nav.bar .pill{font-size:11px;font-weight:700;background:var(--panel);
 .bar-item.lead .bar-fill{background:var(--gold)}
 .bar-item.lead .bar-top .v{color:var(--gold-dark)}
 
-/* ---------- snackbar ---------- */
-.snack{
-  position:fixed;inset-inline:12px;bottom:calc(var(--bar) + 12px + env(safe-area-inset-bottom));
+/* ---------- snackbar & menu ---------- */
+.snack{position:fixed;inset-inline:12px;bottom:calc(var(--bar) + 12px + env(safe-area-inset-bottom));
   max-width:520px;margin:0 auto;background:var(--deep);color:#fff;
   border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;
-  z-index:50;font-size:13.5px;box-shadow:0 10px 30px rgba(4,9,26,.3);
-}
+  z-index:50;font-size:13.5px;box-shadow:0 10px 30px rgba(4,9,26,.3)}
 .snack[hidden]{display:none}
 .snack .grow{flex:1}
 .snack button{background:none;border:0;color:var(--gold);font-weight:700;font-size:13.5px}
-
-/* ---------- menu ---------- */
-.menu{
-  position:fixed;z-index:45;top:calc(58px + env(safe-area-inset-top));inset-inline-end:12px;
+.menu{position:fixed;z-index:45;top:calc(58px + env(safe-area-inset-top));inset-inline-end:12px;
   background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;
-  box-shadow:0 14px 40px rgba(4,9,26,.18);min-width:210px;
-}
+  box-shadow:0 14px 40px rgba(4,9,26,.18);min-width:210px}
 .menu[hidden]{display:none}
 .menu button{display:block;width:100%;text-align:start;background:#fff;border:0;
   padding:13px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--line)}
 .menu button:last-child{border-bottom:0}
 .menu button:hover{background:var(--panel)}
-.foot{margin-top:18px;font-size:11.5px;color:var(--mute);line-height:1.65;text-align:center}
+.foot{margin-top:16px;font-size:11.5px;color:var(--mute);line-height:1.65;text-align:center}
+.tips{margin:0;padding:0 18px 0 0}
+.tips li{color:var(--ink);font-size:14.5px;line-height:1.75;margin-bottom:10px}
 </style>
 </head>
 <body>
@@ -365,7 +361,7 @@ fill="currentColor" stroke="none">
 <header class="top">
   <span class="brand">
     <svg class="mark" aria-hidden="true"><use href="#mkBars"></use></svg>
-    <h1>מחשבון האבנים הקטנות</h1>
+    <h1 id="appTitle">מחשבון האבנים הקטנות</h1>
   </span>
   <span class="grow"></span>
   <button class="icobtn" id="btnMenu" aria-haspopup="true" aria-expanded="false" aria-label="עוד פעולות">
@@ -381,7 +377,7 @@ fill="currentColor" stroke="none">
 
 <main class="wrap">
   <section id="screenList"></section>
-  <section id="screenTeams" hidden></section>
+  <section id="screenSet" hidden></section>
   <section id="screenDash" hidden></section>
   <p class="foot" id="formula"></p>
 </main>
@@ -395,9 +391,9 @@ fill="currentColor" stroke="none">
     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><path d="M3 20h18M7 20v-7M12 20V6M17 20v-10"/></svg>
     <span>דשבורד</span>
   </button>
-  <button id="navTeams">
-    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 19v-1.5a3.5 3.5 0 0 0-3.5-3.5h-5A3.5 3.5 0 0 0 4 17.5V19"/><circle cx="10" cy="7.5" r="3.2"/><path d="M20 19v-1.5a3.5 3.5 0 0 0-2.6-3.4M15.5 4.6a3.2 3.2 0 0 1 0 5.9"/></svg>
-    <span>צוותים</span>
+  <button id="navSet">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="3.2"/><path d="M19.4 14.5a1.6 1.6 0 0 0 .32 1.77l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.6 1.6 0 0 0-1.77-.32 1.6 1.6 0 0 0-1 1.46V21a2 2 0 1 1-4 0v-.1A1.6 1.6 0 0 0 9.1 19.4a1.6 1.6 0 0 0-1.77.32l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06a1.6 1.6 0 0 0 .32-1.77 1.6 1.6 0 0 0-1.46-1H3a2 2 0 1 1 0-4h.1a1.6 1.6 0 0 0 1.46-1.1 1.6 1.6 0 0 0-.32-1.77l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06a1.6 1.6 0 0 0 1.77.32H9.1a1.6 1.6 0 0 0 1-1.46V3a2 2 0 1 1 4 0v.1a1.6 1.6 0 0 0 1 1.46 1.6 1.6 0 0 0 1.77-.32l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06a1.6 1.6 0 0 0-.32 1.77V9.1a1.6 1.6 0 0 0 1.46 1H21a2 2 0 1 1 0 4h-.1a1.6 1.6 0 0 0-1.46 1Z"/></svg>
+    <span>הגדרות</span>
   </button>
 </nav>
 
@@ -408,6 +404,9 @@ fill="currentColor" stroke="none">
 
 <div class="scrim" id="scrim" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle" id="sheet"></div>
+</div>
+<div class="scrim" id="scrim2" hidden>
+  <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tipsTitle" id="sheet2"></div>
 </div>
 
 <script>
@@ -442,124 +441,118 @@ const AUTOS = [0.25, 0.5, 0.7, 0.9];
 const AUTO_LABEL = {0.9:'כמעט הכול', 0.7:'רוב', 0.5:'חצי', 0.25:'קצת'};
 const TIME_KEYS = [15, 30, 45, 60, 120];
 
-/* Six domains. Each row in the list wears its domain's colour, so a long
-   list can be read at a glance without anyone having to pick an icon.
-   The colours are WAIVES tokens only. */
-const DOMAINS = [
-  {name:'משאבי אנוש וגיוס',      color:'var(--teal)',      icon:'people'},
-  {name:'כספים והנהלת חשבונות',  color:'var(--gold-dark)', icon:'doc'},
-  {name:'רכש ותפעול',            color:'var(--teal-ink)',  icon:'box'},
-  {name:'שירות, מכירות ושיווק',  color:'var(--gold)',      icon:'chat'},
-  {name:'לוגיסטיקה',             color:'var(--mute)',      icon:'truck'},
-  {name:'שירותי משרד',           color:'var(--deep)',      icon:'clip'}
+/* Icons are chosen from the task's own words, so "מענה לטלפונים" gets a telephone
+   and not whatever bucket a domain list would have put it in. First match wins,
+   so the more specific words come first. */
+const ICONS = {
+  phone:{color:'var(--teal)',      d:'M15.8 21a16.9 16.9 0 0 1-12.8-12.8 2 2 0 0 1 1.3-2.3l2-.7a1.6 1.6 0 0 1 1.9.8l1 2a1.6 1.6 0 0 1-.4 2l-1 .8a12 12 0 0 0 4.4 4.4l.8-1a1.6 1.6 0 0 1 2-.4l2 1a1.6 1.6 0 0 1 .8 1.9l-.7 2a2 2 0 0 1-1.3 1.3Z'},
+  mail:{color:'var(--teal)',       d:'M3.5 6.5h17v11h-17zM3.5 7.5l8.5 6 8.5-6'},
+  chat:{color:'var(--gold)',       d:'M21 11.5a7.5 7.5 0 0 1-10.8 6.7L4 20l1.9-5.9A7.5 7.5 0 1 1 21 11.5Z'},
+  money:{color:'var(--gold-dark)', d:'M3 6.5h18v11H3zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM6.5 10v.01M17.5 14v.01'},
+  chart:{color:'var(--gold-dark)', d:'M4 20h16M7.5 20v-6M12 20V8M16.5 20v-9'},
+  calendar:{color:'var(--teal-ink)',d:'M4.5 6.5h15v13h-15zM4.5 10.5h15M8.5 3.5v4M15.5 3.5v4'},
+  people:{color:'var(--teal)',     d:'M15 18v-1.2a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3V18M9 8.2a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6ZM21 18v-1.2a3 3 0 0 0-2.2-2.9M14.5 2.8a3 3 0 0 1 0 5.4'},
+  doc:{color:'var(--mute)',        d:'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4'},
+  box:{color:'var(--teal-ink)',    d:'M21 8 12 3 3 8l9 5 9-5ZM3 8v8l9 5 9-5V8M12 13v8'},
+  truck:{color:'var(--mute)',      d:'M3 16V6h11v10M14 9h4l3 3v4h-7M7.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6ZM17.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6Z'},
+  data:{color:'var(--deep)',       d:'M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3ZM4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3'},
+  search:{color:'var(--teal-ink)', d:'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-4-4'},
+  clip:{color:'var(--mute)',       d:'M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1ZM8 6H6.5A1.5 1.5 0 0 0 5 7.5v12A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 17.5 6H16M9 12h6M9 16h4'}
+};
+const ICON_KEYS = Object.keys(ICONS);
+const ICON_WORDS = [
+  /* The strong words come first: "עדכון CRM אחרי פגישות ושיחות" is a data task,
+     even though it also says "פגישות" and "שיחות". */
+  ['data',    ['crm','העברת נתונים','סנכרון']],
+  ['phone',   ['טלפון','טלפונים','שיחות','שיחה','מוקד','חיוג']],
+  ['mail',    ['מייל','מיילים','דוא','ניוזלטר','תפוצה','הודעות']],
+  ['chat',    ['וואטסאפ','פניות','פנייה','מענה','שאלות','תשובות','צ׳אט','שירות']],
+  ['money',   ['חשבונית','חשבוניות','גבייה','תשלום','תשלומים','שכר','תקציב','בנק','כספים','מחירון','הצעת מחיר','הצעות מחיר']],
+  ['chart',   ['דוח','דוחות','נתוני','סטטיסטיקה','מדידה','ביצועים']],
+  ['truck',   ['משלוח','משלוחים','מוביל','מובילים','לוגיסטיקה','אספקה','אספקות']],
+  ['box',     ['מלאי','הזמנה','הזמנות','רכש','ספק','ספקים','ליקוט','החזרות']],
+  ['calendar',['יומן','יומנים','פגישה','פגישות','תיאום','ראיונות','ראיון','נוכחות','חופשות','אירוע','אירועים','נסיעות','תזמון']],
+  ['people',  ['קורות חיים','מועמד','מועמדים','גיוס','עובד','עובדים','קליטת','עזיבת','הערכות','צוות']],
+  ['data',    ['מערכת','מערכות','נתונים','העתק','העברת','טבלה','סטטוס','תיעוד','עדכון']],
+  ['search',  ['בדיקה','בקרה','מעקב','חיפוש','מיון','השוואה','התאמה','התאמות']],
+  ['doc',     ['מסמך','מסמכים','טפסים','סריקה','תיוק','אישור','אישורים','תעודות','סיכומי','סיכום','פוסט','פוסטים','תוכן']]
 ];
-const DOMAIN_FALLBACK = {color:'var(--mute)', icon:'dot'};
+function iconFor(name){
+  const n = String(name || '').toLowerCase();
+  if(!n.trim()) return 'clip';
+  for(const pair of ICON_WORDS)
+    for(const w of pair[1])
+      if(n.indexOf(w) !== -1) return pair[0];
+  return 'clip';
+}
 
 const CATALOG = [
- {domain:'משאבי אנוש וגיוס', q:'באיזה שלב בגיוס או בקליטה הכי הרבה הלוך-חזור?', roles:[
-   {role:'רכזת גיוס', tasks:[
-     ['מיון קורות חיים',120,'day'],
-     ['תיאום ראיונות עם מועמדים ומראיינים',45,'day'],
-     ['שליחת עדכונים ותשובות למועמדים',30,'day'],
-     ['פרסום משרות בכמה ערוצים',60,'week'],
-     ['עדכון סטטוס מועמדים בטבלה או במערכת',30,'day'],
-     ['דוח גיוס להנהלה',120,'month']]},
-   {role:'מנהלת משאבי אנוש', tasks:[
-     ['קליטת עובד חדש (טפסים, הרשאות, ציוד)',180,'week'],
-     ['מענה לשאלות חוזרות של עובדים',60,'day'],
-     ['ריכוז נוכחות וחופשות לשכר',240,'month'],
-     ['הכנת מסמכים ואישורים לעובדים',30,'day'],
-     ['ריכוז תהליך הערכות עובדים',600,'quarter'],
-     ['עזיבת עובד (סגירת הרשאות, ציוד, מסמכים)',120,'month']]}]},
- {domain:'כספים והנהלת חשבונות', q:'אילו מסמכים או אישורים אתה רודף אחריהם כל חודש?', roles:[
-   {role:'מנהלת חשבונות', tasks:[
-     ['הקלדת חשבוניות ספקים',90,'day'],
-     ['התאמות בנק',180,'week'],
-     ['גבייה ותזכורות ללקוחות',60,'day'],
-     ['הפקת חשבוניות ללקוחות',45,'day'],
-     ['איסוף מסמכים חסרים מעובדים ומספקים',30,'day'],
-     ['הכנת חומרים לרואה החשבון',360,'quarter']]},
-   {role:'כספים ובקרה', tasks:[
-     ['דוח תזרים שבועי',120,'week'],
-     ['דוח הנהלה חודשי',360,'month'],
-     ['אישור והעברת תשלומים',60,'week'],
-     ['הכנת תקציב רבעוני',720,'quarter']]}]},
- {domain:'רכש ותפעול', q:'איזה מידע אתה אוסף מכמה מקומות כדי להכין דוח או הזמנה?', roles:[
-   {role:'רכזת רכש', tasks:[
-     ['בקשה והשוואה של הצעות מחיר',120,'week'],
-     ['פתיחת הזמנות רכש',30,'day'],
-     ['מעקב אספקות מול ספקים',45,'day'],
-     ['התאמת חשבונית להזמנה ולתעודת משלוח',30,'day'],
-     ['עדכון מחירונים',180,'month'],
-     ['הערכת ספקים',360,'quarter']]},
-   {role:'מנהלת תפעול', tasks:[
-     ['דוח סטטוס שבועי מכמה מקורות',120,'week'],
-     ['העברת מידע בין מערכות (העתק-הדבק)',60,'day'],
-     ['תיאום משימות ומעקב מול צוותים',45,'day'],
-     ['ריכוז תקלות ובקשות',30,'day']]}]},
- {domain:'שירות, מכירות ושיווק', q:'מה אתה מעדכן אחרי כל שיחה או פגישה?', roles:[
-   {role:'נציגת שירות', tasks:[
-     ['מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day'],
-     ['תיעוד פניות במערכת',45,'day'],
-     ['ניתוב פניות לגורם הנכון',30,'day'],
-     ['סיכום שיחות',30,'day'],
-     ['דוח פניות שבועי',60,'week']]},
-   {role:'איש מכירות', tasks:[
-     ['עדכון CRM אחרי פגישות ושיחות',45,'day'],
-     ['הכנת הצעת מחיר',60,'week'],
-     ['פולואפ ללידים',60,'day'],
-     ['הכנה לפגישה (מחקר על הלקוח)',30,'day'],
-     ['דוח מכירות',120,'week']]},
-   {role:'רכזת שיווק', tasks:[
-     ['הכנת פוסטים ותזמונם',180,'week'],
-     ['איסוף נתוני קמפיינים לדוח',120,'week'],
-     ['עדכון רשימות תפוצה',60,'week'],
-     ['הכנת ניוזלטר',240,'month']]}]},
- {domain:'לוגיסטיקה', q:'מה לקוחות או ספקים שואלים אותך שהתשובה עליו כבר קיימת במערכת?', roles:[
-   {role:'רכזת לוגיסטיקה', tasks:[
-     ['תיאום משלוחים מול מובילים',60,'day'],
-     ['הפקת תעודות משלוח ומסמכים',45,'day'],
-     ['מענה ללקוחות "איפה ההזמנה שלי"',60,'day'],
-     ['עדכון מלאי',30,'day'],
-     ['ספירת מלאי',960,'quarter']]},
-   {role:'מנהלת מחסן', tasks:[
-     ['תכנון ליקוטים',45,'day'],
-     ['דוח החזרות',120,'week'],
-     ['הזמנה חוזרת של מלאי',60,'week']]}]},
- {domain:'שירותי משרד', q:'מה אתה מתאם בטלפון או בוואטסאפ שהיה יכול לקרות לבד?', roles:[
-   {role:'מנהלת משרד', tasks:[
-     ['ניהול יומנים ותיאום פגישות',60,'day'],
-     ['הזמנת ציוד וכיבוד',60,'week'],
-     ['מענה לטלפונים ולמיילים כלליים',60,'day'],
-     ['סריקה ותיוק מסמכים',30,'day'],
-     ['ריכוז נוכחות',120,'month'],
-     ['ארגון אירועי חברה',480,'quarter']]},
-   {role:'עוזרת אישית', tasks:[
-     ['הכנת סיכומי ישיבות',30,'day'],
-     ['תיאום נסיעות',120,'month'],
-     ['מעקב משימות פתוחות של המנהל',30,'day']]}]}
+ {domain:'משאבי אנוש וגיוס', tasks:[
+   ['מיון קורות חיים',120,'day'],
+   ['תיאום ראיונות עם מועמדים ומראיינים',45,'day'],
+   ['שליחת עדכונים ותשובות למועמדים',30,'day'],
+   ['פרסום משרות בכמה ערוצים',60,'week'],
+   ['עדכון סטטוס מועמדים במערכת',30,'day'],
+   ['קליטת עובד חדש (טפסים, הרשאות, ציוד)',180,'week'],
+   ['מענה לשאלות חוזרות של עובדים',60,'day'],
+   ['ריכוז נוכחות וחופשות לשכר',240,'month']]},
+ {domain:'כספים והנהלת חשבונות', tasks:[
+   ['הקלדת חשבוניות ספקים',90,'day'],
+   ['התאמות בנק',180,'week'],
+   ['גבייה ותזכורות ללקוחות',60,'day'],
+   ['הפקת חשבוניות ללקוחות',45,'day'],
+   ['מעקב אחרי תשלומים',45,'day'],
+   ['הכנת חומרים לרואה החשבון',360,'quarter'],
+   ['הפקת דוחות חודשיים',120,'month']]},
+ {domain:'רכש ותפעול', tasks:[
+   ['השוואת הצעות מחיר',120,'week'],
+   ['פתיחת הזמנות רכש',30,'day'],
+   ['מעקב אספקות מול ספקים',45,'day'],
+   ['העברת נתונים בין מערכות',60,'day'],
+   ['עדכון מחירונים',180,'month']]},
+ {domain:'שירות, מכירות ושיווק', tasks:[
+   ['מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day'],
+   ['תיעוד פניות במערכת',45,'day'],
+   ['ניתוב פניות לגורם הנכון',30,'day'],
+   ['עדכון CRM אחרי פגישות ושיחות',45,'day'],
+   ['פולואפ ללידים',60,'day'],
+   ['הכנת פוסטים ותזמונם',180,'week']]},
+ {domain:'לוגיסטיקה', tasks:[
+   ['תיאום משלוחים מול מובילים',60,'day'],
+   ['הפקת תעודות משלוח',45,'day'],
+   ['מענה ללקוחות "איפה ההזמנה שלי"',60,'day'],
+   ['עדכון מלאי',30,'day']]},
+ {domain:'שירותי משרד', tasks:[
+   ['תיאום פגישות ביומן',60,'day'],
+   ['מענה לטלפונים ולמיילים כלליים',60,'day'],
+   ['סריקה ותיוק מסמכים',30,'day'],
+   ['הכנת סיכומי ישיבות',30,'day'],
+   ['הזמנת ציוד וכיבוד',60,'week']]}
 ];
 
-/* The ready-made keys inside the form: name, minutes, frequency, domain index. */
-const QUICK = [
-  ['מיון קורות חיים',120,'day',0],
-  ['הקלדת חשבוניות',90,'day',1],
-  ['מענה לשאלות חוזרות',60,'day',3],
-  ['עדכון CRM',45,'day',3],
-  ['תיאום פגישות ביומן',60,'day',5],
-  ['הפקת דוחות חודשיים',120,'month',1],
-  ['מעקב אחרי תשלומים',45,'day',1],
-  ['קליטת עובד חדש',180,'week',0],
-  ['העברת נתונים בין מערכות',60,'day',2]
+/* The list of ready-made tasks a person starts with. It is hers to prune, it is
+   stored apart from the scenario, and "תרחיש חדש" never brings the default back. */
+const LIB_DEFAULT = [
+  ['מיון קורות חיים',120,'day'],
+  ['הקלדת חשבוניות ספקים',90,'day'],
+  ['מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day'],
+  ['עדכון CRM אחרי פגישות ושיחות',45,'day'],
+  ['תיאום פגישות ביומן',60,'day'],
+  ['מענה לטלפונים ולמיילים כלליים',60,'day'],
+  ['הפקת דוחות חודשיים',120,'month'],
+  ['מעקב אחרי תשלומים',45,'day'],
+  ['קליטת עובד חדש (טפסים, הרשאות, ציוד)',180,'week'],
+  ['העברת נתונים בין מערכות',60,'day']
 ];
 
-const DISCOVERY = [
-  'מה עשית אתמול שתעשה גם מחר בדיוק באותה צורה?',
-  'מה אתה מעתיק ממקום אחד למקום אחר: ממייל לטבלה, מטבלה למערכת?',
-  'על מה אתה מחכה לאחרים כדי להמשיך לעבוד?',
-  'איזו שאלה אתה עונה עליה שוב ושוב?',
-  'מה אתה בודק או מתקן ידנית, כי אין לך אמון במה שהגיע?',
-  'איזו משימה היית שמח שתיעלם מחר בבוקר?'
+/* Plural throughout, so the wording never has to pick a gender. */
+const TIPS = [
+  'מה עשיתם אתמול שתעשו גם מחר בדיוק באותה צורה?',
+  'מה אתם מעתיקים ממקום אחד למקום אחר: ממייל לטבלה, מטבלה למערכת?',
+  'על מה אתם מחכים לאחרים כדי להמשיך לעבוד?',
+  'איזו שאלה אתם עונים עליה שוב ושוב?',
+  'מה אתם בודקים או מתקנים ידנית, כי אין אמון במה שהגיע?',
+  'איזו משימה הייתם שמחים שתיעלם מחר בבוקר?'
 ];
 
 const DREAM_CHIPS = ['פרויקט חדש שמחכה','פיתוח מקצועי לצוות','שירות טוב יותר ללקוחות','צמיחה ולקוחות חדשים','זמן לחשוב ולתכנן','פחות שעות נוספות'];
@@ -567,83 +560,84 @@ const DREAM_CHIPS = ['פרויקט חדש שמחכה','פיתוח מקצועי �
 /* ============================================================
    2. MODEL + VALIDATION
    ============================================================ */
-const LIMITS = {minutes:[0,1440], people:[1,999], names:120, groups:60, tasks:300};
+const LIMITS = {minutes:[0,1440], people:[1,999], names:120, groups:60, tasks:300, lib:60, biz:60};
 
 function uid(p){ return p + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-3); }
 function clamp(n, lo, hi){ n = Number(n); if(!Number.isFinite(n)) return lo; return Math.min(hi, Math.max(lo, n)); }
 function str(s, max){ return (typeof s === 'string' ? s : '').slice(0, max); }
 
-function emptyState(){ return { v:2, groups:[], dream:{chips:[], text:''} }; }
-function newGroup(name){
-  return { id:uid('g'), name:name || 'הצוות שלי', people:1, tasks:[] };
+/* Tasks are a FLAT list. `gid` may be null: a task does not have to belong to
+   anything, because nothing here should assume that an organisation is made of
+   teams. Galli names the groupings herself — "צוות רכש", "מנהלת HR" — and a task
+   with no grouping simply counts once. */
+function emptyState(){ return { v:3, biz:'', groups:[], tasks:[], dream:{chips:[], text:''} }; }
+function newGroup(name, people){
+  return { id:uid('g'), name: str(name, LIMITS.names), people: people || 1 };
 }
-function newTask(name, minutes, freq, dom){
+function newTask(name, minutes, freq, icon){
   return { id:uid('t'), name:name||'', minutes:minutes||0, freq:freq||'day',
-           auto:0.7, on:true, dom:(typeof dom === 'number' ? dom : null) };
+           auto:0.7, on:true, gid:null, icon: icon || iconFor(name) };
 }
-/* A task's icon follows its domain. A name typed by hand is matched against the
-   catalog once, on the way in, so the list still looks sorted without asking. */
-function domainOf(name){
-  const n = String(name || '').trim();
-  if(!n) return null;
-  for(let i=0; i<CATALOG.length; i++)
-    for(const r of CATALOG[i].roles)
-      for(const t of r.tasks)
-        if(t[0] === n || t[0].indexOf(n) === 0 || n.indexOf(t[0]) === 0) return i;
-  return null;
-}
-function domainMeta(i){
-  return (typeof i === 'number' && DOMAINS[i]) ? DOMAINS[i] : DOMAIN_FALLBACK;
-}
-
-function ensureGroup(){
-  if(!state.groups.length) state.groups.push(newGroup('הצוות שלי'));
-  return state.groups[0];
-}
-function allTasks(){
-  const out = [];
-  for(const g of state.groups) for(const t of g.tasks) out.push({t, g});
-  return out;
-}
-function findTask(id){
-  for(const g of state.groups) for(const t of g.tasks) if(t.id === id) return {t, g};
-  return null;
-}
-function findGroup(id){ return state.groups.filter(g => g.id === id)[0] || null; }
+function findTask(id){ return state.tasks.filter(t => t.id === id)[0] || null; }
+function findGroup(id){ return id ? (state.groups.filter(g => g.id === id)[0] || null) : null; }
+function peopleOf(gid){ const g = findGroup(gid); return g ? g.people : 1; }
 
 /* Validation never throws. Anything unknown is clamped or defaulted. */
 function sanitize(raw){
   if(!raw || typeof raw !== 'object') return null;
   const seen = new Set();
   const s = emptyState();
+  s.biz = str(raw.biz, LIMITS.biz);
   const groups = Array.isArray(raw.groups) ? raw.groups.slice(0, LIMITS.groups) : [];
-  let taskCount = 0;
-  for(const rg of groups){
-    if(!rg || typeof rg !== 'object') continue;
-    const g = newGroup(str(rg.name, LIMITS.names) || 'הצוות שלי');
+  const idMap = {};
+  groups.forEach((rg, i) => {
+    if(!rg || typeof rg !== 'object') return;
+    const g = newGroup(str(rg.name, LIMITS.names), 1);
     while(seen.has(g.id)) g.id = uid('g');
     seen.add(g.id);
     g.people = Math.round(clamp(rg.people, LIMITS.people[0], LIMITS.people[1]));
-    const tasks = Array.isArray(rg.tasks) ? rg.tasks : [];
-    for(const rt of tasks){
-      if(!rt || typeof rt !== 'object') continue;
-      if(taskCount >= LIMITS.tasks) break;
-      const t = newTask(str(rt.name, LIMITS.names), 0, 'day', null);
-      while(seen.has(t.id)) t.id = uid('t');
-      seen.add(t.id);
-      t.minutes = Math.round(clamp(rt.minutes, LIMITS.minutes[0], LIMITS.minutes[1]));
-      t.freq = FREQS.includes(rt.freq) ? rt.freq : 'day';
-      t.auto = AUTOS.includes(Number(rt.auto)) ? Number(rt.auto) : 0.7;
-      t.on = rt.on !== false;                      // older links have no flag: everything counts
-      t.dom = (Number.isInteger(rt.dom) && DOMAINS[rt.dom]) ? rt.dom : domainOf(t.name);
-      g.tasks.push(t); taskCount++;
-    }
+    idMap[i] = g.id;
+    if(rg.id) idMap[rg.id] = g.id;
     s.groups.push(g);
+  });
+  const tasks = Array.isArray(raw.tasks) ? raw.tasks.slice(0, LIMITS.tasks) : [];
+  for(const rt of tasks){
+    if(!rt || typeof rt !== 'object') continue;
+    const t = newTask(str(rt.name, LIMITS.names), 0, 'day', null);
+    while(seen.has(t.id)) t.id = uid('t');
+    seen.add(t.id);
+    t.minutes = Math.round(clamp(rt.minutes, LIMITS.minutes[0], LIMITS.minutes[1]));
+    t.freq = FREQS.includes(rt.freq) ? rt.freq : 'day';
+    t.auto = AUTOS.includes(Number(rt.auto)) ? Number(rt.auto) : 0.7;
+    t.on = rt.on !== false;                       // older links have no flag: everything counts
+    t.icon = ICON_KEYS.includes(rt.icon) ? rt.icon : iconFor(t.name);
+    const mapped = idMap[rt.gid];
+    t.gid = mapped || null;
+    s.tasks.push(t);
   }
   const chips = Array.isArray(raw.dream && raw.dream.chips) ? raw.dream.chips : [];
   s.dream.chips = chips.filter(c => DREAM_CHIPS.includes(c)).slice(0, DREAM_CHIPS.length);
   s.dream.text = str(raw.dream && raw.dream.text, 400);
   return s;
+}
+function sanitizeLib(raw){
+  if(!Array.isArray(raw)) return null;
+  const out = [];
+  for(const r of raw.slice(0, LIMITS.lib)){
+    if(!r || typeof r !== 'object') continue;
+    const name = str(r.name, LIMITS.names).trim();
+    if(!name || out.some(x => x.name === name)) continue;
+    out.push({
+      name,
+      minutes: Math.round(clamp(r.minutes, LIMITS.minutes[0], LIMITS.minutes[1])),
+      freq: FREQS.includes(r.freq) ? r.freq : 'day',
+      icon: ICON_KEYS.includes(r.icon) ? r.icon : iconFor(name)
+    });
+  }
+  return out;
+}
+function defaultLib(){
+  return LIB_DEFAULT.map(x => ({name:x[0], minutes:x[1], freq:x[2], icon:iconFor(x[0])}));
 }
 
 /* ============================================================
@@ -665,54 +659,49 @@ function allocate(values, target){
   return out;
 }
 function compute(s){
-  const rows = [];
-  for(const g of s.groups){
-    for(const t of g.tasks){
-      const hours = (t.minutes/60) * freqFactor(t.freq) * g.people;
-      rows.push({
-        id:t.id, groupId:g.id, groupName:g.name, name:t.name, people:g.people,
-        minutes:t.minutes, freq:t.freq, auto:t.auto, dom:t.dom, on:t.on !== false,
-        hoursMonth:hours, freedMonth:hours * t.auto
-      });
-    }
-  }
+  const rows = s.tasks.map(t => {
+    const people = (function(){ const g = s.groups.filter(x => x.id === t.gid)[0]; return g ? g.people : 1; })();
+    const hours = (t.minutes/60) * freqFactor(t.freq) * people;
+    return {
+      id:t.id, gid:t.gid, name:t.name, icon:t.icon, people:people,
+      minutes:t.minutes, freq:t.freq, auto:t.auto, on:t.on !== false,
+      hoursMonth:hours, freedMonth:hours * t.auto
+    };
+  });
   /* Only the ticked rows are in the cart. An unticked row still shows its own
      number, in grey, outside the sum — so nobody has to guess why the total moved. */
   const live = rows.filter(r => r.on && r.minutes > 0);
   const exactFreed = live.reduce((a,r) => a + r.freedMonth, 0);
-  const exactToday = live.reduce((a,r) => a + r.hoursMonth, 0);
   /* Under ten hours a whole-number list lies twice: a real task reads "0 ש׳", and
      two identical tasks come out 1 and 0 because the leftover hour has to land on
      one of them. Below that line the list counts in tenths. */
   const step = exactFreed > 0 && exactFreed < 10 ? 10 : 1;
   const target = Math.round(exactFreed * step);
-  const totalShown = target / step;
   const shown = allocate(live.map(r => r.freedMonth * step), target);
   live.forEach((r,i) => { r.freedShown = shown[i] / step; });
   rows.forEach(r => {
-    if(r.freedShown === undefined)
-      r.freedShown = Math.round(r.freedMonth * step) / step;
+    if(r.freedShown === undefined) r.freedShown = Math.round(r.freedMonth * step) / step;
   });
 
   const byGroup = [];
-  for(const g of s.groups){
-    const mine = live.filter(r => r.groupId === g.id);
-    if(!mine.length) continue;
-    byGroup.push({id:g.id, name:g.name, people:g.people,
-                  freed:mine.reduce((a,r) => a + r.freedMonth, 0)});
-  }
-  byGroup.sort((a,b) => b.freed - a.freed);
+  const seen = [];
+  s.groups.forEach(g => {
+    const mine = rows.filter(r => r.gid === g.id);
+    seen.push(g.id);
+    byGroup.push({id:g.id, name:g.name, people:g.people, rows:mine,
+                  freed:mine.filter(r => r.on && r.minutes > 0).reduce((a,r) => a + r.freedMonth, 0),
+                  shown:mine.filter(r => r.on && r.minutes > 0).reduce((a,r) => a + r.freedShown, 0)});
+  });
+  const loose = rows.filter(r => !r.gid || seen.indexOf(r.gid) === -1);
 
   return {
-    rows, live,
+    rows, live, byGroup, loose,
     totals:{
-      hoursToday: exactToday,
       freedMonthExact: exactFreed,
-      freedMonth: totalShown,
+      freedMonth: target / step,
       freedYear: Math.round(exactFreed * 12),
       fte: exactFreed / FTE_MONTH
     },
-    byGroup,
     dream:{chips:s.dream.chips.slice(), text:s.dream.text}
   };
 }
@@ -721,6 +710,7 @@ function compute(s){
    4. PERSIST / ENCODE / MIGRATE
    ============================================================ */
 const LS_KEY = 'waives.stones.v1';
+const LIB_KEY = 'waives.stones.lib';
 
 function b64urlEncode(text){
   const bytes = new TextEncoder().encode(text);      // Hebrew would break btoa() directly
@@ -736,44 +726,63 @@ function b64urlDecode(s){
   for(let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
   return new TextDecoder().decode(bytes);
 }
-/* Compact NAMED keys — adding a field never shifts the meaning of the others. */
+/* Compact NAMED keys — adding a field never shifts the meaning of the others.
+   A task points at its grouping by INDEX, so the link carries no random ids. */
 function pack(s){
+  const idx = {};
+  s.groups.forEach((g,i) => { idx[g.id] = i; });
   return {
-    v:2,
-    g:s.groups.map(g => ({
-      n:g.name, p:g.people,
-      t:g.tasks.map(t => ({
-        n:t.name, m:t.minutes, f:FREQS.indexOf(t.freq), a:AUTOS.indexOf(t.auto),
-        o:t.on === false ? 0 : 1, dm:(typeof t.dom === 'number' ? t.dom : -1)
-      }))
+    v:3, b:s.biz,
+    g:s.groups.map(g => ({n:g.name, p:g.people})),
+    t:s.tasks.map(t => ({
+      n:t.name, m:t.minutes, f:FREQS.indexOf(t.freq), a:AUTOS.indexOf(t.auto),
+      o:t.on === false ? 0 : 1, ic:ICON_KEYS.indexOf(t.icon),
+      gi:(t.gid != null && idx[t.gid] !== undefined) ? idx[t.gid] : -1
     })),
     dc:s.dream.chips, dt:s.dream.text
   };
 }
 function unpack(o){
   if(!o || typeof o !== 'object') return null;
-  return migrate({
-    v:o.v,
-    groups:Array.isArray(o.g) ? o.g.map(g => ({
-      name:g && g.n, people:g && g.p,
-      tasks:Array.isArray(g && g.t) ? g.t.map(t => ({
-        name:t && t.n, minutes:t && t.m,
-        freq:FREQS[t && t.f], auto:AUTOS[t && t.a],
-        on:!(t && t.o === 0),
-        dom:(t && Number.isInteger(t.dm) && t.dm >= 0) ? t.dm : null
-      })) : []
-    })) : [],
-    dream:{chips:o.dc, text:o.dt}
-  });
+  return migrate(o);
 }
-/* Kept forever: every past shape must still open. v1 links carry no `o` and no
-   `dm`; unpack already defaults those, so a v1 payload simply flows through. */
-function migrate(obj){
-  if(!obj || typeof obj !== 'object') return null;
-  return obj;
+/* Kept forever: every past shape must still open.
+   v1 and v2 nested the tasks inside the groups; v3 holds them flat. */
+function migrate(o){
+  if(!o || typeof o !== 'object') return null;
+  const groups = Array.isArray(o.g) ? o.g : [];
+  const out = {biz: str(o.b, LIMITS.biz), groups:[], tasks:[], dream:{chips:o.dc, text:o.dt}};
+  groups.forEach((g,i) => {
+    out.groups.push({id:'i' + i, name: g && g.n, people: g && g.p});
+  });
+  if(Array.isArray(o.t)){                                  // v3: flat
+    o.t.forEach(t => {
+      if(!t) return;
+      out.tasks.push({
+        name:t.n, minutes:t.m, freq:FREQS[t.f], auto:AUTOS[t.a],
+        on:!(t.o === 0), icon:ICON_KEYS[t.ic],
+        gid:(typeof t.gi === 'number' && t.gi >= 0) ? ('i' + t.gi) : null
+      });
+    });
+  }else{                                                   // v1 / v2: nested
+    groups.forEach((g,i) => {
+      const list = (g && Array.isArray(g.t)) ? g.t : [];
+      list.forEach(t => {
+        if(!t) return;
+        out.tasks.push({
+          name:t.n, minutes:t.m, freq:FREQS[t.f], auto:AUTOS[t.a],
+          on:!(t.o === 0), icon:null, gid:'i' + i
+        });
+      });
+    });
+  }
+  return out;
 }
 function save(){
   try{ localStorage.setItem(LS_KEY, JSON.stringify(pack(state))); }catch(e){ /* private mode */ }
+}
+function saveLib(){
+  try{ localStorage.setItem(LIB_KEY, JSON.stringify(lib)); }catch(e){}
 }
 function loadLocal(){
   try{
@@ -781,6 +790,13 @@ function loadLocal(){
     if(!raw) return null;
     return sanitize(unpack(JSON.parse(raw)));
   }catch(e){ return null; }
+}
+function loadLib(){
+  try{
+    const raw = localStorage.getItem(LIB_KEY);
+    if(!raw) return defaultLib();
+    return sanitizeLib(JSON.parse(raw)) || defaultLib();
+  }catch(e){ return defaultLib(); }
 }
 function readHash(){
   const m = /[#&]s=([A-Za-z0-9\-_]+)/.exec(location.hash || '');
@@ -796,7 +812,8 @@ function shareUrl(){
    5. RENDER
    ============================================================ */
 let state = emptyState();
-let ui = { screen:'list', editId:null, draft:null, menuOpen:false };
+let lib = [];
+let ui = { screen:'list', editId:null, draft:null, menuOpen:false, collapsed:{}, toTop:false };
 let undoSnapshot = null, undoTimer = null, snackTimer = null;
 
 const $ = id => document.getElementById(id);
@@ -807,18 +824,8 @@ function el(tag, cls, text){
   if(text != null) n.textContent = text;   // user text is NEVER innerHTML
   return n;
 }
-function svgIcon(name, size){
-  const NS = 'http://www.w3.org/2000/svg';
-  const paths = {
-    people:'M15 18v-1.2a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3V18M9 8.2a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6ZM21 18v-1.2a3 3 0 0 0-2.2-2.9M14.5 2.8a3 3 0 0 1 0 5.4',
-    doc:'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4',
-    box:'M21 8 12 3 3 8l9 5 9-5ZM3 8v8l9 5 9-5V8M12 13v8',
-    chat:'M21 11.5a7.5 7.5 0 0 1-10.8 6.7L4 20l1.9-5.9A7.5 7.5 0 1 1 21 11.5Z',
-    truck:'M3 16V6h11v10M14 9h4l3 3v4h-7M7.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6ZM17.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6Z',
-    clip:'M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1ZM8 6H6.5A1.5 1.5 0 0 0 5 7.5v12A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 17.5 6H16M9 12h6M9 16h4',
-    dot:'M12 7.5a4.5 4.5 0 1 0 0 9 4.5 4.5 0 0 0 0-9Z',
-    check:'m4 12.5 5 5L20 6.5'
-  };
+const NS = 'http://www.w3.org/2000/svg';
+function pathSvg(d, size){
   const svg = document.createElementNS(NS,'svg');
   svg.setAttribute('viewBox','0 0 24 24');
   if(size){ svg.setAttribute('width',size); svg.setAttribute('height',size); }
@@ -829,18 +836,21 @@ function svgIcon(name, size){
   svg.setAttribute('stroke-linejoin','round');
   svg.setAttribute('aria-hidden','true');
   const p = document.createElementNS(NS,'path');
-  p.setAttribute('d', paths[name] || paths.dot);
+  p.setAttribute('d', d);
   svg.appendChild(p);
   return svg;
 }
+function iconSvg(key, size){ return pathSvg((ICONS[key] || ICONS.clip).d, size); }
+function iconColor(key){ return (ICONS[key] || ICONS.clip).color; }
+const CHECK_D = 'm4 12.5 5 5L20 6.5';
+const CARET_D = 'm6 9 6 6 6-6';
+
 function fmtMinutes(m){
   if(m < 60) return m + ' דק׳';
   const h = m/60;
   return (Number.isInteger(h) ? h : h.toFixed(1).replace('.0','')) + ' ש׳';
 }
-function fmtHours(h){
-  return nf(h) + ' ש׳';
-}
+function fmtHours(h){ return nf(h) + ' ש׳'; }
 /* The growth frame is never detached from the number. Percent below one
    position, "משרה ועוד 70%" above it — Galli's own wording, 2026-11-21. */
 function freeText(fte){
@@ -852,23 +862,93 @@ function freeText(fte){
   if(rem === 0) return head + (full === 1 ? ' פנויה' : ' פנויות') + ' למשימות חשובות אחרות';
   return head + ' ועוד ' + rem + '% פנויים למשימות חשובות אחרות';
 }
+function ftePct(fte){ return Math.max(0, Math.round(fte * 100)) + '%'; }
 
+/* Rebuilding a screen collapses its height for an instant, and the browser
+   clamps the scroll position to the top. Every render puts it back, so pressing
+   a tick box halfway down a long list leaves you where you were. */
 function render(){
+  const y = window.scrollY;
   const res = compute(state);
-  $('screenList').hidden  = ui.screen !== 'list';
-  $('screenTeams').hidden = ui.screen !== 'teams';
-  $('screenDash').hidden  = ui.screen !== 'dash';
+  $('screenList').hidden = ui.screen !== 'list';
+  $('screenSet').hidden  = ui.screen !== 'set';
+  $('screenDash').hidden = ui.screen !== 'dash';
   $('navList').setAttribute('aria-current', ui.screen === 'list' ? 'page' : 'false');
   $('navDash').setAttribute('aria-current', ui.screen === 'dash' ? 'page' : 'false');
-  $('navTeams').setAttribute('aria-current', ui.screen === 'teams' ? 'page' : 'false');
-  if(ui.screen === 'list')  renderList(res);
-  if(ui.screen === 'teams') renderTeams(res);
-  if(ui.screen === 'dash')  renderDash(res);
+  $('navSet').setAttribute('aria-current', ui.screen === 'set' ? 'page' : 'false');
+  $('appTitle').textContent = 'מחשבון האבנים הקטנות' + (state.biz.trim() ? ' · ' + state.biz.trim() : '');
+  if(ui.screen === 'list') renderList(res);
+  if(ui.screen === 'set')  renderSettings(res);
+  if(ui.screen === 'dash') renderDash(res);
   renderFormula();
-  if(ui.draft) renderSheet(ui.draft);
+  if(ui.toTop){ ui.toTop = false; window.scrollTo(0, 0); }
+  else window.scrollTo(0, y);
 }
 
-/* ---- the list: one row per task, the cart total at its end ---- */
+function taskRow(r){
+  const row = el('div','row' + (r.on ? '' : ' off'));
+
+  const ico = el('span','ico');
+  ico.style.background = iconColor(r.icon);
+  ico.appendChild(iconSvg(r.icon));
+
+  /* The name and the small print are isolated from each other: a name that ends
+     in Latin letters, like "עדכון CRM", otherwise drags the next number across
+     the boundary and the row reads scrambled. */
+  const open = el('button','rowmain');
+  open.type = 'button';
+  open.style.cssText = 'background:none;border:0;padding:0;text-align:start;min-width:0';
+  const nm = el('bdi','nm', r.name || 'משימה ללא שם');
+  const mt = el('bdi','meta');
+  mt.textContent = fmtMinutes(r.minutes) + ' · ' + FREQ_SHORT[r.freq] +
+    (r.people > 1 ? ' · ×' + r.people : '') + ' · ' + Math.round(r.auto*100) + '%';
+  open.appendChild(nm);
+  open.appendChild(mt);
+  open.addEventListener('click', () => openSheet(r.id));
+
+  const hrs = el('span','hrs');
+  hrs.appendChild(el('bdi', null, fmtHours(r.freedShown)));
+
+  const tick = el('button','tick');
+  tick.type = 'button';
+  tick.setAttribute('role','checkbox');
+  tick.setAttribute('aria-checked', r.on ? 'true' : 'false');
+  tick.setAttribute('aria-label', (r.on ? 'להוציא מהחישוב: ' : 'להחזיר לחישוב: ') + (r.name || 'משימה ללא שם'));
+  tick.appendChild(pathSvg(CHECK_D));
+  tick.addEventListener('click', ev => {
+    ev.stopPropagation();
+    apply(() => { const t = findTask(r.id); if(t) t.on = !t.on; });
+  });
+
+  /* icon, name, hours, tick — the order of a shopping list: what the line IS
+     sits at the start, what you toggle sits at the end. */
+  row.appendChild(ico);
+  row.appendChild(open);
+  row.appendChild(hrs);
+  row.appendChild(tick);
+  return row;
+}
+
+function groupHeader(g, open){
+  const h = el('button','ghead');
+  h.type = 'button';
+  h.setAttribute('aria-expanded', open ? 'true' : 'false');
+  h.appendChild(pathSvg(CARET_D)).setAttribute('class','caret');
+  const nm = el('span','gname');
+  nm.appendChild(el('bdi', null, g.name || 'ללא שיוך'));
+  if(g.people > 1) nm.appendChild(el('span','gsub', ' · ' + g.people + ' אנשים'));
+  h.appendChild(nm);
+  const tot = el('span','gtot');
+  tot.appendChild(el('bdi', null, fmtHours(Math.round(g.shown * 10) / 10)));
+  h.appendChild(tot);
+  h.addEventListener('click', () => {
+    ui.collapsed[g.id] = open;      // open → collapse it
+    render();
+  });
+  return h;
+}
+
+/* ---- the list: one row per task, grouped by whatever Galli called things ---- */
 function renderList(res){
   const host = $('screenList');
   host.textContent = '';
@@ -891,7 +971,7 @@ function renderList(res){
     e.appendChild(demo);
     card.appendChild(e);
     host.appendChild(card);
-    host.appendChild(discoveryBox());
+    host.appendChild(tipsButton());
     return;
   }
 
@@ -901,89 +981,42 @@ function renderList(res){
   head.appendChild(el('span','sub', onCount + ' מתוך ' + res.rows.length + ' בחישוב'));
   card.appendChild(head);
 
-  res.rows.forEach(r => {
-    const row = el('div','row' + (r.on ? '' : ' off'));
-
-    const tick = el('button','tick');
-    tick.type = 'button';
-    tick.setAttribute('role','checkbox');
-    tick.setAttribute('aria-checked', r.on ? 'true' : 'false');
-    tick.setAttribute('aria-label', (r.on ? 'להוציא מהחישוב: ' : 'להחזיר לחישוב: ') + (r.name || 'משימה ללא שם'));
-    tick.appendChild(svgIcon('check'));
-    tick.addEventListener('click', ev => {
-      ev.stopPropagation();
-      apply(() => { const f = findTask(r.id); if(f) f.t.on = !f.t.on; });
+  const named = res.byGroup.filter(g => g.rows.length);
+  if(named.length){
+    named.forEach(g => {
+      const open = !ui.collapsed[g.id];
+      card.appendChild(groupHeader(g, open));
+      if(open) g.rows.forEach(r => card.appendChild(taskRow(r)));
     });
+    if(res.loose.length){
+      const g = {id:'__loose', name:'ללא שיוך', people:1, rows:res.loose,
+                 shown:res.loose.filter(r => r.on && r.minutes > 0).reduce((a,r) => a + r.freedShown, 0)};
+      const open = !ui.collapsed[g.id];
+      card.appendChild(groupHeader(g, open));
+      if(open) res.loose.forEach(r => card.appendChild(taskRow(r)));
+    }
+  }else{
+    res.rows.forEach(r => card.appendChild(taskRow(r)));
+  }
 
-    const meta = domainMeta(r.dom);
-    const ico = el('span','ico');
-    ico.style.background = meta.color;
-    ico.appendChild(svgIcon(meta.icon));
-
-    /* The name and the small print are isolated from each other: a name that ends
-       in Latin letters, like "עדכון CRM", otherwise drags the next number across
-       the boundary and the row reads scrambled. */
-    const main = el('div','rowmain');
-    const nm = el('bdi','nm', r.name || 'משימה ללא שם');
-    const mt = el('bdi','meta');
-    mt.textContent = fmtMinutes(r.minutes) + ' · ' + FREQ_SHORT[r.freq] +
-      (r.people > 1 ? ' · ×' + r.people + ' אנשים' : '') + ' · ' + Math.round(r.auto*100) + '%' +
-      (state.groups.length > 1 ? ' · ' + r.groupName : '');
-    main.appendChild(nm);
-    main.appendChild(mt);
-
-    const open = el('button','rowmain');
-    open.type = 'button';
-    open.style.cssText = 'background:none;border:0;padding:0;text-align:start;min-width:0';
-    open.appendChild(main);
-    open.addEventListener('click', () => openSheet(r.id));
-
-    const hrs = el('span','hrs');
-    hrs.appendChild(el('bdi', null, fmtHours(r.freedShown)));
-
-    /* icon, name, hours, tick — the order of a shopping list: what the line IS
-       sits at the start, what you toggle sits at the end. */
-    row.appendChild(ico);
-    row.appendChild(open);
-    row.appendChild(hrs);
-    row.appendChild(tick);
-    card.appendChild(row);
-  });
-
-  const tot = el('div','total');
-  const left = el('div');
-  left.appendChild(el('div','lbl','סה״כ מתפנה בחודש'));
-  const big = el('div','big');
-  big.appendChild(el('bdi', null, nf(res.totals.freedMonth)));
-  left.appendChild(big);
-  left.appendChild(el('div','unit','שעות בחודש'));
-  left.appendChild(el('div','free', freeText(res.totals.fte) + ' · ' + nf(res.totals.freedYear) + ' שעות בשנה'));
-  tot.appendChild(left);
-  tot.appendChild(el('span','grow'));
-  const ringWrap = el('div');
-  ringWrap.style.cssText = 'display:flex;align-items:center;gap:6px;flex:none';
-  fillPositions(ringWrap, res.totals.fte, res.totals.freedMonthExact === 0, 46);
-  tot.appendChild(ringWrap);
+  /* A plain total row, the weight of the rows above it. Everything else about
+     the number — the year, the share of a position — lives on the dashboard. */
+  const tot = el('div','totalrow');
+  tot.appendChild(el('span','tlabel','סה״כ מתפנה החודש'));
+  const v = el('span','tvalue');
+  v.appendChild(el('bdi', null, fmtHours(res.totals.freedMonth)));
+  tot.appendChild(v);
   card.appendChild(tot);
 
   host.appendChild(card);
-  host.appendChild(discoveryBox());
+  host.appendChild(tipsButton());
 }
-
-function discoveryBox(){
-  const d = document.createElement('details');
-  d.className = 'disc';
-  const s = document.createElement('summary');
-  s.textContent = 'לא בטוחים מה עוד להוסיף?';
-  d.appendChild(s);
-  const ul = document.createElement('ul');
-  DISCOVERY.forEach(q => ul.appendChild(el('li', null, q)));
-  d.appendChild(ul);
-  const add = el('button','inline-link','+ להוסיף משימה');
-  add.type = 'button';
-  add.addEventListener('click', () => openSheet(null));
-  d.appendChild(add);
-  return d;
+function tipsButton(){
+  const b = el('button','disclink','לא בטוחים מה להוסיף? כמה שאלות שעוזרות למצוא');
+  b.type = 'button';
+  b.id = 'btnTips';
+  b.addEventListener('click', openTips);
+  return b;
 }
 
 /* ---- positions: a person per whole position, a ring for the remainder ---- */
@@ -994,11 +1027,10 @@ function fillPositions(wrap, fte, empty, size){
   const rem = pct - full * 100;
   for(let i=0; i<Math.min(full,4); i++) wrap.appendChild(personSvg(size));
   if(full > 4) wrap.appendChild(el('span','posmore','+' + (full-4)));
-  if(empty || rem > 0 || full === 0) wrap.appendChild(ringSvg(empty ? 0 : rem/100, empty ? '' : rem + '%', size));
+  if(empty || rem > 0 || full === 0) wrap.appendChild(ringSvg(empty ? 0 : rem/100, size));
 }
 function personSvg(size){
-  const NS = 'http://www.w3.org/2000/svg';
-  const s = size || 46;
+  const s = size || 40;
   const svg = document.createElementNS(NS,'svg');
   svg.setAttribute('width', s*0.72); svg.setAttribute('height', s);
   svg.setAttribute('viewBox','0 0 34 46');
@@ -1012,9 +1044,8 @@ function personSvg(size){
   svg.appendChild(head); svg.appendChild(body);
   return svg;
 }
-function ringSvg(frac, centre, size){
-  const NS = 'http://www.w3.org/2000/svg';
-  const s = size || 46, r = s/2 - 5, c = 2*Math.PI*r;
+function ringSvg(frac, size){
+  const s = size || 40, r = s/2 - 4, c = 2*Math.PI*r;
   const svg = document.createElementNS(NS,'svg');
   svg.setAttribute('width', s); svg.setAttribute('height', s);
   svg.setAttribute('viewBox','0 0 '+s+' '+s);
@@ -1033,44 +1064,52 @@ function ringSvg(frac, centre, size){
     arc.setAttribute('transform','rotate(-90 '+(s/2)+' '+(s/2)+')');
     svg.appendChild(arc);
   }
-  if(centre){
-    const t = document.createElementNS(NS,'text');
-    t.setAttribute('x',s/2); t.setAttribute('y',s/2);
-    t.setAttribute('text-anchor','middle'); t.setAttribute('dominant-baseline','central');
-    t.setAttribute('font-size', Math.round(s*0.26));
-    t.setAttribute('font-weight','800'); t.setAttribute('fill','#fff');
-    t.setAttribute('font-family','Heebo, sans-serif');
-    t.textContent = centre;
-    svg.appendChild(t);
-  }
   return svg;
 }
 
-/* ---- teams: the ONLY place a headcount is entered ---- */
-function renderTeams(res){
-  const host = $('screenTeams');
+/* ---- settings: the business name, the groupings, and her task list ---- */
+function renderSettings(res){
+  const host = $('screenSet');
   host.textContent = '';
-  const card = el('div','card');
-  const head = el('div','cardhead');
-  head.appendChild(el('h2', null, 'צוותים ותפקידים'));
-  head.appendChild(el('span','sub','כמה אנשים עושים את המשימות'));
-  card.appendChild(head);
 
+  const biz = el('div','card');
+  const bh = el('div','cardhead');
+  bh.appendChild(el('h2', null, 'שם העסק או המשרד'));
+  biz.appendChild(bh);
+  const bbox = el('div','padbox');
+  const bin = document.createElement('input');
+  bin.type = 'text'; bin.className = 'field'; bin.id = 'fBiz';
+  bin.placeholder = 'למשל: משרד עורכי דין לוי';
+  bin.maxLength = LIMITS.biz;
+  bin.value = state.biz;
+  bin.setAttribute('aria-label','שם העסק או המשרד');
+  bin.addEventListener('input', () => {
+    state.biz = bin.value.slice(0, LIMITS.biz);
+    $('appTitle').textContent = 'מחשבון האבנים הקטנות' + (state.biz.trim() ? ' · ' + state.biz.trim() : '');
+    save();
+  });
+  bbox.appendChild(bin);
+  bbox.appendChild(el('p','hint','כשזה מלא, השם מצטרף לכותרת המחשבון ולסיכום.'));
+  biz.appendChild(bbox);
+  host.appendChild(biz);
+
+  const gcard = el('div','card');
+  const gh = el('div','cardhead');
+  gh.appendChild(el('h2', null, 'למי משויכות המשימות'));
+  gh.appendChild(el('span','sub','שם וכמה אנשים'));
+  gcard.appendChild(gh);
   if(!state.groups.length){
-    const e = el('div','empty');
-    e.appendChild(el('p', null, 'עוד אין צוותים. הצוות הראשון נוצר כשמוסיפים משימה.'));
-    card.appendChild(e);
+    gcard.appendChild(el('p','hint','עוד לא הגדרתם שיוכים. אפשר להוסיף "צוות רכש" עם שלושה אנשים, או "מנהלת HR" עם אחד — איך שנכון אצלכם.')).style.padding = '14px 15px 0';
   }
   state.groups.forEach(g => {
-    const row = el('div','team');
+    const row = el('div','setrow');
     const name = document.createElement('input');
     name.type = 'text';
     name.value = g.name;
     name.maxLength = LIMITS.names;
-    name.setAttribute('aria-label','שם הצוות או התפקיד');
-    name.addEventListener('input', () => {
-      apply(() => { g.name = name.value.slice(0, LIMITS.names); }, true);
-    });
+    name.placeholder = 'שם השיוך';
+    name.setAttribute('aria-label','שם השיוך');
+    name.addEventListener('input', () => { g.name = name.value.slice(0, LIMITS.names); save(); });
     row.appendChild(name);
 
     const step = el('div','stepper');
@@ -1078,72 +1117,103 @@ function renderTeams(res){
     minus.type = 'button'; minus.setAttribute('aria-label','פחות אנשים');
     const num = document.createElement('input');
     num.type = 'text'; num.inputMode = 'numeric'; num.value = g.people;
-    num.setAttribute('aria-label','מספר אנשים ב' + g.name);
+    num.setAttribute('aria-label','מספר אנשים');
     const plus = el('button', null, '+');
     plus.type = 'button'; plus.setAttribute('aria-label','עוד אנשים');
     minus.addEventListener('click', () => apply(() => { g.people = Math.max(1, g.people - 1); }));
     plus.addEventListener('click',  () => apply(() => { g.people = Math.min(LIMITS.people[1], g.people + 1); }));
     num.addEventListener('input', () => {
-      apply(() => { g.people = Math.round(clamp(num.value, LIMITS.people[0], LIMITS.people[1])); }, true);
+      g.people = Math.round(clamp(num.value, LIMITS.people[0], LIMITS.people[1]));
+      save();
     });
-    step.appendChild(minus); step.appendChild(num); step.appendChild(plus);
+    /* plus first: in a right-to-left screen the first button is the right one,
+       and adding a person is the common move. */
+    step.appendChild(plus); step.appendChild(num); step.appendChild(minus);
     row.appendChild(step);
-    row.appendChild(el('span','teamcount', g.tasks.length + ' משימות'));
 
-    if(state.groups.length > 1){
-      const del = el('button','inline-link','מחיקה');
-      del.type = 'button';
-      del.addEventListener('click', () => deleteGroup(g.id));
-      row.appendChild(del);
-    }
-    card.appendChild(row);
+    const del = el('button','inline-link danger','מחיקה');
+    del.type = 'button';
+    del.addEventListener('click', () => deleteGroup(g.id));
+    row.appendChild(del);
+    gcard.appendChild(row);
   });
+  const gfoot = el('div','padbox');
+  const addg = el('button','btn ghost block','+ שיוך חדש');
+  addg.type = 'button'; addg.id = 'btnAddGroup';
+  addg.addEventListener('click', () => apply(() => { state.groups.push(newGroup('', 1)); }));
+  gfoot.appendChild(addg);
+  gfoot.appendChild(el('p','hint','מספר האנשים מכפיל את כל המשימות המשויכות, בהנחה שכולם עושים אותן באותו זמן.'));
+  gcard.appendChild(gfoot);
+  host.appendChild(gcard);
 
-  const foot = el('div');
-  foot.style.padding = '14px 16px';
-  const add = el('button','btn ghost block','+ צוות או תפקיד');
-  add.type = 'button';
-  add.addEventListener('click', () => apply(() => { state.groups.push(newGroup('צוות חדש')); }));
-  foot.appendChild(add);
-  foot.appendChild(el('p','hint','מספר האנשים מכפיל את כל משימות הצוות, בהנחה שכולם עושים אותן באותו זמן. שינוי כאן מעדכן מיד את כל הרשימה.'));
-  card.appendChild(foot);
-  host.appendChild(card);
+  const lcard = el('div','card');
+  const lh = el('div','cardhead');
+  lh.appendChild(el('h2', null, 'המשימות המוכנות'));
+  lh.appendChild(el('span','sub', lib.length + ' ברשימה'));
+  lcard.appendChild(lh);
+  lib.forEach((item, i) => {
+    const row = el('div','setrow');
+    const ico = el('span','ico');
+    ico.style.background = iconColor(item.icon);
+    ico.appendChild(iconSvg(item.icon));
+    row.appendChild(ico);
+    const nm = el('span','libname');
+    nm.appendChild(el('bdi', null, item.name));
+    row.appendChild(nm);
+    row.appendChild(el('span','hint', fmtMinutes(item.minutes) + ' · ' + FREQ_SHORT[item.freq])).style.margin = '0';
+    const del = el('button','inline-link danger','הסרה');
+    del.type = 'button';
+    del.setAttribute('aria-label','הסרת ' + item.name + ' מהרשימה המוכנה');
+    del.addEventListener('click', () => {
+      lib.splice(i,1); saveLib(); render();
+      toast('הוסר מהרשימה המוכנה');
+    });
+    row.appendChild(del);
+    lcard.appendChild(row);
+  });
+  const lfoot = el('div','padbox');
+  lfoot.appendChild(el('p','hint','אלה הכפתורים שמופיעים כשמוסיפים משימה. משימה שתכתבו בעצמכם מצטרפת לכאן אוטומטית, והרשימה נשמרת גם כשמתחילים תרחיש חדש.'));
+  const reset = el('button','inline-link','החזרת הרשימה המקורית');
+  reset.type = 'button'; reset.id = 'btnLibReset';
+  reset.addEventListener('click', () => { lib = defaultLib(); saveLib(); render(); toast('הרשימה המוכנה חזרה למקור'); });
+  lfoot.appendChild(reset);
+  lcard.appendChild(lfoot);
+  host.appendChild(lcard);
 }
 
-/* ---- dashboard: the four blocks Galli picked, in that order ---- */
+/* ---- dashboard: one banner carries the whole headline ---- */
 function renderDash(res){
   const host = $('screenDash');
   host.textContent = '';
   const t = res.totals;
   const card = el('div','card');
 
-  const top = el('div','block');
-  top.appendChild(el('h3', null, 'הזמן שחוזר לצוות'));
-  const n = el('div','dash-num');
-  n.appendChild(el('bdi', null, nf(t.freedMonth)));
-  top.appendChild(n);
-  top.appendChild(el('div','dash-sub','שעות בחודש · ' + nf(t.freedYear) + ' שעות בשנה'));
-  card.appendChild(top);
-
-  const pos = el('div','block');
-  pos.appendChild(el('h3', null, 'כמה משרה זה'));
+  const ban = el('div','banner');
+  const right = el('div','side');
+  const big = el('div','big');
+  big.appendChild(el('bdi', null, nf(t.freedMonth)));
+  right.appendChild(big);
+  right.appendChild(el('div','lbl','שעות בחודש'));
+  right.appendChild(el('div','sub', nf(t.freedYear) + ' שעות בשנה'));
+  ban.appendChild(right);
+  ban.appendChild(el('span','divider'));
+  const left = el('div','side');
+  const pbig = el('div','big');
+  pbig.appendChild(el('bdi', null, ftePct(t.fte)));
+  left.appendChild(pbig);
+  left.appendChild(el('div','lbl','מתוך משרה מלאה'));
   const prow = el('div','posrow');
-  prow.style.cssText = 'background:var(--deep);border-radius:14px;padding:16px;display:flex;align-items:center;gap:16px;color:#fff';
-  const icons = el('div');
-  icons.style.cssText = 'display:flex;align-items:center;gap:8px;flex:none';
-  fillPositions(icons, t.fte, t.freedMonthExact === 0, 46);
-  prow.appendChild(icons);
-  /* the words live inside the dark panel, beside the people they describe */
-  const cap = el('div','poscap');
-  cap.style.cssText = 'margin:0;color:#C7D0DD;flex:1;min-width:0';
-  cap.appendChild(document.createTextNode(freeText(t.fte) + '. '));
+  fillPositions(prow, t.fte, t.freedMonthExact === 0, 40);
+  left.appendChild(prow);
+  left.appendChild(el('div','sub', freeText(t.fte)));
+  ban.appendChild(left);
+  card.appendChild(ban);
+
   const dreamText = res.dream.chips.concat(res.dream.text ? [res.dream.text] : []).join(' · ');
-  const bb = el('b', null, dreamText || 'זמן לצמיחה');
-  bb.style.color = 'var(--gold)';
-  cap.appendChild(bb);
-  prow.appendChild(cap);
-  pos.appendChild(prow);
-  card.appendChild(pos);
+  const db = el('div','dreambar');
+  db.appendChild(el('span','k','מה אפשרי בזמן שהתפנה? '));
+  db.appendChild(el('b', null, dreamText || 'עוד לא סימנתם'));
+  card.appendChild(db);
 
   const ranked = res.live.slice().sort((a,b) => b.freedMonth - a.freedMonth).slice(0,6);
   if(ranked.length){
@@ -1168,14 +1238,15 @@ function renderDash(res){
     card.appendChild(rb);
   }
 
-  if(res.byGroup.length){
+  const groups = res.byGroup.filter(g => g.freed > 0).sort((a,b) => b.freed - a.freed);
+  if(groups.length){
     const gb = el('div','block');
-    gb.appendChild(el('h3', null, 'לפי צוות'));
-    const max = res.byGroup[0].freed || 1;
-    res.byGroup.forEach(g => {
+    gb.appendChild(el('h3', null, 'לפי שיוך'));
+    const max = groups[0].freed || 1;
+    groups.forEach(g => {
       const item = el('div','bar-item');
       const line = el('div','bar-top');
-      line.appendChild(el('bdi', null, g.name + ' · ' + g.people + ' אנשים'));
+      line.appendChild(el('bdi', null, (g.name || 'ללא שיוך') + (g.people > 1 ? ' · ' + g.people + ' אנשים' : '')));
       const v = el('span','v');
       v.appendChild(el('bdi', null, fmtHours(Math.round(g.freed))));
       line.appendChild(v);
@@ -1190,41 +1261,29 @@ function renderDash(res){
     card.appendChild(gb);
   }
 
-  const db = el('div','block');
-  db.appendChild(el('h3', null, 'מה הייתם עושים עם הזמן הזה?'));
+  const qb = el('div','block');
+  qb.appendChild(el('h3', null, 'מה הייתם עושים עם הזמן הזה?'));
   const chips = el('div','chips');
   DREAM_CHIPS.forEach(c => {
     const b = el('button','chip sm', c);
     b.type = 'button';
-    b.setAttribute('aria-pressed', state.dream.chips.includes(c) ? 'true' : 'false');
+    b.setAttribute('aria-pressed', state.dream.chips.indexOf(c) !== -1 ? 'true' : 'false');
     b.addEventListener('click', () => apply(() => {
       const i = state.dream.chips.indexOf(c);
       if(i === -1) state.dream.chips.push(c); else state.dream.chips.splice(i,1);
     }));
     chips.appendChild(b);
   });
-  db.appendChild(chips);
+  qb.appendChild(chips);
   const free = document.createElement('input');
   free.type = 'text'; free.className = 'field'; free.style.marginTop = '10px';
   free.placeholder = 'או כתבו בעצמכם';
   free.maxLength = 400;
   free.value = state.dream.text;
   free.setAttribute('aria-label','מה הייתם עושים עם הזמן');
-  free.addEventListener('input', () => apply(() => { state.dream.text = free.value.slice(0,400); }, true));
-  db.appendChild(free);
-  card.appendChild(db);
-
-  const act = el('div','block');
-  const share = el('button','btn block','קישור לתרחיש');
-  share.type = 'button'; share.id = 'btnShare';
-  share.addEventListener('click', doShare);
-  act.appendChild(share);
-  const copy = el('button','btn ghost block','העתקת סיכום');
-  copy.type = 'button'; copy.id = 'btnCopy';
-  copy.style.marginTop = '8px';
-  copy.addEventListener('click', doCopy);
-  act.appendChild(copy);
-  card.appendChild(act);
+  free.addEventListener('input', () => { state.dream.text = free.value.slice(0,400); save(); });
+  qb.appendChild(free);
+  card.appendChild(qb);
 
   host.appendChild(card);
 }
@@ -1232,23 +1291,61 @@ function renderDash(res){
 function renderFormula(){
   $('formula').textContent = 'משרה מלאה = ' + FTE_MONTH + ' שעות בחודש (' + DAYS_MONTH +
     ' ימי עבודה, יום של ' + DAY_HOURS + ' שעות). משימה יומית מוכפלת ב-' + DAYS_MONTH +
-    ', שבועית ב-' + WEEKS_MONTH + '. זמנים לדוגמה בקטלוג, משנים לפי מה שקורה אצלכם.';
+    ', שבועית ב-' + WEEKS_MONTH + '. הזמנים הם הערכה, משנים לפי מה שקורה אצלכם.';
 }
 
-/* ---- the sheet: everything about one item, with a live number on top ---- */
+/* ---- the tips sheet ---- */
+function openTips(){
+  const sheet = $('sheet2');
+  sheet.textContent = '';
+  const head = el('div','sheethead plain');
+  const h = el('h2', null, 'שאלות שעוזרות למצוא משימות');
+  h.id = 'tipsTitle';
+  head.appendChild(h);
+  head.appendChild(el('span','grow')).style.flex = '1';
+  const x = el('button','icobtn','✕');
+  x.type = 'button'; x.id = 'tipsClose';
+  x.setAttribute('aria-label','סגירה');
+  x.addEventListener('click', closeTips);
+  head.appendChild(x);
+  sheet.appendChild(head);
+  const body = el('div','sheetbody');
+  const ul = document.createElement('ul');
+  ul.className = 'tips';
+  TIPS.forEach(q => ul.appendChild(el('li', null, q)));
+  body.appendChild(ul);
+  sheet.appendChild(body);
+  const foot = el('div','sheetfoot');
+  const add = el('button','btn','+ הוספת משימה');
+  add.type = 'button'; add.id = 'tipsAdd';
+  add.addEventListener('click', () => { closeTips(); openSheet(null); });
+  foot.appendChild(add);
+  sheet.appendChild(foot);
+  $('scrim2').hidden = false;
+  document.body.style.overflow = 'hidden';
+  x.focus();
+}
+/* Closing the tips puts the page back at the top, where "+ חדש" is waiting. */
+function closeTips(){
+  $('scrim2').hidden = true;
+  $('sheet2').textContent = '';
+  document.body.style.overflow = '';
+  window.scrollTo(0, 0);
+}
+
+/* ---- the item sheet: everything about one task, with a live number on top ---- */
 function openSheet(id){
-  const f = id ? findTask(id) : null;
-  if(id && !f) return;
+  const t = id ? findTask(id) : null;
+  if(id && !t) return;
   ui.editId = id;
-  ui.draft = f
-    ? {name:f.t.name, minutes:f.t.minutes, freq:f.t.freq, auto:f.t.auto,
-       dom:f.t.dom, on:f.t.on !== false, groupId:f.g.id}
-    : {name:'', minutes:0, freq:'day', auto:0.7, dom:null, on:true,
-       groupId:(state.groups[0] ? state.groups[0].id : null)};
+  ui.draft = t
+    ? {name:t.name, minutes:t.minutes, freq:t.freq, auto:t.auto, icon:t.icon, gid:t.gid,
+       custom: TIME_KEYS.indexOf(t.minutes) === -1 && t.minutes > 0}
+    : {name:'', minutes:0, freq:'day', auto:0.7, icon:'clip', gid:null, custom:false};
   $('scrim').hidden = false;
   document.body.style.overflow = 'hidden';
   renderSheet(ui.draft);
-  const inp = $('sheet').querySelector('input');
+  const inp = $('sheet').querySelector('#fName');
   if(inp) inp.focus();
 }
 function closeSheet(){
@@ -1260,9 +1357,7 @@ function closeSheet(){
 /* The draft is computed on its own, so the number at the top of the sheet moves on
    every press — the list screen is a list, but adding an item is still a calculator. */
 function draftHours(d){
-  const g = findGroup(d.groupId);
-  const people = g ? g.people : 1;
-  return (d.minutes/60) * freqFactor(d.freq) * people * d.auto;
+  return (d.minutes/60) * freqFactor(d.freq) * peopleOf(d.gid) * d.auto;
 }
 function renderSheet(d){
   const sheet = $('sheet');
@@ -1307,19 +1402,21 @@ function renderSheet(d){
   name.value = d.name;
   name.addEventListener('input', () => {
     d.name = name.value.slice(0, LIMITS.names);
-    const guess = domainOf(d.name);
-    if(guess !== null) d.dom = guess;
+    d.icon = iconFor(d.name);
     renderSheet(d);
   });
   q1.appendChild(name);
   const c1 = el('div','chips');
   c1.style.marginTop = '10px';
-  QUICK.forEach(q => {
-    const b = el('button','chip sm', q[0]);
+  lib.forEach(item => {
+    const b = el('button','chip sm');
     b.type = 'button';
-    b.setAttribute('aria-pressed', d.name === q[0] ? 'true' : 'false');
+    b.appendChild(iconSvg(item.icon));
+    b.appendChild(el('bdi', null, item.name));
+    b.setAttribute('aria-pressed', d.name === item.name ? 'true' : 'false');
     b.addEventListener('click', () => {
-      d.name = q[0]; d.minutes = q[1]; d.freq = q[2]; d.dom = q[3];
+      d.name = item.name; d.minutes = item.minutes; d.freq = item.freq; d.icon = item.icon;
+      d.custom = TIME_KEYS.indexOf(item.minutes) === -1;
       renderSheet(d);
     });
     c1.appendChild(b);
@@ -1327,46 +1424,58 @@ function renderSheet(d){
   q1.appendChild(c1);
   body.appendChild(q1);
 
-  /* 2 — how long it takes. The frequency is a button INSIDE the question, so the
-     assumption is never hidden in a line underneath. */
+  /* 2 — how long it takes. The frequency is a dropdown INSIDE the question, so the
+     assumption is on screen and changing it is one choice, not four presses. */
   const q2 = el('div','q');
   const l2 = el('div','qlabel');
   l2.appendChild(document.createTextNode('כמה זמן היא לוקחת'));
-  const fb = el('button','freqbtn', FREQ_ONCE[d.freq]);
-  fb.type = 'button'; fb.id = 'fFreq';
-  fb.setAttribute('aria-label','תדירות: ' + FREQ_ONCE[d.freq] + ', לשינוי');
-  fb.addEventListener('click', () => {
-    d.freq = FREQS[(FREQS.indexOf(d.freq) + 1) % FREQS.length];
-    renderSheet(d);
+  const sel = document.createElement('select');
+  sel.className = 'freqsel'; sel.id = 'fFreq';
+  sel.setAttribute('aria-label','תדירות');
+  FREQS.forEach(f => {
+    const o = document.createElement('option');
+    o.value = f; o.textContent = FREQ_ONCE[f];
+    if(d.freq === f) o.selected = true;
+    sel.appendChild(o);
   });
-  l2.appendChild(fb);
+  sel.addEventListener('change', () => { d.freq = FREQS.includes(sel.value) ? sel.value : 'day'; renderSheet(d); });
+  l2.appendChild(sel);
   l2.appendChild(document.createTextNode('?'));
   q2.appendChild(l2);
   const c2 = el('div','chips');
   TIME_KEYS.forEach(m => {
     const b = el('button','chip', fmtMinutes(m));
     b.type = 'button';
-    b.setAttribute('aria-pressed', d.minutes === m ? 'true' : 'false');
-    b.addEventListener('click', () => { d.minutes = m; renderSheet(d); });
+    b.setAttribute('aria-pressed', (!d.custom && d.minutes === m) ? 'true' : 'false');
+    b.addEventListener('click', () => { d.minutes = m; d.custom = false; renderSheet(d); });
     c2.appendChild(b);
   });
+  const other = el('button','chip','אחר');
+  other.type = 'button'; other.id = 'fOther';
+  other.setAttribute('aria-pressed', d.custom ? 'true' : 'false');
+  other.addEventListener('click', () => { d.custom = true; renderSheet(d); });
+  c2.appendChild(other);
   q2.appendChild(c2);
-  const mins = document.createElement('input');
-  mins.type = 'text'; mins.inputMode = 'numeric'; mins.className = 'field';
-  mins.style.marginTop = '10px';
-  mins.setAttribute('data-k','mins');
-  mins.setAttribute('aria-label','מספר דקות');
-  mins.placeholder = 'או מספר דקות משלכם';
-  mins.value = d.minutes ? String(d.minutes) : '';
-  mins.addEventListener('input', () => {
-    d.minutes = Math.round(clamp(mins.value, LIMITS.minutes[0], LIMITS.minutes[1]));
-    renderSheet(d);
-  });
-  q2.appendChild(mins);
-  const g2 = findGroup(d.groupId);
+  /* The minutes box appears only when "אחר" is chosen: a second place showing the
+     same 30 minutes you just pressed is noise. */
+  if(d.custom){
+    const mins = document.createElement('input');
+    mins.type = 'text'; mins.inputMode = 'numeric'; mins.className = 'field';
+    mins.style.marginTop = '10px';
+    mins.id = 'fMinutes';
+    mins.setAttribute('data-k','mins');
+    mins.setAttribute('aria-label','מספר דקות');
+    mins.placeholder = 'מספר דקות';
+    mins.value = d.minutes ? String(d.minutes) : '';
+    mins.addEventListener('input', () => {
+      d.minutes = Math.round(clamp(mins.value, LIMITS.minutes[0], LIMITS.minutes[1]));
+      renderSheet(d);
+    });
+    q2.appendChild(mins);
+  }
   const weekly = (d.minutes/60) * freqFactor(d.freq) / WEEKS_MONTH;
   if(weekly > 42){
-    q2.appendChild(el('p','hint warn','זה יותר מ-42 שעות בשבוע לאדם אחד. אולי מדובר בכמה אנשים — אפשר להגדיר את הצוות במסך "צוותים".'));
+    q2.appendChild(el('p','hint warn','זה יותר מ-42 שעות בשבוע לאדם אחד. אם זה נעשה בכמה ידיים, אפשר להגדיר שיוך עם כמה אנשים במסך "הגדרות".'));
   }
   body.appendChild(q2);
 
@@ -1385,31 +1494,55 @@ function renderSheet(d){
   q3.appendChild(el('p','hint','הערכה. אפשר לשנות בכל רגע ולראות איך המספר זז.'));
   body.appendChild(q3);
 
-  /* 4 — which team. Names only: the headcount lives on the teams screen. */
+  /* 4 — who it belongs to. Nothing is assumed: no grouping is a valid answer, and
+     the names are hers — "צוות רכש", "מנהלת HR", whatever fits. */
   const q4 = el('div','q');
-  q4.appendChild(el('div','qlabel','לאיזה צוות המשימה שייכת?'));
+  q4.appendChild(el('div','qlabel','למי משויכת המשימה?'));
   const c4 = el('div','chips');
+  const none = el('button','chip sm','לא משויכת');
+  none.type = 'button';
+  none.setAttribute('aria-pressed', d.gid == null ? 'true' : 'false');
+  none.addEventListener('click', () => { d.gid = null; renderSheet(d); });
+  c4.appendChild(none);
   state.groups.forEach(g => {
-    const b = el('button','chip sm', g.name);
+    const b = el('button','chip sm', g.name || 'שיוך ללא שם');
     b.type = 'button';
-    b.setAttribute('aria-pressed', d.groupId === g.id ? 'true' : 'false');
-    b.addEventListener('click', () => { d.groupId = g.id; renderSheet(d); });
+    b.setAttribute('aria-pressed', d.gid === g.id ? 'true' : 'false');
+    b.addEventListener('click', () => { d.gid = g.id; renderSheet(d); });
     c4.appendChild(b);
   });
-  const nb = el('button','chip sm','+ צוות חדש');
-  nb.type = 'button';
-  nb.addEventListener('click', () => {
-    const g = newGroup('צוות חדש');
-    state.groups.push(g);
-    d.groupId = g.id;
-    save(); renderSheet(d);
-  });
-  c4.appendChild(nb);
   q4.appendChild(c4);
-  if(g2 && g2.people > 1)
-    q4.appendChild(el('p','hint','המשימה מוכפלת ב-' + g2.people + ' אנשים. את הכמות משנים במסך "צוותים".'));
+  const addRow = el('div');
+  addRow.style.cssText = 'display:flex;gap:8px;margin-top:10px';
+  const newName = document.createElement('input');
+  newName.type = 'text'; newName.className = 'field'; newName.id = 'fNewGroup';
+  newName.setAttribute('data-k','newg');
+  newName.placeholder = 'שם חדש: צוות רכש, מנהלת HR…';
+  newName.maxLength = LIMITS.names;
+  const addBtn = el('button','btn sm','הוספה');
+  addBtn.type = 'button'; addBtn.id = 'fAddGroup';
+  const doAdd = () => {
+    const nm = newName.value.trim().slice(0, LIMITS.names);
+    if(!nm) return;
+    const exist = state.groups.filter(g => g.name === nm)[0];
+    if(exist){ d.gid = exist.id; }
+    else{
+      const g = newGroup(nm, 1);
+      state.groups.push(g);
+      d.gid = g.id;
+    }
+    save(); renderSheet(d);
+  };
+  addBtn.addEventListener('click', doAdd);
+  newName.addEventListener('keydown', ev => { if(ev.key === 'Enter'){ ev.preventDefault(); doAdd(); } });
+  addRow.appendChild(newName);
+  addRow.appendChild(addBtn);
+  q4.appendChild(addRow);
+  const gnow = findGroup(d.gid);
+  if(gnow && gnow.people > 1)
+    q4.appendChild(el('p','hint','המשימה מוכפלת ב-' + gnow.people + ' אנשים. את הכמות משנים במסך "הגדרות".'));
   else
-    q4.appendChild(el('p','hint','את מספר האנשים בכל צוות מגדירים פעם אחת, במסך "צוותים".'));
+    q4.appendChild(el('p','hint','אפשר להשאיר בלי שיוך. את מספר האנשים בכל שיוך מגדירים פעם אחת, במסך "הגדרות".'));
   body.appendChild(q4);
 
   sheet.appendChild(body);
@@ -1422,10 +1555,10 @@ function renderSheet(d){
     del.addEventListener('click', () => { const id = ui.editId; closeSheet(); deleteTask(id); });
     foot.appendChild(del);
   }
-  const ok = el('button','btn', ui.editId ? 'שמירה' : 'הוספה לרשימה');
-  ok.type = 'button'; ok.id = 'sheetSave';
-  ok.addEventListener('click', commitDraft);
-  foot.appendChild(ok);
+  const okb = el('button','btn', ui.editId ? 'שמירה' : 'הוספה לרשימה');
+  okb.type = 'button'; okb.id = 'sheetSave';
+  okb.addEventListener('click', commitDraft);
+  foot.appendChild(okb);
   sheet.appendChild(foot);
 
   if(keep){
@@ -1438,29 +1571,33 @@ function renderSheet(d){
     }
   }
 }
+/* A task written by hand joins the ready list, so the second time it is one press. */
+function rememberInLib(d){
+  const nm = d.name.trim();
+  if(!nm || lib.some(x => x.name === nm)) return;
+  lib.unshift({name:nm, minutes:d.minutes, freq:d.freq, icon:d.icon});
+  if(lib.length > LIMITS.lib) lib.length = LIMITS.lib;
+  saveLib();
+}
 function commitDraft(){
   const d = ui.draft;
   if(!d) return;
   if(!d.name.trim() && !d.minutes){ closeSheet(); return; }
   const editId = ui.editId;
   closeSheet();
+  if(!editId) rememberInLib(d);
   apply(() => {
-    let g = findGroup(d.groupId) || ensureGroup();
     if(editId){
-      const f = findTask(editId);
-      if(f){
-        if(f.g.id !== g.id){
-          f.g.tasks.splice(f.g.tasks.indexOf(f.t), 1);
-          g.tasks.push(f.t);
-        }
-        f.t.name = d.name; f.t.minutes = d.minutes; f.t.freq = d.freq;
-        f.t.auto = d.auto; f.t.dom = d.dom; f.t.on = d.on;
+      const t = findTask(editId);
+      if(t){
+        t.name = d.name; t.minutes = d.minutes; t.freq = d.freq;
+        t.auto = d.auto; t.icon = d.icon; t.gid = d.gid;
       }
     }else{
-      if(allTasks().length >= LIMITS.tasks){ toast('הרשימה מלאה'); return; }
-      const t = newTask(d.name, d.minutes, d.freq, d.dom);
-      t.auto = d.auto;
-      g.tasks.push(t);
+      if(state.tasks.length >= LIMITS.tasks){ toast('הרשימה מלאה'); return; }
+      const t = newTask(d.name, d.minutes, d.freq, d.icon);
+      t.auto = d.auto; t.gid = d.gid;
+      state.tasks.push(t);
     }
   });
   ui.screen = 'list';
@@ -1470,20 +1607,8 @@ function commitDraft(){
 /* ============================================================
    6. EVENTS
    ============================================================ */
-/* Every mutation goes through here: mutate, persist, redraw. `quiet` skips the
-   redraw for keystrokes inside a field the user is still typing in. */
-function apply(fn, quiet){
-  fn();
-  save();
-  if(!quiet) render();
-}
+function apply(fn){ fn(); save(); render(); }
 function snapshot(){ return JSON.parse(JSON.stringify(pack(state))); }
-function applyState(next, msg){
-  const prev = snapshot();
-  state = next;
-  save(); render();
-  offerUndo(msg, prev);
-}
 function toast(msg){
   $('snackText').textContent = msg;
   $('snackBtn').hidden = true;
@@ -1511,10 +1636,8 @@ function doUndo(){
 function deleteTask(id){
   const prev = snapshot();
   apply(() => {
-    for(const g of state.groups){
-      const i = g.tasks.findIndex(t => t.id === id);
-      if(i !== -1){ g.tasks.splice(i,1); break; }
-    }
+    const i = state.tasks.findIndex(t => t.id === id);
+    if(i !== -1) state.tasks.splice(i,1);
   });
   offerUndo('המשימה נמחקה', prev);
 }
@@ -1523,99 +1646,92 @@ function deleteGroup(id){
   apply(() => {
     const i = state.groups.findIndex(g => g.id === id);
     if(i === -1) return;
-    const dead = state.groups.splice(i,1)[0];
-    if(dead.tasks.length){
-      const host = state.groups[0] || (state.groups.push(newGroup('הצוות שלי')), state.groups[0]);
-      dead.tasks.forEach(t => host.tasks.push(t));
-    }
+    state.groups.splice(i,1);
+    state.tasks.forEach(t => { if(t.gid === id) t.gid = null; });   // the tasks stay, unassigned
   });
-  offerUndo('הצוות נמחק, המשימות עברו לצוות הראשון', prev);
+  offerUndo('השיוך נמחק, המשימות נשארו בלי שיוך', prev);
 }
 function loadDemo(){
   const prev = snapshot();
   const s = emptyState();
-  const a = newGroup('רכזות גיוס'); a.people = 2;
-  [['מיון קורות חיים',120,'day',0],
-   ['תיאום ראיונות עם מועמדים ומראיינים',45,'day',0],
-   ['שליחת עדכונים ותשובות למועמדים',30,'day',0]].forEach(x => {
-    const t = newTask(x[0],x[1],x[2],x[3]); a.tasks.push(t);
-  });
-  const b = newGroup('מנהלת חשבונות'); b.people = 1;
-  [['הקלדת חשבוניות ספקים',90,'day',1],
-   ['גבייה ותזכורות ללקוחות',60,'day',1],
-   ['התאמות בנק',180,'week',1]].forEach(x => {
-    const t = newTask(x[0],x[1],x[2],x[3]); b.tasks.push(t);
-  });
-  const c = newGroup('נציגות שירות'); c.people = 3;
-  [['מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day',3],
-   ['תיעוד פניות במערכת',45,'day',3],
-   ['עדכון CRM אחרי פגישות ושיחות',45,'day',3],
-   ['ניתוב פניות לגורם הנכון',30,'day',3]].forEach(x => {
-    const t = newTask(x[0],x[1],x[2],x[3]); c.tasks.push(t);
-  });
+  const mk = (name, minutes, freq, gi) => {
+    const t = newTask(name, minutes, freq, null);
+    t.gid = gi;
+    s.tasks.push(t);
+  };
+  const a = newGroup('צוות גיוס', 2);
+  const b = newGroup('מנהלת חשבונות', 1);
+  const c = newGroup('צוות שירות', 3);
   s.groups.push(a,b,c);
+  mk('מיון קורות חיים',120,'day',a.id);
+  mk('תיאום ראיונות עם מועמדים ומראיינים',45,'day',a.id);
+  mk('שליחת עדכונים ותשובות למועמדים',30,'day',a.id);
+  mk('הקלדת חשבוניות ספקים',90,'day',b.id);
+  mk('גבייה ותזכורות ללקוחות',60,'day',b.id);
+  mk('התאמות בנק',180,'week',b.id);
+  mk('מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day',c.id);
+  mk('תיעוד פניות במערכת',45,'day',c.id);
+  mk('עדכון CRM אחרי פגישות ושיחות',45,'day',c.id);
+  mk('ניתוב פניות לגורם הנכון',30,'day',c.id);
   state = s;
-  ui.screen = 'list';
+  ui.screen = 'list'; ui.collapsed = {}; ui.toTop = true;
   save(); render();
   offerUndo('נטען תרחיש לדוגמה', prev);
 }
+/* A new scenario clears the cart. It never touches her ready list — that list is
+   about her business, not about this scenario. */
 function resetAll(){
   const prev = snapshot();
   state = emptyState();
-  ui.screen = 'list';
+  ui.screen = 'list'; ui.collapsed = {}; ui.toTop = true;
   save(); render();
   offerUndo('תרחיש חדש', prev);
 }
 function summaryText(){
   const res = compute(state);
-  const lines = ['מחשבון האבנים הקטנות · WAIVES', ''];
-  lines.push('סה״כ מתפנה בחודש: ' + nf(res.totals.freedMonth) + ' שעות');
+  const lines = ['מחשבון האבנים הקטנות · WAIVES'];
+  if(state.biz.trim()) lines.push(state.biz.trim());
+  lines.push('');
+  lines.push('סה״כ מתפנה החודש: ' + nf(res.totals.freedMonth) + ' שעות');
   lines.push(freeText(res.totals.fte));
   lines.push(nf(res.totals.freedYear) + ' שעות בשנה');
-  lines.push('');
-  res.live.slice().sort((a,b) => b.freedMonth - a.freedMonth).forEach(r => {
-    lines.push('· ' + (r.name || 'משימה ללא שם') + ' — ' + fmtHours(r.freedShown) + ' בחודש');
-  });
-  const dream = res.dream.chips.concat(res.dream.text ? [res.dream.text] : []).join(' · ');
-  if(dream){ lines.push(''); lines.push('הזמן הזה הולך ל: ' + dream); }
-  lines.push('');
-  lines.push('משרה מלאה = ' + FTE_MONTH + ' שעות בחודש (' + DAYS_MONTH + ' ימי עבודה, יום של ' + DAY_HOURS + ' שעות).');
   return lines.join('\n');
 }
 let selfHash = false;
 function doShare(){
   const url = shareUrl();
   if(url.length > 1900){
-    doCopy();
-    toast('התרחיש ארוך מדי לקישור, הסיכום הועתק במקום');
+    toast('התרחיש ארוך מדי לקישור');
     return;
   }
   const nextHash = 's=' + url.split('#s=')[1];
   if(location.hash !== '#' + nextHash) selfHash = true;
   location.hash = nextHash;
-  copyText(url, 'הקישור הועתק', 'הקישור בשורת הכתובת');
+  copyText(url);
 }
-function doCopy(){ copyText(summaryText(), 'הסיכום הועתק', 'לא הצלחנו להעתיק'); }
-function copyText(text, good, bad){
-  if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(() => toast(good), () => toast(bad));
-  }else{
+/* Whatever path the copy takes, a success says the same sentence. */
+function copyText(text){
+  const fallback = () => {
     try{
       const ta = document.createElement('textarea');
       ta.value = text; ta.setAttribute('readonly','');
       ta.style.cssText = 'position:fixed;top:-1000px';
       document.body.appendChild(ta); ta.select();
-      document.execCommand('copy'); document.body.removeChild(ta);
-      toast(good);
-    }catch(e){ toast(bad); }
-  }
+      const good = document.execCommand('copy');
+      document.body.removeChild(ta);
+      toast(good ? 'הקישור הועתק' : 'הקישור בשורת הכתובת, אפשר להעתיק משם');
+    }catch(e){ toast('הקישור בשורת הכתובת, אפשר להעתיק משם'); }
+  };
+  if(navigator.clipboard && navigator.clipboard.writeText){
+    navigator.clipboard.writeText(text).then(() => toast('הקישור הועתק'), fallback);
+  }else fallback();
 }
 
 function go(screen){
   ui.screen = screen;
+  ui.toTop = true;
   closeMenu();
   render();
-  window.scrollTo(0,0);
 }
 function closeMenu(){
   ui.menuOpen = false;
@@ -1625,14 +1741,12 @@ function closeMenu(){
 function buildMenu(){
   const m = $('menu');
   m.textContent = '';
-  [['טעינת דוגמה', loadDemo],
-   ['קישור לתרחיש', doShare],
-   ['העתקת סיכום', doCopy],
-   ['תרחיש חדש', resetAll]].forEach(([label, fn]) => {
-    const b = el('button', null, label);
+  const items = [['טעינת דוגמה', loadDemo], ['קישור לתרחיש', doShare], ['תרחיש חדש', resetAll]];
+  items.forEach(pair => {
+    const b = el('button', null, pair[0]);
     b.type = 'button';
     b.setAttribute('role','menuitem');
-    b.addEventListener('click', () => { closeMenu(); fn(); });
+    b.addEventListener('click', () => { closeMenu(); pair[1](); });
     m.appendChild(b);
   });
 }
@@ -1650,12 +1764,14 @@ document.addEventListener('click', ev => {
 });
 $('navList').addEventListener('click', () => go('list'));
 $('navDash').addEventListener('click', () => go('dash'));
-$('navTeams').addEventListener('click', () => go('teams'));
+$('navSet').addEventListener('click', () => go('set'));
 $('snackBtn').addEventListener('click', doUndo);
 $('scrim').addEventListener('click', ev => { if(ev.target === $('scrim')) closeSheet(); });
+$('scrim2').addEventListener('click', ev => { if(ev.target === $('scrim2')) closeTips(); });
 document.addEventListener('keydown', ev => {
   if(ev.key !== 'Escape') return;
   if(ui.draft) closeSheet();
+  else if(!$('scrim2').hidden) closeTips();
   else if(ui.menuOpen) closeMenu();
 });
 
@@ -1668,7 +1784,7 @@ window.addEventListener('hashchange', () => {
   if(incoming === 'bad'){ toast('הקישור לא נקרא, נפתח התרחיש שלך'); return; }
   const prev = snapshot();
   state = incoming;
-  ui.screen = 'list';
+  ui.screen = 'list'; ui.collapsed = {}; ui.toTop = true;
   closeSheet();
   save(); render();
   offerUndo('נפתח תרחיש מקישור', prev);
@@ -1678,14 +1794,14 @@ window.addEventListener('hashchange', () => {
    7. BOOT — the hash is validated before anything local is touched
    ============================================================ */
 function boot(){
+  lib = loadLib();
   buildMenu();
   const hash = readHash();
   const local = loadLocal();
   if(hash && hash !== 'bad'){
     state = hash;
     save(); render();
-    if(local && local.groups.some(g => g.tasks.length))
-      offerUndo('נפתח תרחיש מקישור', pack(local));
+    if(local && local.tasks.length) offerUndo('נפתח תרחיש מקישור', pack(local));
   }else{
     state = local || emptyState();
     render();
@@ -1697,10 +1813,11 @@ boot();
 /* Exposed for the automated checks only. Nothing in the page reads this. */
 window.__waives = {
   get state(){ return state; },
+  get lib(){ return lib; },
   get ui(){ return ui; },
   compute: () => compute(state),
   shareUrl, summaryText, sanitize, unpack, pack, b64urlEncode, b64urlDecode,
-  freeText, FTE_MONTH, DAYS_MONTH, WEEKS_MONTH
+  freeText, iconFor, FTE_MONTH, DAYS_MONTH, WEEKS_MONTH
 };
 </script>
 </body>
