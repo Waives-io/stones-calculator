@@ -1,4 +1,4 @@
-/* QA for מחשבון האבנים הקטנות.   node qa.js [baseUrl]
+/* QA for מחשבון שעות.   node qa.js [baseUrl]
    With no argument it serves ../index.html on localhost and tests that. */
 const http = require('http');
 const fs = require('fs');
@@ -20,11 +20,26 @@ function ok(name, cond, extra){
 function section(t){ console.log('\n== ' + t); }
 const near = (a, b, tol) => Math.abs(a - b) <= (tol === undefined ? 0.051 : tol);
 
+/* The whole folder, not just the page: an installable app is its manifest, its
+   icons and its worker, and a harness that answered index.html to every request
+   would have reported all three as present whatever they contained. */
+const TYPES = {'.html':'text/html; charset=utf-8', '.js':'text/javascript; charset=utf-8',
+               '.json':'application/json; charset=utf-8',
+               '.webmanifest':'application/manifest+json; charset=utf-8',
+               '.png':'image/png', '.svg':'image/svg+xml'};
 function serve(){
   return new Promise(res => {
     const srv = http.createServer((req, rep) => {
-      rep.writeHead(200, {'Content-Type':'text/html; charset=utf-8'});
-      rep.end(fs.readFileSync(path.join(ROOT, 'index.html')));
+      let rel = decodeURIComponent(req.url.split('?')[0].split('#')[0]);
+      if(rel === '/' || rel === '') rel = '/index.html';
+      const file = path.join(ROOT, path.normalize(rel).replace(/^[\\/]+/, ''));
+      if(!file.startsWith(ROOT) || !fs.existsSync(file) || fs.statSync(file).isDirectory()){
+        rep.writeHead(404, {'Content-Type':'text/plain'});
+        return rep.end('no');
+      }
+      rep.writeHead(200, {'Content-Type': TYPES[path.extname(file)] || 'application/octet-stream',
+                          'Cache-Control':'no-store'});
+      rep.end(fs.readFileSync(file));
     });
     srv.listen(PORT, () => res(srv));
   });
@@ -168,11 +183,19 @@ async function main(){
   /* innerText, not textContent: textContent would also scan the page's own
      <script>, so this would be testing the source instead of the screen. */
   const snapText = async p => { screenText.push(await p.evaluate(() => document.body.innerText)); };
+  /* השליחה חיה בשלוש הנקודות, אז כל בדיקה מגיעה אליה משם. */
+  const openSendSheet = async p => {
+    await p.locator('#btnMenu').click();
+    await p.waitForTimeout(170);
+    await p.locator('#menuSend').click();
+    await p.waitForTimeout(300);
+  };
 
   /* ---------------------------------------------------------- */
   section('1 · הרשימה היא המסך הראשון');
-  ok('הכותרת היא מחשבון האבנים הקטנות',
-     (await page.locator('#appTitle').textContent()).indexOf('מחשבון האבנים הקטנות') === 0);
+  ok('הכותרת היא מחשבון שעות',
+     (await page.locator('#appTitle').textContent()).trim() === 'מחשבון שעות');
+  ok('גם בלשונית הדפדפן', (await page.title()).indexOf('מחשבון שעות') === 0);
   ok('כפתור "חדש" בצד שמאל למעלה', await page.evaluate(() => {
     const b = document.getElementById('btnNew').getBoundingClientRect();
     return b.left < window.innerWidth/2 && b.top < 90;
@@ -625,15 +648,19 @@ async function main(){
   const menuText = await page.locator('#menu').textContent();
   ok('"קישור לתרחיש" כבר לא קבור בתפריט', menuText.indexOf('קישור לתרחיש') === -1);
   ok('אין בתפריט "העתקת סיכום"', menuText.indexOf('העתקת סיכום') === -1);
+  const menuIds = await page.evaluate(() =>
+    [...document.querySelectorAll('#menu button')].map(b => b.id));
+  ok('בתפריט ארבעה פריטים, בסדר שנקבע',
+     menuIds.join(',') === 'menuSend,menuCode,menuDemo,menuReset');
   await page.keyboard.press('Escape');
   await page.waitForTimeout(160);
 
-  /* השליחה היא המעשה שבשבילו הכלי קיים: מנהל ממלא ומעביר לעובד, והוא מחזיר. */
-  ok('יש כפתור שליחה אחד על הרשימה',
-     (await page.locator('#screenList #btnSend').count()) === 1);
+  /* השליחה היא המעשה שבשבילו הכלי קיים: מנהל ממלא ומעביר לעובד, והוא מחזיר.
+     היא יושבת בשלוש הנקודות, ובמקום אחד בלבד. */
+  ok('אין יותר מקש שליחה על הרשימה',
+     (await page.locator('#screenList #btnSend').count()) === 0);
   ok('אין כפתור שיתוף ישן', (await page.locator('#screenList #btnShare').count()) === 0);
-  await page.locator('#btnSend').click();
-  await page.waitForTimeout(240);
+  await openSendSheet(page);
   ok('נפתח מסך שליחה', !(await page.locator('#scrim3').isHidden()));
   const sendTxt = await page.locator('#sheet3').textContent();
   ok('המסך מסביר שמי שמקבל יכול להמשיך ולשלוח בחזרה',
@@ -644,6 +671,11 @@ async function main(){
      (await page.locator('#sendCopy').count()) === 1 &&
      (await page.locator('#sendWa').count()) === 1 &&
      (await page.locator('#sendMail').count()) === 1);
+  /* מי ששולח צריך לדעת מאיפה לאיפה זה הולך, לפני שהוא לוחץ. */
+  const hint = await page.locator('#sheet3 .sendhint').textContent();
+  ok('המסך אומר שהוואטסאפ נפתח אצלם והם בוחרים למי',
+     hint.indexOf('נפתח אצלכם') !== -1 && hint.indexOf('בוחרים למי') !== -1);
+  ok('והוא אומר שהמייל מעתיק קודם', hint.indexOf('מעתיק את הקישור') !== -1);
   const waUrl = await page.evaluate(async () => {
     let got = null;
     const real = window.open;
@@ -654,8 +686,28 @@ async function main(){
   });
   ok('וואטסאפ נפתח עם הקישור בפנים',
      waUrl.indexOf('https://wa.me/?text=') === 0 && decodeURIComponent(waUrl).indexOf('#z=') !== -1);
-  await page.locator('#btnSend').click();
-  await page.waitForTimeout(240);
+  await openSendSheet(page);
+  /* "מייל" נכשל בשקט כשאין במחשב תוכנת מייל, אז הקישור חייב להיות ביד בלי קשר. */
+  await page.evaluate(() => {
+    window.__mailto = null;
+    const real = HTMLAnchorElement.prototype.click;
+    HTMLAnchorElement.prototype.click = function(){
+      if(String(this.href).indexOf('mailto:') === 0){ window.__mailto = this.href; return; }
+      return real.apply(this, arguments);
+    };
+  });
+  await page.locator('#sendMail').click();
+  await page.waitForTimeout(320);
+  const mailto = await page.evaluate(() => window.__mailto);
+  ok('"מייל" מנסה לפתוח את תוכנת המייל עם הקישור בפנים',
+     typeof mailto === 'string' && mailto.indexOf('mailto:?subject=') === 0 &&
+     decodeURIComponent(mailto).indexOf('#z=') !== -1);
+  const mailToast = await page.locator('#snackText').textContent();
+  ok('ובמקביל הקישור הועתק, וזה נאמר ("' + mailToast + '")',
+     mailToast.indexOf('הועתק') !== -1 && mailToast.indexOf('תוכנת המייל') !== -1);
+  ok('מה שהועתק הוא הקישור עצמו',
+     (await page.evaluate(() => navigator.clipboard.readText())).indexOf('#z=') !== -1);
+  await openSendSheet(page);
   await page.locator('#sendCopy').click();
   await page.waitForTimeout(260);
   const toast = await page.locator('#snackText').textContent();
@@ -825,11 +877,40 @@ async function main(){
      (await page.locator('.dreambar').textContent()).indexOf('פרויקט חדש שמחכה') !== -1);
   ok('"איפה הזמן יושב?" היא כותרת אחת',
      (await page.locator('#screenDash .block h3', {hasText:'איפה הזמן יושב?'}).count()) === 1);
-  const subs = await page.locator('#screenDash .subh').allTextContents();
+  const subs = await page.locator('#screenDash .bargroup .ghead .gname').allTextContents();
   ok('מתחתיה "לפי משימה" ואחריה "לפי תפקיד"',
      subs[0] === 'לפי משימה' && subs[1] === 'לפי תפקיד');
   ok('אין יותר "לפי שיוך" בדשבורד',
-     (await page.locator('#screenDash .subh', {hasText:'לפי שיוך'}).count()) === 0);
+     (await page.locator('#screenDash .bargroup', {hasText:'לפי שיוך'}).count()) === 0);
+  ok('אין יותר כותרת שטוחה בדשבורד',
+     (await page.locator('#screenDash .subh').count()) === 0);
+  /* שתי הכותרות הן אותו אובייקט כמו קבוצת תפקיד ברשימה — מקש מורם שמתקפל. */
+  const headLook = await page.evaluate(() => {
+    const d = getComputedStyle(document.querySelector('#screenDash .bargroup .ghead'));
+    document.getElementById('navList').click();
+    const l = getComputedStyle(document.querySelector('#screenList .ghead'));
+    const out = {dashBg:d.backgroundImage, dashSh:d.boxShadow,
+                 listBg:l.backgroundImage, listSh:l.boxShadow};
+    document.getElementById('navDash').click();
+    return out;
+  });
+  ok('כותרת בדשבורד היא אותו מקש כמו קבוצה ברשימה',
+     headLook.dashBg === headLook.listBg && headLook.dashSh === headLook.listSh &&
+     headLook.dashSh.indexOf('inset') !== -1);
+  /* אותו חיתוך, אותם נתונים: שני המספרים חייבים להיות אותו מספר, ושווים לבאנר. */
+  const sums = await page.evaluate(() => ({
+    task: document.querySelector('#subtask .gtot').textContent.trim(),
+    role: document.querySelector('#subrole .gtot').textContent.trim(),
+    banner: document.querySelector('#screenDash .banner .big').textContent.trim()
+  }));
+  ok('שתי הכותרות מציגות את אותו סכום (' + sums.task + ' / ' + sums.role + ')',
+     sums.task === sums.role);
+  ok('והוא הסכום שבבאנר (' + sums.banner + ')',
+     sums.task.indexOf(sums.banner) === 0);
+  /* "לפי משימה" הציגה פעם רק שש — ואז שתי הכותרות סתרו זו את זו. */
+  ok('"לפי משימה" מציגה את כל המשימות הפעילות',
+     (await page.locator('#screenDash .bar-item.pinkbar').count()) ===
+     (await page.evaluate(() => window.__waives.compute().live.length)));
   const tones = await page.evaluate(() => {
     const g = sel => [...document.querySelectorAll(sel)]
       .map(b => getComputedStyle(b.querySelector('.bar-fill')).backgroundImage);
@@ -896,8 +977,7 @@ async function main(){
   const src = await page.evaluate(() => document.documentElement.outerHTML);
   const seen = screenText.join('\n');
   ok('אין ציור אבנים בקוד', !/function mountain|mountain\(|stoneSvg|pebble|cairn/i.test(src));
-  ok('המילה אבנים נשארת רק בשם הכלי',
-     (seen.match(/אבנים/g) || []).length === (seen.match(/מחשבון האבנים הקטנות/g) || []).length);
+  ok('המילה אבנים ירדה מהמסך לגמרי', seen.indexOf('אבנים') === -1);
   ok('אין סימן שקל על המסך', seen.indexOf(SHEKEL) === -1);
   ok('אין המילה קיצוץ', seen.indexOf('קיצוץ') === -1 && src.indexOf('קיצוץ') === -1);
   ok('אין המילה פיטורים', seen.indexOf('פיטורים') === -1 && src.indexOf('פיטורים') === -1);
@@ -1258,9 +1338,14 @@ async function main(){
   await page.locator('#emptyDemo').click();
   await page.waitForTimeout(260);
   ok('בלי קוד אין שורת ענן על הרשימה', (await page.locator('#cloudBar').count()) === 0);
-  await page.locator('#btnSend').click();
-  await page.waitForTimeout(240);
+  await openSendSheet(page);
   ok('מוצעת שמירה בענן', (await page.locator('#sendCloud').count()) === 1);
+  /* זה המסלול שמחזיק את הכלי בין אנשים ומכשירים, אז הוא מקש מלא ולא כפתור חיוור. */
+  ok('ההצעה היא מקש מלא, לא כפתור חיוור', await page.evaluate(() => {
+    const c = getComputedStyle(document.getElementById('sendCloud'));
+    return c.color === 'rgb(255, 255, 255)' && c.boxShadow.indexOf('inset') !== -1 &&
+           c.backgroundImage.indexOf('247, 121, 159') !== -1;
+  }));
   ok('עוד אין קוד להראות', (await page.locator('#sendCode').count()) === 0);
   ok('המסך אומר שכלום לא נשמר בשרת',
      (await page.locator('#sheet3').textContent()).indexOf('לא נשמרים בשום שרת') !== -1);
@@ -1342,8 +1427,7 @@ async function main(){
   /* קוד שני שמודבק לתוך לשונית פתוחה — בלי טעינה מחדש */
   await fresh(page);
   await addTask(page, {assign:'מזכירות', name:'תיוק מסמכים סרוקים', minutes:45, freq:'day'});
-  await page.locator('#btnSend').click();
-  await page.waitForTimeout(240);
+  await openSendSheet(page);
   await page.locator('#sendCloud').click();
   await page.waitForTimeout(700);
   const second = await page.evaluate(() => window.__waives.cloud.code);
@@ -1364,8 +1448,7 @@ async function main(){
      (await page.evaluate(() => window.__waives.cloud.code)) === code);
 
   /* הדרך החוצה */
-  await page.locator('#btnSend').click();
-  await page.waitForTimeout(240);
+  await openSendSheet(page);
   await page.locator('#sendOff').click();
   await page.waitForTimeout(260);
   const offTxt = await page.locator('#sheet3').textContent();
@@ -1386,7 +1469,165 @@ async function main(){
   await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('25 · צילומי מסך');
+  section('25 · הקוד מקבל איפה להיכנס');
+  await fresh(page);
+  ok('מסך ריק מציע להקליד קוד', (await page.locator('#emptyCode').count()) === 1);
+  ok('והשורה אומרת למה היא שם',
+     (await page.locator('.emptyor').textContent()).indexOf('קיבלתם קוד') === 0);
+  await page.locator('#emptyCode').click();
+  await page.waitForTimeout(240);
+  ok('נפתח מסך להזנת קוד', (await page.locator('#fCode').count()) === 1);
+  ok('הכותרת אומרת מה עושים כאן',
+     (await page.locator('#askTitle').textContent()).indexOf('קוד') !== -1);
+  ok('הסמן כבר בשדה', (await page.evaluate(() => document.activeElement.id)) === 'fCode');
+
+  /* קוד קצר נעצר כאן, בלי לצאת לרשת בכלל */
+  const putsBefore = store.state.puts;
+  const getsBefore = store.mem.size;
+  await page.locator('#fCode').fill('ABC');
+  await page.locator('#codeOpen').click();
+  await page.waitForTimeout(220);
+  ok('קוד קצר מקבל תשובה מיד',
+     (await page.locator('#codeBad').textContent()).indexOf('עשרה תווים') !== -1);
+  ok('ושום דבר לא נשלח לחנות', store.mem.size === getsBefore && store.state.puts === putsBefore);
+
+  /* קוד תקין שלא קיים — נאמר בלי להחליף כלום */
+  await page.locator('#fCode').fill('2V0C2C8YG1');
+  await page.locator('#codeOpen').click();
+  await page.waitForTimeout(500);
+  ok('קוד שלא קיים נאמר בפירוש',
+     (await page.locator('#codeBad').textContent()).indexOf('לא מצאנו') !== -1);
+  ok('המסך נשאר פתוח כדי לתקן', (await page.locator('#fCode').count()) === 1);
+  ok('הכפתור חוזר לעצמו',
+     (await page.locator('#codeOpen').textContent()) === 'פתיחת המיפוי');
+  await page.locator('#askNo').click();
+  await page.waitForTimeout(200);
+
+  /* מיפוי אמיתי, קוד אמיתי, ומכשיר שני שמקליד אותו ביד */
+  await page.locator('#emptyDemo').click();
+  await page.waitForTimeout(300);
+  await openSendSheet(page);
+  await page.locator('#sendCloud').click();
+  await page.waitForTimeout(700);
+  const mine = await page.evaluate(() => window.__waives.cloud.code);
+  const pretty = await page.evaluate(c => window.__waives.prettyCode(c), mine);
+  const rowsHere = (await listNums(page)).rows.length;
+  await page.locator('#askNo').click();
+  await page.waitForTimeout(200);
+
+  /* שורת הענן היא הדרך חזרה אל הקוד, בלי לחפש */
+  await page.locator('#cloudBar').click();
+  await page.waitForTimeout(300);
+  ok('לחיצה על שורת הענן פותחת את השליחה',
+     (await page.locator('#sendCode').count()) === 1);
+  await page.locator('#askNo').click();
+  await page.waitForTimeout(200);
+
+  await fresh(page);
+  ok('המכשיר השני מתחיל ריק', (await listNums(page)).rows.length === 0);
+  await page.locator('#btnMenu').click();
+  await page.waitForTimeout(170);
+  await page.locator('#menuCode').click();
+  await page.waitForTimeout(240);
+  /* כמו שמקלידים קוד שהוקרא בטלפון: אותיות קטנות, עם המקף */
+  await page.locator('#fCode').fill(pretty.toLowerCase());
+  await page.locator('#fCode').press('Enter');
+  await page.waitForTimeout(800);
+  ok('הקוד פותח את המיפוי', (await listNums(page)).rows.length === rowsHere);
+  ok('והמכשיר מחובר אליו', (await page.evaluate(() => window.__waives.cloud.code)) === mine);
+  ok('הכתובת נושאת את הקוד', (await page.evaluate(() => location.hash)) === '#k=' + mine);
+  ok('שורת הענן מראה את הקוד',
+     (await page.locator('#cloudBar').textContent()).indexOf(pretty) !== -1);
+  ok('מסך הקוד נסגר מעצמו', await page.locator('#scrim3').isHidden());
+
+  /* ביטול מחזיר את מה שהיה — וגם משחרר את הקוד של האחר */
+  ok('מוצע ביטול', await page.locator('#snackBtn').isVisible());
+  await page.locator('#snackBtn').click();
+  await page.waitForTimeout(300);
+  ok('הביטול מחזיר את המיפוי שהיה כאן', (await listNums(page)).rows.length === 0);
+  ok('והוא מרפה מהקוד של האחר',
+     (await page.evaluate(() => window.__waives.cloud.code)) === null);
+  ok('הכתובת כבר לא נושאת אותו',
+     (await page.evaluate(() => location.hash)).indexOf('k=') === -1);
+  const after = store.mem.get(mine);
+  await addTask(page, {assign:'מוקדנית', name:'סגירת קופה יומית', minutes:30, freq:'day'});
+  await page.waitForTimeout(1900);
+  ok('ומה שנכתב כאן אחרי הביטול לא נוגע במיפוי שלו', store.mem.get(mine) === after);
+
+  /* I, L, O, U הן האותיות שאין באלפבית הזה, ומי שמקליד מתכוון למה שדומה להן */
+  const folded = await page.evaluate(() => [
+    window.__waives.tidyCode(' 2v0c2-c8ygz '),
+    window.__waives.tidyCode('iloc2c8ygz'),
+    window.__waives.tidyCode('2V0C2*C8YGZ')
+  ]);
+  ok('מקף, רווחים ואותיות קטנות לא מפריעים', folded[0] === '2V0C2C8YGZ');
+  ok('I ו-L נקראות 1, O נקראת 0 (' + folded[1] + ')', folded[1] === '110C2C8YGZ');
+  ok('תו זר נופל ולא מזיז את השאר', folded[2] === '2V0C2C8YGZ');
+  await snapText(page);
+
+  /* ---------------------------------------------------------- */
+  section('26 · אפליקציה שאפשר להתקין');
+  await fresh(page);
+  ok('יש manifest מקושר מהדף', (await page.evaluate(() => {
+    const l = document.querySelector('link[rel="manifest"]');
+    return l ? l.getAttribute('href') : null;
+  })) === 'manifest.webmanifest');
+  const mres = await page.request.get(url + 'manifest.webmanifest');
+  ok('הוא באמת נמצא על השרת', mres.ok());
+  const man = await mres.json();
+  ok('השם מתחת לאייקון הוא "מחשבון שעות"', man.short_name === 'מחשבון שעות');
+  ok('השם המלא נושא גם את WAIVES', (man.name || '').indexOf('WAIVES') !== -1);
+  ok('היא נפתחת כאפליקציה ולא כלשונית', man.display === 'standalone');
+  ok('עברית מימין לשמאל', man.lang === 'he' && man.dir === 'rtl');
+  ok('הכתובת שנפתחת היא יחסית, אז היא עובדת בכל תיקייה',
+     man.start_url === './' && man.scope === './');
+  ok('הרקע תואם לרקע של האפליקציה',
+     man.background_color === '#E7ECE6' && man.theme_color === '#E7ECE6');
+  ok('יש אייקון maskable לאנדרואיד',
+     (man.icons || []).some(i => (i.purpose || '').indexOf('maskable') !== -1));
+  const iconSizes = [];
+  for(const ic of (man.icons || [])){
+    const r = await page.request.get(url + ic.src);
+    if(!r.ok()){ iconSizes.push(ic.src + ':404'); continue; }
+    const buf = await r.body();
+    const png = buf[1] === 0x50 && buf[2] === 0x4E && buf[3] === 0x47;
+    iconSizes.push(ic.src + ':' + (png ? buf.readUInt32BE(16) + 'x' + buf.readUInt32BE(20) : 'not-png'));
+  }
+  ok('כל האייקונים קיימים ובגודל שהוכרז (' + iconSizes.join(' ') + ')',
+     iconSizes.length === (man.icons || []).length &&
+     iconSizes.every((t, i) => t.split(':')[1] === man.icons[i].sizes));
+  const apple = await page.evaluate(() => {
+    const l = document.querySelector('link[rel="apple-touch-icon"]');
+    return l ? l.getAttribute('href') : null;
+  });
+  ok('יש אייקון לאייפון', apple === 'icons/apple-touch-icon.png');
+  ok('והוא על השרת', (await page.request.get(url + apple)).ok());
+  ok('שם האפליקציה מוגדר גם לאייפון', (await page.evaluate(() => {
+    const m = document.querySelector('meta[name="apple-mobile-web-app-title"]');
+    return m ? m.content : null;
+  })) === 'מחשבון שעות');
+  ok('צבע הסרגל תואם לרקע', (await page.evaluate(() => {
+    const m = document.querySelector('meta[name="theme-color"]');
+    return m ? m.content : null;
+  })) === '#E7ECE6');
+
+  const swRes = await page.request.get(url + 'sw.js');
+  ok('שכבת האופליין קיימת', swRes.ok());
+  const swSrc = await swRes.text();
+  ok('הדף עצמו נמשך מהרשת קודם, והקאש הוא רק רשת ביטחון',
+     swSrc.indexOf("req.mode === 'navigate'") !== -1 && swSrc.indexOf('caches.match') !== -1);
+  ok('חנות המיפויים לא נשמרת בקאש', swSrc.indexOf('workers.dev') !== -1);
+  ok('גרסה ישנה נמחקת כשעולה חדשה', swSrc.indexOf('caches.delete') !== -1);
+  const pageSrc = await page.evaluate(() => document.documentElement.outerHTML);
+  ok('הרישום רץ רק על האתר האמיתי, לא על עותק מקומי',
+     pageSrc.indexOf("location.protocol === 'https:'") !== -1);
+  ok('ובבדיקות עצמן לא נרשם worker',
+     (await page.evaluate(() => navigator.serviceWorker ?
+        navigator.serviceWorker.getRegistrations().then(r => r.length) : 0)) === 0);
+  await snapText(page);
+
+  /* ---------------------------------------------------------- */
+  section('27 · צילומי מסך');
   const shots = [];
   const shot = async (n, w) => {
     await page.setViewportSize({width:w || 430, height:950});
@@ -1427,7 +1668,24 @@ async function main(){
   await page.locator('#navDash').click();
   await page.waitForTimeout(240);
   await shot('10-dash-desktop', 1280);
-  ok('עשרה צילומי מסך נשמרו (' + shots.length + ')', shots.length === 10);
+  await page.setViewportSize({width:430, height:950});
+  await page.locator('#navList').click();
+  await page.waitForTimeout(220);
+  await page.locator('#btnMenu').click();
+  await page.waitForTimeout(170);
+  await page.locator('#menuSend').click();
+  await page.waitForTimeout(320);
+  await shot('11-send');
+  await page.locator('#askNo').click();
+  await page.waitForTimeout(200);
+  await page.locator('#btnMenu').click();
+  await page.waitForTimeout(170);
+  await page.locator('#menuCode').click();
+  await page.waitForTimeout(280);
+  await shot('12-code');
+  await page.locator('#askNo').click();
+  await page.waitForTimeout(200);
+  ok('שנים-עשר צילומי מסך נשמרו (' + shots.length + ')', shots.length === 12);
   ok('כל הצילומים קיימים על הדיסק',
      shots.every(n => fs.existsSync(path.join(SHOTS, n + '.png'))));
 

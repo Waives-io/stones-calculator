@@ -3,9 +3,17 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>מחשבון האבנים הקטנות · WAIVES</title>
+<title>מחשבון שעות · WAIVES</title>
 <meta name="description" content="כמה שעות בחודש חוזרות לצוות כשהמשימות הקטנות נעשות לבד.">
-<meta name="theme-color" content="#14707E">
+<meta name="theme-color" content="#E7ECE6">
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icons/favicon-32.png" sizes="32x32">
+<link rel="icon" href="icons/icon-192.png" sizes="192x192">
+<link rel="apple-touch-icon" href="icons/apple-touch-icon.png">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="default">
+<meta name="apple-mobile-web-app-title" content="מחשבון שעות">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
@@ -87,7 +95,8 @@ input,select{font:inherit;color:inherit}
 .top .grow{flex:1}
 
 /* ---------- KEY ---------- */
-.icobtn,.newbtn,.chip,.btn,.tick,.row,.ghead,.stepper,.disclink,.chipx,.menu button,.dreambar{
+.icobtn,.newbtn,.chip,.btn,.tick,.row,.ghead,.stepper,.disclink,.chipx,.menu button,.dreambar,
+.cloudbar{
   transition:transform .13s ease, box-shadow .13s ease, background .13s ease;
 }
 .icobtn{
@@ -388,7 +397,7 @@ nav.bar button[aria-current="page"]{color:var(--gold-ink);font-weight:700;
 .codelbl{display:block;font-size:12.5px;font-weight:600;color:var(--ink-faint)}
 .codeval{display:block;margin-top:5px;font-size:25px;font-weight:800;color:var(--ink);
   letter-spacing:2.5px}
-.cloudbar{margin-top:16px;padding:13px 17px;border-radius:var(--r-key);
+.cloudbar{display:block;width:100%;margin-top:16px;padding:13px 17px;border-radius:var(--r-key);
   font-size:13px;font-weight:700;color:var(--screen-soft);text-align:center;
   background:linear-gradient(180deg,#E3F1DB,#D2E7C7);
   box-shadow:inset 0 2px 0 rgba(255,255,255,.9), 0 2px 3px rgba(62,88,60,.1)}
@@ -417,6 +426,21 @@ select.freqsel{
 }
 .hint{font-size:13px;color:var(--ink-faint);margin:12px 0 0;line-height:1.6}
 .hint.warn{color:var(--pink-ink);font-weight:600}
+/* Typing a code somebody read out on the phone: wide characters, well spaced,
+   and sunk into the page so it reads as a slot to fill rather than a key. */
+.codeform{display:flex;flex-direction:column;gap:11px;padding:4px 18px 0}
+.codein{width:100%;text-align:center;font-size:23px;font-weight:800;letter-spacing:3px;
+  text-transform:uppercase;
+  color:var(--ink);font-family:inherit;background:var(--key-press);border:0;
+  border-radius:var(--r-key);padding:15px 12px;box-shadow:var(--press)}
+.codein:focus{outline:2.5px solid var(--green);outline-offset:2px}
+.codein::placeholder{color:var(--ink-faint);font-weight:700;letter-spacing:2px}
+.codebad{margin:10px 22px 0;font-size:13.5px;font-weight:700;line-height:1.6;
+  color:var(--pink-ink);text-align:center}
+.codebad[hidden]{display:none}
+.sendhint{margin:10px 22px 0;font-size:12.5px;line-height:1.6;color:var(--ink-faint);
+  text-align:center}
+.emptyor{margin:16px 0 0;font-size:13.5px;color:var(--ink-soft)}
 .inline-link{color:var(--green-dark);text-decoration:underline;font-size:13.5px;
   padding:7px 0;font-weight:700;display:inline-block}
 .danger{color:var(--pink-ink)}
@@ -479,8 +503,12 @@ select.freqsel{
 .bar-item.pinkbar .bar-top .v{color:var(--pink-ink)}
 .bar-item.goldbar .bar-fill{background:linear-gradient(90deg, var(--gold-a), var(--gold-b))}
 .bar-item.goldbar .bar-top .v{color:#9A7418}
-.subh{margin:20px 0 12px;font-size:13.5px;font-weight:800;color:var(--ink-soft)}
-.block h3 + .subh{margin-top:2px}
+/* The dashboard's two answers are the same object as a role on the list: a
+   raised key that folds, with the hours on its end. They were flat text, which
+   read as a different app on the same phone. */
+.bargroup .ghead{margin-top:0}
+.bargroup + .bargroup{margin-top:20px}
+.barbody{padding:2px 2px 0}
 
 /* ---------- snackbar & menu ---------- */
 .snack{position:fixed;inset-inline:16px;bottom:calc(var(--bar) + 14px + env(safe-area-inset-bottom));
@@ -630,7 +658,7 @@ fill="currentColor" stroke="none">
 <header class="top">
   <span class="brand">
     <svg class="mark" aria-hidden="true"><use href="#mkBars"></use></svg>
-    <h1 id="appTitle">מחשבון האבנים הקטנות</h1>
+    <h1 id="appTitle">מחשבון שעות</h1>
   </span>
   <span class="grow"></span>
   <button class="icobtn" id="btnMenu" aria-haspopup="true" aria-expanded="false" aria-label="עוד פעולות">
@@ -1256,6 +1284,9 @@ let lib = [];
 let ui = { screen:'list', editId:null, draft:null, menuOpen:false, collapsed:{}, toTop:false,
            open:null, dashOpen:{} };
 let undoSnapshot = null, undoTimer = null, snackTimer = null;
+/* Undoing the opening of somebody else's mapping has to let go of their code as
+   well, or the next keystroke here would be written over their work. */
+let undoCloud;
 
 const $ = id => document.getElementById(id);
 const nf = n => Number(n).toLocaleString('he-IL');
@@ -1284,7 +1315,6 @@ function pathSvg(d, size){
 function iconSvg(key, size){ return pathSvg((ICONS[key] || ICONS.clip).d, size); }
 const CHECK_D = 'm4 12.5 5 5L20 6.5';
 const CARET_D = 'm6 9 6 6 6-6';
-const SEND_D = 'M21.5 2.5 2.5 9.3l7.6 3.1 3.1 7.6 8.3-17.5Zm0 0-11.4 10';
 
 function fmtMinutes(m){
   if(m < 60) return m + ' דק׳';
@@ -1317,7 +1347,7 @@ function render(){
   $('navList').setAttribute('aria-current', ui.screen === 'list' ? 'page' : 'false');
   $('navDash').setAttribute('aria-current', ui.screen === 'dash' ? 'page' : 'false');
   $('navSet').setAttribute('aria-current', ui.screen === 'set' ? 'page' : 'false');
-  $('appTitle').textContent = 'מחשבון האבנים הקטנות' + (state.biz.trim() ? ' · ' + state.biz.trim() : '');
+  $('appTitle').textContent = 'מחשבון שעות' + (state.biz.trim() ? ' · ' + state.biz.trim() : '');
   if(ui.screen === 'list') renderList(res);
   if(ui.screen === 'set')  renderSettings(res);
   if(ui.screen === 'dash') renderDash(res);
@@ -1412,6 +1442,14 @@ function renderList(res){
     demo.id = 'emptyDemo';
     demo.addEventListener('click', loadDemo);
     e.appendChild(demo);
+    /* Somebody who was given a code lands here, on an empty screen, with nothing
+       to do with it. This is the one place that line belongs. */
+    const or = el('p','emptyor','קיבלתם קוד של מיפוי קיים? ');
+    const codeBtn = el('button','inline-link','הקלדת קוד');
+    codeBtn.type = 'button'; codeBtn.id = 'emptyCode';
+    codeBtn.addEventListener('click', openCodeEntry);
+    or.appendChild(codeBtn);
+    e.appendChild(or);
     card.appendChild(e);
     host.appendChild(card);
     host.appendChild(tipsButton());
@@ -1453,7 +1491,6 @@ function renderList(res){
 
   host.appendChild(card);
   host.appendChild(tipsButton());
-  host.appendChild(sendButton());
   const bar = cloudBar();
   if(bar) host.appendChild(bar);
 }
@@ -1607,7 +1644,7 @@ function renderSettings(res){
   bin.setAttribute('aria-label','שם העסק או המשרד');
   bin.addEventListener('input', () => {
     state.biz = bin.value.slice(0, LIMITS.biz);
-    $('appTitle').textContent = 'מחשבון האבנים הקטנות' + (state.biz.trim() ? ' · ' + state.biz.trim() : '');
+    $('appTitle').textContent = 'מחשבון שעות' + (state.biz.trim() ? ' · ' + state.biz.trim() : '');
     save();
   });
   bbox.appendChild(bin);
@@ -1728,19 +1765,23 @@ function renderDash(res){
   /* One question — where the time sits — answered twice: once by task, once by
      role. Each answer keeps its own colour, so neither list is read as a ranking
      of the other. */
-  const ranked = res.live.slice().sort((a,b) => b.freedMonth - a.freedMonth).slice(0,6);
+  /* Both lists are the same hours cut two ways, so both carry the same total —
+     and both are complete. Showing six tasks against every role made one heading
+     disagree with the other over the same data, which is a reason to distrust
+     the whole screen. They fold, so length costs nothing. */
+  const ranked = res.live.slice().sort((a,b) => b.freedMonth - a.freedMonth);
   const groups = res.byGroup.filter(g => g.freed > 0).sort((a,b) => b.freed - a.freed);
   if(ranked.length || groups.length){
     const wb = el('div','block');
     wb.appendChild(el('h3', null, 'איפה הזמן יושב?'));
     if(ranked.length){
       const max = ranked[0].freedMonth || 1;
-      wb.appendChild(barGroup('task','לפי משימה', () => ranked.map(r =>
+      wb.appendChild(barGroup('task','לפי משימה', t.freedMonth, () => ranked.map(r =>
         barItem(r.name || 'משימה ללא שם', r.freedShown, r.freedMonth / max, 'pinkbar'))));
     }
     if(groups.length){
       const max = groups[0].freed || 1;
-      wb.appendChild(barGroup('role','לפי תפקיד', () => groups.map(g => barItem(
+      wb.appendChild(barGroup('role','לפי תפקיד', t.freedMonth, () => groups.map(g => barItem(
         (g.name || 'ללא שיוך') + (g.people > 1 ? ' · ' + g.people + ' אנשים' : ''),
         Math.round(g.freed), g.freed / max, 'goldbar'))));
     }
@@ -1824,14 +1865,20 @@ function renderDash(res){
 
 /* A folding answer. Open by default — the point of the screen is to be read — and
    closed with one press when the other answer is the one being discussed. */
-function barGroup(key, title, build){
+function barGroup(key, title, total, build){
   const open = ui.dashOpen[key] !== false;
   const wrap = el('div','bargroup');
-  const h = el('button','subh', title);
+  const h = el('button','ghead');
   h.type = 'button';
   h.id = 'sub' + key;
   h.setAttribute('aria-expanded', open ? 'true' : 'false');
+  const nm = el('span','gname');
+  nm.appendChild(el('bdi', null, title));
+  h.appendChild(nm);
   h.appendChild(pathSvg(CARET_D)).setAttribute('class','caret');
+  const tot = el('span','gtot');
+  tot.appendChild(el('bdi', null, fmtHours(total)));
+  h.appendChild(tot);
   h.addEventListener('click', () => { ui.dashOpen[key] = !open; render(); });
   wrap.appendChild(h);
   if(open){
@@ -2329,8 +2376,9 @@ function toast(msg){
   clearTimeout(snackTimer);
   snackTimer = setTimeout(() => { $('snack').hidden = true; }, 3200);
 }
-function offerUndo(msg, prevPacked){
+function offerUndo(msg, prevPacked, prevCloud){
   undoSnapshot = prevPacked;
+  undoCloud = prevCloud;
   $('snackText').textContent = msg;
   $('snackBtn').hidden = false;
   $('snack').hidden = false;
@@ -2342,9 +2390,16 @@ function offerUndo(msg, prevPacked){
 function doUndo(){
   if(!undoSnapshot) return;
   const back = sanitize(unpack(undoSnapshot));
-  undoSnapshot = null;
+  const backCloud = undoCloud;
+  undoSnapshot = null; undoCloud = undefined;
   $('snack').hidden = true;
-  if(back){ state = back; save(); render(); }
+  if(!back) return;
+  state = back;
+  if(backCloud !== undefined && backCloud !== cloud.code){
+    cloud.code = backCloud; cloud.fail = false; saveCloud();
+    if(codeInHash()){ selfHash = true; location.hash = backCloud ? 'k=' + backCloud : ''; }
+  }
+  save(); render();
 }
 /* A role exists to gather tasks. Take the last one away and the role is an empty
    heading nobody asked for, so it goes with it — and the message says so, because
@@ -2412,7 +2467,7 @@ function resetAll(){
 }
 function summaryText(){
   const res = compute(state);
-  const lines = ['מחשבון האבנים הקטנות · WAIVES'];
+  const lines = ['מחשבון שעות · WAIVES'];
   if(state.biz.trim()) lines.push(state.biz.trim());
   lines.push('');
   lines.push('סה״כ מתפנה החודש: ' + nf(res.totals.freedMonth) + ' שעות');
@@ -2438,6 +2493,94 @@ function sendText(url){
   return 'מיפוי המשימות שחוזרות על עצמן' + (who ? ' ב' + who : '') +
          ' — אפשר להוסיף, לשנות ולשלוח בחזרה:\n' + url;
 }
+/* ---- opening a mapping somebody else saved ----
+   Saving to the cloud mints a code, and until now there was nowhere to type one
+   in: a code read out over the phone was a dead end. Crockford's alphabet has no
+   I, L, O or U, so the four characters people reach for by mistake are folded
+   into the ones they meant, and the dash is optional. */
+function tidyCode(raw){
+  return String(raw || '').toUpperCase()
+    .replace(/[IL]/g, '1').replace(/O/g, '0').replace(/U/g, 'V')
+    .replace(/[^0-9A-Z]/g, '');
+}
+function openCodeEntry(){
+  const sheet = $('sheet3');
+  sheet.textContent = '';
+  const head = el('div','sheethead plain');
+  const h = el('h2', null, 'פתיחת מיפוי עם קוד');
+  h.id = 'askTitle';
+  head.appendChild(h);
+  sheet.appendChild(head);
+
+  const body = el('div','askbody');
+  body.appendChild(el('p', null,
+    'קיבלתם קוד בן עשרה תווים? הקלידו אותו כאן, והמיפוי ייפתח על המכשיר הזה עם כל מה שמילאו בו עד עכשיו.'));
+  if(state.tasks.length){
+    body.appendChild(el('p', null,
+      'המיפוי שפתוח כאן עכשיו יוחלף. מיד אחרי זה תופיע האפשרות לבטל ולחזור אליו.'));
+  }
+  sheet.appendChild(body);
+
+  const form = el('div','codeform');
+  const inp = document.createElement('input');
+  inp.className = 'codein'; inp.id = 'fCode'; inp.type = 'text';
+  inp.autocomplete = 'off'; inp.spellcheck = false;
+  inp.setAttribute('autocapitalize','characters');
+  inp.setAttribute('aria-label','קוד המיפוי');
+  inp.placeholder = 'XXXXX-XXXXX';
+  inp.maxLength = 13;
+  form.appendChild(inp);
+  const open = el('button','btn block','פתיחת המיפוי');
+  open.type = 'button'; open.id = 'codeOpen';
+  form.appendChild(open);
+  sheet.appendChild(form);
+
+  const bad = el('p','codebad');
+  bad.id = 'codeBad';
+  bad.hidden = true;
+  sheet.appendChild(bad);
+  const no = el('button','inline-link sendclose','סגירה');
+  no.type = 'button'; no.id = 'askNo';
+  no.addEventListener('click', closeAsk);
+  sheet.appendChild(no);
+
+  const say = t => { bad.textContent = t; bad.hidden = false; };
+  const submit = async () => {
+    const code = tidyCode(inp.value);
+    if(!validCode(code)){
+      say('קוד הוא עשרה תווים. בדקו שהעתקתם את כולו.');
+      inp.focus();
+      return;
+    }
+    open.disabled = true; open.textContent = 'פותח…'; bad.hidden = true;
+    let got = null;
+    try{ got = await cloudPull(code); }catch(e){ got = null; }
+    if(!got){
+      open.disabled = false; open.textContent = 'פתיחת המיפוי';
+      say('לא מצאנו מיפוי עם הקוד הזה. ייתכן שהוא נמחק, או שנשמט תו.');
+      inp.focus();
+      return;
+    }
+    const prevState = snapshot();
+    const prevCode = cloud.code;
+    state = got;
+    cloud.code = code; cloud.fail = false; saveCloud();
+    if(location.hash !== '#k=' + code){ selfHash = true; location.hash = 'k=' + code; }
+    ui.screen = 'list'; ui.collapsed = {}; ui.toTop = true;
+    closeAsk();
+    save(); render();
+    offerUndo('נפתח מיפוי משותף', prevState, prevCode);
+  };
+  open.addEventListener('click', submit);
+  inp.addEventListener('keydown', ev => {
+    if(ev.key === 'Enter'){ ev.preventDefault(); submit(); }
+  });
+
+  $('scrim3').hidden = false;
+  document.body.style.overflow = 'hidden';
+  inp.focus();
+}
+
 async function openSend(){
   const saved = !!cloud.code;
   const url = saved ? cloudLink(cloud.code) : await currentLink();
@@ -2479,16 +2622,29 @@ async function openSend(){
     window.open('https://wa.me/?text=' + encodeURIComponent(sendText(url)), '_blank', 'noopener');
     closeAsk();
   });
+  /* A mail window opens only if the computer has a mail program set as its
+     default, and most do not — the browser then drops the request without a
+     word, which reads as a broken button. So the link goes on the clipboard
+     first and the message says so: the mail window is a bonus, never the only
+     way through. */
   const mail = el('button','btn quiet','מייל');
   mail.type = 'button'; mail.id = 'sendMail';
   mail.addEventListener('click', () => {
-    location.href = 'mailto:?subject=' + encodeURIComponent('מיפוי המשימות שחוזרות על עצמן') +
-                    '&body=' + encodeURIComponent(sendText(url));
+    copyText(url, 'הקישור הועתק. אם תוכנת המייל לא נפתחה — הדביקו אותו במייל שלכם.');
+    const a = document.createElement('a');
+    a.href = 'mailto:?subject=' + encodeURIComponent('מיפוי המשימות שחוזרות על עצמן') +
+             '&body=' + encodeURIComponent(sendText(url));
+    a.rel = 'noopener';
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
     closeAsk();
   });
   row.appendChild(wa); row.appendChild(mail);
   col.appendChild(row);
   sheet.appendChild(col);
+  sheet.appendChild(el('p','sendhint',
+    'וואטסאפ נפתח אצלכם עם ההודעה מוכנה, ואתם בוחרים למי לשלוח. "מייל" מעתיק את הקישור ומנסה לפתוח את תוכנת המייל של המחשב.'));
 
   if(saved){
     sheet.appendChild(el('p','sendnote',
@@ -2521,7 +2677,9 @@ async function openSend(){
     const sep = el('div','sendsep');
     sep.appendChild(el('span', null, 'או'));
     sheet.appendChild(sep);
-    const up = el('button','btn ghost block','שמירה בענן וקבלת קוד');
+    /* This is the path that makes the tool work across people and devices, so it
+       is a solid key. A pale one under a separator read as an afterthought. */
+    const up = el('button','btn pink block','שמירה בענן וקבלת קוד');
     up.type = 'button'; up.id = 'sendCloud';
     up.addEventListener('click', async () => {
       up.disabled = true;
@@ -2563,8 +2721,12 @@ async function openSend(){
    and the one that says, loudly, when it stopped being saved. */
 function cloudBar(){
   if(!cloud.code) return null;
-  const b = el('div','cloudbar' + (cloud.fail ? ' bad' : ''));
+  const b = el('button','cloudbar' + (cloud.fail ? ' bad' : ''));
+  b.type = 'button';
   b.id = 'cloudBar';
+  /* The code is read out over the phone, so it has to be reachable without
+     hunting: the line that says the mapping is saved opens the sending sheet. */
+  b.addEventListener('click', openSend);
   if(cloud.fail){
     b.appendChild(el('bdi', null,
       'לא הצלחנו לשמור בענן. המיפוי שמור אצלכם במכשיר, ננסה שוב בשינוי הבא.'));
@@ -2574,16 +2736,9 @@ function cloudBar(){
   return b;
 }
 
-function sendButton(){
-  const b = el('button','btn block sendbtn');
-  b.type = 'button'; b.id = 'btnSend';
-  b.appendChild(pathSvg(SEND_D, 19));
-  b.appendChild(el('span', null, 'שליחת המיפוי'));
-  b.addEventListener('click', openSend);
-  return b;
-}
 /* Whatever path the copy takes, a success says the same sentence. */
-function copyText(text){
+function copyText(text, done){
+  const said = done || 'הקישור הועתק';
   const fallback = () => {
     try{
       const ta = document.createElement('textarea');
@@ -2592,11 +2747,11 @@ function copyText(text){
       document.body.appendChild(ta); ta.select();
       const good = document.execCommand('copy');
       document.body.removeChild(ta);
-      toast(good ? 'הקישור הועתק' : 'הקישור בשורת הכתובת, אפשר להעתיק משם');
+      toast(good ? said : 'הקישור בשורת הכתובת, אפשר להעתיק משם');
     }catch(e){ toast('הקישור בשורת הכתובת, אפשר להעתיק משם'); }
   };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(() => toast('הקישור הועתק'), fallback);
+    navigator.clipboard.writeText(text).then(() => toast(said), fallback);
   }else fallback();
 }
 
@@ -2614,14 +2769,19 @@ function closeMenu(){
 function buildMenu(){
   const m = $('menu');
   m.textContent = '';
-  /* "קישור לתרחיש" used to live here, where nobody found it. It is a key on the
-     list now, so one action still has exactly one control. */
-  const items = [['טעינת דוגמה', loadDemo], ['תרחיש חדש', resetAll]];
-  items.forEach(pair => {
-    const b = el('button', null, pair[0]);
+  /* Sending a mapping and opening one somebody saved are done to a finished
+     mapping, not to a task, so they sit at the top — above the two that throw
+     the scenario away. Each is in exactly one place. */
+  const items = [['menuSend','שליחת המיפוי', openSend],
+                 ['menuCode','פתיחת מיפוי עם קוד', openCodeEntry],
+                 ['menuDemo','טעינת דוגמה', loadDemo],
+                 ['menuReset','תרחיש חדש', resetAll]];
+  items.forEach(it => {
+    const b = el('button', null, it[1]);
     b.type = 'button';
+    b.id = it[0];
     b.setAttribute('role','menuitem');
-    b.addEventListener('click', () => { closeMenu(); pair[1](); });
+    b.addEventListener('click', () => { closeMenu(); it[2](); });
     m.appendChild(b);
   });
 }
@@ -2671,10 +2831,11 @@ window.addEventListener('hashchange', async () => {
     const got = await cloudPull(code);
     if(!got){ toast('הקוד לא נמצא. ייתכן שהמיפוי נמחק'); return; }
     const prevState = snapshot();
+    const prevCode = cloud.code;
     state = got; cloud.code = code; cloud.fail = false; saveCloud();
     ui.screen = 'list'; ui.collapsed = {}; ui.toTop = true;
     closeSheet(); save(); render();
-    offerUndo('נפתח מיפוי משותף', prevState);
+    offerUndo('נפתח מיפוי משותף', prevState, prevCode);
     return;
   }
   const incoming = await readHash();
@@ -2732,6 +2893,15 @@ async function boot(){
 }
 boot();
 
+/* The offline layer, and with it the install prompt. Only on the real site: a
+   worker registered against a local copy would start serving the checks a page
+   from its own cache instead of the one under test. */
+if('serviceWorker' in navigator && location.protocol === 'https:'){
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+
 /* Exposed for the automated checks only. Nothing in the page reads this. */
 window.__waives = {
   get state(){ return state; },
@@ -2741,7 +2911,8 @@ window.__waives = {
   get cloud(){ return cloud; },
   shareUrl, summaryText, sanitize, unpack, pack, b64urlEncode, b64urlDecode,
   freeText, iconFor, FTE_MONTH, DAYS_MONTH, WEEKS_MONTH,
-  cloudCreate, cloudPull, cloudDelete, prettyCode, get cloudApi(){ return CLOUD_API; }
+  cloudCreate, cloudPull, cloudDelete, prettyCode, tidyCode,
+  get cloudApi(){ return CLOUD_API; }
 };
 </script>
 </body>

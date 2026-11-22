@@ -125,6 +125,36 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
    the device either way. The store never parses the payload. Cloudflare Worker
    `stones` + KV, free tier, CORS locked to calc.waives.io, two-year TTL from the
    last write.
+27. **The code has somewhere to be typed.** A code nobody can enter is a code
+   nobody can use: "פתיחת מיפוי עם קוד" sits in the menu and on the empty screen,
+   where whoever was given one actually lands. I, L, O and U are not in the
+   alphabet, so they are folded into 1, 1, 0 and V; the dash, spaces and lower
+   case are stripped. A short code is refused before any round trip. The line on
+   the list that says the mapping is saved opens the sending sheet, so the code is
+   never more than one press away. Undoing the opening of somebody else's mapping
+   lets go of their code too, or the next keystroke here would be written over
+   their work.
+28. **"מייל" copies before it tries.** A mailto: opens a window only if the
+   computer has a default mail program, and most do not — the browser then drops
+   it in silence, which reads as a broken button. So the link goes on the
+   clipboard first and the message says so. Galli found this on her own machine
+   (22.11.2026): nothing happened at all.
+29. **Sending moved into the three dots, and the green key came off the list.**
+   Her call, 22.11.2026, over the cost: a manager opening the tool alone on a
+   phone now has nothing on screen that says a mapping can be sent. If that shows
+   up in meetings, a small send icon goes beside the dots in the top bar.
+30. **Both dashboard answers are complete, and carry the same number.** They are
+   one set of hours cut two ways, so a heading that showed the top six tasks
+   against every role made the screen disagree with itself. Both headings are now
+   the same folding key as a role on the list, with the month's total on the end.
+31. **It installs.** Manifest, Galli's own icon at every size (and a maskable one
+   pulled in to 80% for Android's circle), and a worker that fetches the page from
+   the network first and falls back to the cache — a tool shown in a meeting must
+   never open stale, and must still open with no signal. The worker registers only
+   over https, so a local copy under test is never served from a cache. The
+   mapping store is never cached: a saved mapping is shared state.
+32. **"מחשבון שעות", not "מחשבון האבנים הקטנות".** On a phone the long name left
+   no room for the name of the business beside it.
 
 ## Approach
 - **State**: `{ v:3, biz, groups:[{id,name,people}], tasks:[{id,name,minutes,freq,auto,on,
@@ -163,8 +193,9 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
 ## Files
 - `index.html` — the entire tool
 - `PLAN.md` — this file
+- `manifest.webmanifest`, `sw.js`, `icons/` — the installable app
 - `.nojekyll`, `CNAME` — GitHub Pages
-- `qa/qa.js` — 343 Playwright checks (not deployed)
+- `qa/qa.js` — 409 Playwright checks (not deployed)
 - `worker/` — the mapping store (Cloudflare Worker + KV), deployed separately
 - `design-options/` — the five look directions GPT drew; option 4 was chosen
 
@@ -179,5 +210,5 @@ hash (truncated, non-base64, negative minutes, 1e9 people, auto 99, unknown freq
 unknown domain, `<img src=x onerror=…>`, and a v1 link) · Hebrew and Latin names survive
 a round trip · an incoming link with Undo · storage denied · the wording at 0, under a
 position, exactly one, two, and above one · no stones, no ₪, no cutting words · the look itself (mint page, key shadows,
-the green screen, the two accent colours, no dark surface) · RTL and keyboard · no horizontal overflow at 320/390/768/1280 · ten screenshots.
+the green screen, the two accent colours, no dark surface) · RTL and keyboard · no horizontal overflow at 320/390/768/1280 · a code typed by hand opens the mapping on another device and Undo lets go of it again · the manifest, every icon at its declared size and the offline layer · twelve screenshots.
 Then verified live on calc.waives.io against the bytes the site actually serves.
