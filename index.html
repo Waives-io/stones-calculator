@@ -42,6 +42,12 @@
   --lift-sm:var(--edge-hi), inset 0 -2.5px 0 rgba(62,88,60,.11), var(--contact), 0 7px 14px var(--shadow), 0 2px 4px var(--shadow-soft);
   --lift-lg:var(--edge-hi), var(--edge-lo), var(--contact), 0 20px 34px var(--shadow), 0 7px 13px var(--shadow-soft);
   --press:inset 0 3px 6px rgba(62,88,60,.26), inset 0 1px 0 rgba(255,255,255,.5), 0 1px 2px var(--shadow-soft);
+  /* A solid key is the same key whatever it says: "חדש", "הוספה", the frequency,
+     the total. One token, so none of them can drift flat again. */
+  --key-green:inset 0 2px 0 rgba(255,255,255,.5), inset 0 -3.5px 0 rgba(30,66,32,.26),
+              0 2px 3px rgba(40,80,40,.22), 0 10px 20px rgba(78,143,61,.34), 0 3px 7px rgba(78,143,61,.2);
+  --key-pink:inset 0 2px 0 rgba(255,255,255,.5), inset 0 -3.5px 0 rgba(150,40,80,.26),
+             0 2px 3px rgba(150,40,80,.2), 0 10px 20px rgba(222,80,130,.34), 0 3px 7px rgba(222,80,130,.2);
   --face:linear-gradient(180deg, var(--key-a), var(--key-b));
 }
 *{box-sizing:border-box}
@@ -95,8 +101,7 @@ input,select{font:inherit;color:inherit}
   background:linear-gradient(180deg, var(--green-a), var(--green-b)); color:#fff; font-weight:700;
   height:46px; padding:0 20px; border-radius:var(--r-round);
   display:flex; align-items:center; gap:8px; flex:none; font-size:15.5px;
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(30,66,32,.14),
-             0 8px 18px rgba(78,143,61,.32), 0 2px 5px rgba(78,143,61,.2);
+  box-shadow:var(--key-green);
 }
 .newbtn:hover{transform:translateY(-1px)}
 .newbtn:active{transform:translateY(1px);
@@ -138,6 +143,15 @@ input,select{font:inherit;color:inherit}
 .subh[aria-expanded="false"] .caret{transform:rotate(90deg)}
 
 /* ---------- a task: one soft key ---------- */
+/* Taking a task off the list for good, not just out of the calculation. Quiet
+   until it is wanted, pink under the finger, and undoable for ten seconds. */
+.rowx{
+  width:30px;height:30px;border-radius:var(--r-round);flex:none;
+  display:grid;place-items:center;font-size:13px;font-weight:700;
+  color:var(--ink-faint);background:none;box-shadow:none;
+}
+.rowx:hover{background:linear-gradient(180deg,#FDE3EB,#FBD5E0);color:var(--pink-ink)}
+.rowx:active{background:linear-gradient(180deg, var(--pink-a), var(--pink-b));color:#fff}
 .row{
   display:flex;align-items:center;gap:13px;width:100%;
   background:var(--face); border-radius:var(--r-key);
@@ -175,9 +189,10 @@ input,select{font:inherit;color:inherit}
   position:relative; isolation:isolate; overflow:hidden;
   background:linear-gradient(160deg, var(--screen-a), var(--screen-b));
   box-shadow:inset 0 0 0 1.5px rgba(255,255,255,.55),
-             inset 0 2px 0 rgba(255,255,255,.7),
-             inset 0 -3px 9px rgba(70,115,65,.13),
-             0 7px 18px var(--shadow-soft);
+             inset 0 2px 0 rgba(255,255,255,.75),
+             inset 0 -3.5px 0 rgba(70,115,65,.16),
+             0 2px 3px rgba(62,88,60,.14),
+             0 14px 26px var(--shadow), 0 5px 10px var(--shadow-soft);
 }
 .screen::before{
   content:''; position:absolute; inset:0 0 auto 0; height:56%;
@@ -188,10 +203,12 @@ input,select{font:inherit;color:inherit}
 /* the total of the list IS a screen, so nobody can miss that it is the sum */
 .totalrow{
   display:flex;align-items:center;gap:12px;
-  padding:17px 19px; margin-top:8px; border-radius:var(--r-key);
+  padding:18px 20px; margin-top:14px; border-radius:var(--r-key);
+  background:linear-gradient(180deg, var(--green-a), var(--green-b));
+  box-shadow:var(--key-green);
 }
-.totalrow .tlabel{flex:1;font-weight:700;font-size:16px;color:var(--screen-ink)}
-.totalrow .tvalue{font-weight:800;font-size:20px;color:var(--screen-ink);flex:none}
+.totalrow .tlabel{flex:1;font-weight:800;font-size:16px;color:#fff}
+.totalrow .tvalue{font-weight:800;font-size:21px;color:#fff;flex:none}
 
 /* ---------- empty state ---------- */
 .empty{padding:34px 24px;text-align:center;background:var(--face);
@@ -203,35 +220,29 @@ input,select{font:inherit;color:inherit}
 .btn{
   background:linear-gradient(180deg, var(--green-a), var(--green-b)); color:#fff;
   border-radius:var(--r-key); padding:16px 24px; font-weight:700; font-size:16px;
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.5), inset 0 -3.5px 0 rgba(30,66,32,.26),
-             0 2px 3px rgba(40,80,40,.22), 0 10px 20px rgba(78,143,61,.34),
-             0 3px 7px rgba(78,143,61,.2);
+  box-shadow:var(--key-green);
 }
 .btn:hover{transform:translateY(-1px)}
 .btn:active{transform:translateY(1px);
   background:linear-gradient(180deg, var(--green-b), var(--green-dark));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 2px 6px rgba(78,143,61,.3)}
 .btn.pink{background:linear-gradient(180deg, var(--pink-a), var(--pink-b));
-  box-shadow:inset 0 2px 0 rgba(255,255,255,.5), inset 0 -3.5px 0 rgba(150,40,80,.26),
-             0 2px 3px rgba(150,40,80,.2), 0 10px 20px rgba(222,80,130,.34),
-             0 3px 7px rgba(222,80,130,.2)}
+  box-shadow:var(--key-pink)}
 .btn.pink:active{background:linear-gradient(180deg, var(--pink-b), #D94A77)}
 .btn.ghost{background:linear-gradient(180deg,#FDE3EB,#FBD5E0);color:var(--pink-ink);
   box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9), 0 6px 14px rgba(222,80,130,.16)}
 .btn.block{display:block;width:100%}
 .btn.sm{padding:11px 16px;font-size:14px;border-radius:16px}
 .disclink{
-  display:block;width:100%;margin-top:16px;text-align:start;
-  background:linear-gradient(180deg,#FDE3EB,#FBD5E0);
-  border-radius:var(--r-key);padding:16px 18px;color:var(--pink-ink);
-  font-weight:700;font-size:14.5px;line-height:1.6;
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9), 0 8px 18px rgba(222,80,130,.17),
-             0 2px 5px rgba(222,80,130,.1);
+  display:block;width:100%;margin-top:18px;text-align:center;
+  background:linear-gradient(180deg, var(--pink-a), var(--pink-b));
+  border-radius:var(--r-key);padding:16px 20px;color:#fff;
+  font-weight:700;font-size:15px;line-height:1.5;
+  box-shadow:var(--key-pink);
 }
-.disclink:hover{transform:translateY(-1px);
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9), 0 11px 22px rgba(222,80,130,.24)}
+.disclink:hover{transform:translateY(-1px)}
 .disclink:active{transform:translateY(1px);
-  background:linear-gradient(180deg,#FBD5E0,#F8C2D3);box-shadow:var(--press)}
+  background:linear-gradient(180deg, var(--pink-b), #D94A77);box-shadow:var(--press)}
 
 /* ---------- bottom bar: a raised white bar with a mint pill on the current screen ---------- */
 nav.bar{
@@ -384,8 +395,7 @@ select.freqsel{
   background-color:var(--green-b);color:#fff;border:0;border-radius:var(--r-pill);
   padding:10px 34px 10px 15px;font-weight:700;font-size:15px;
   appearance:none;-webkit-appearance:none;
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.4), inset 0 -2px 0 rgba(30,66,32,.14),
-             0 6px 14px rgba(78,143,61,.3);
+  box-shadow:var(--key-green);
   background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"), linear-gradient(180deg, var(--green-a), var(--green-b));
   background-repeat:no-repeat,no-repeat;background-position:left 11px center,0 0;
   background-size:14px,100% 100%;
@@ -1202,6 +1212,9 @@ function render(){
   if(ui.screen === 'list') renderList(res);
   if(ui.screen === 'set')  renderSettings(res);
   if(ui.screen === 'dash') renderDash(res);
+  /* The full-position arithmetic explains the dashboard's numbers. On the list and
+     in the settings it is a footnote to nothing. */
+  $('formula').hidden = ui.screen !== 'dash';
   renderFormula();
   if(ui.toTop){ ui.toTop = false; window.scrollTo(0, 0); }
   else window.scrollTo(0, y);
@@ -1241,12 +1254,18 @@ function taskRow(r){
     apply(() => { const t = findTask(r.id); if(t) t.on = !t.on; });
   });
 
-  /* icon, name, hours, tick — the order of a shopping list: what the line IS
-     sits at the start, what you toggle sits at the end. */
+  const del = el('button','rowx','✕');
+  del.type = 'button';
+  del.setAttribute('aria-label','מחיקת ' + (r.name || 'משימה ללא שם') + ' מהרשימה');
+  del.addEventListener('click', ev => { ev.stopPropagation(); deleteTask(r.id); });
+
+  /* icon, name, hours, tick, ✕ — the order of a shopping list: what the line IS
+     sits at the start, what you do to it sits at the end. */
   row.appendChild(ico);
   row.appendChild(open);
   row.appendChild(hrs);
   row.appendChild(tick);
+  row.appendChild(del);
   return row;
 }
 
@@ -1316,7 +1335,7 @@ function renderList(res){
 
   /* A plain total row, the weight of the rows above it. Everything else about
      the number — the year, the share of a position — lives on the dashboard. */
-  const tot = el('div','totalrow screen');
+  const tot = el('div','totalrow');
   tot.appendChild(el('span','tlabel','סה״כ מתפנה החודש'));
   const v = el('span','tvalue');
   v.appendChild(el('bdi', null, fmtHours(res.totals.freedMonth)));
@@ -1422,8 +1441,7 @@ function addToLib(name){
 }
 function tipsButton(){
   const b = el('button','disclink',
-    'לחצו ותקבלו שאלות שיעזרו לכם לחדד אילו עוד משימות חוזרות על עצמן בעסק שלכם ' +
-    'שאפשר להוריד מהיומיום שלכם');
+    'לחצו לקבלת עזרה אילו עוד משימות ניתן להוריד מהיומיום שלכם');
   b.type = 'button';
   b.id = 'btnTips';
   b.addEventListener('click', openTips);
@@ -2134,14 +2152,9 @@ function renderSheet(d){
 
   sheet.appendChild(body);
 
+  /* No delete here any more: it lives on the row itself, where the task is
+     actually looked at, and one action does not get two controls. */
   const foot = el('div','sheetfoot');
-  if(ui.editId){
-    const del = el('button','btn ghost','מחיקה');
-    del.type = 'button'; del.id = 'sheetDelete';
-    del.style.flex = '0 0 auto';
-    del.addEventListener('click', () => { const id = ui.editId; closeSheet(); deleteTask(id); });
-    foot.appendChild(del);
-  }
   const okb = el('button','btn pink', ui.editId ? 'שמירה' : 'הוספה לרשימה');
   okb.type = 'button'; okb.id = 'sheetSave';
   okb.addEventListener('click', commitDraft);
@@ -2222,13 +2235,23 @@ function doUndo(){
   $('snack').hidden = true;
   if(back){ state = back; save(); render(); }
 }
+/* A role exists to gather tasks. Take the last one away and the role is an empty
+   heading nobody asked for, so it goes with it — and the message says so, because
+   a line disappearing from "הגדרות" on its own would otherwise be a mystery. */
 function deleteTask(id){
   const prev = snapshot();
+  let dropped = '';
   apply(() => {
     const i = state.tasks.findIndex(t => t.id === id);
-    if(i !== -1) state.tasks.splice(i,1);
+    if(i === -1) return;
+    const gid = state.tasks[i].gid;
+    state.tasks.splice(i,1);
+    if(gid && !state.tasks.some(t => t.gid === gid)){
+      const gi = state.groups.findIndex(g => g.id === gid);
+      if(gi !== -1){ dropped = state.groups[gi].name.trim(); state.groups.splice(gi,1); }
+    }
   });
-  offerUndo('המשימה נמחקה', prev);
+  offerUndo(dropped ? 'המשימה נמחקה, והתפקיד "' + dropped + '" ירד איתה' : 'המשימה נמחקה', prev);
 }
 function deleteGroup(id){
   const prev = snapshot();

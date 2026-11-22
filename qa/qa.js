@@ -356,10 +356,17 @@ async function main(){
     const v = document.querySelector('.totalrow .tvalue').getBoundingClientRect();
     return (v.left - row.left) < row.width/2;
   }));
-  ok('שורת הסכום צבועה אחרת מהשורות', await page.evaluate(() => {
-    const t = getComputedStyle(document.querySelector('.totalrow')).backgroundImage;
-    const r = getComputedStyle(document.querySelector('.row')).backgroundColor;
-    return t.indexOf('gradient') !== -1 && t !== r;
+  ok('שורת הסכום היא מקש ירוק מלא', await page.evaluate(() => {
+    const c = getComputedStyle(document.querySelector('.totalrow'));
+    const l = getComputedStyle(document.querySelector('.totalrow .tlabel'));
+    const r = getComputedStyle(document.querySelector('.row')).backgroundImage;
+    return c.backgroundImage.indexOf('134, 196, 115') !== -1 &&
+           c.backgroundImage !== r && l.color === 'rgb(255, 255, 255)';
+  }));
+  ok('לשורת הסכום אותו עומק כמו לכפתור "חדש"', await page.evaluate(() => {
+    const a = getComputedStyle(document.querySelector('.totalrow')).boxShadow;
+    const b = getComputedStyle(document.querySelector('.newbtn')).boxShadow;
+    return a === b && a.indexOf('inset') !== -1;
   }));
   await snapText(page);
 
@@ -516,18 +523,47 @@ async function main(){
   L = await listNums(page);
   ok('העריכה נשמרה', L.rows[0].name === 'מענה לטלפונים ולמיילים');
   ok('עריכה לא מוסיפה שורה', L.rows.length === 1);
+  /* המחיקה יושבת על השורה, במקום שבו רואים את המשימה — ולא בשני מקומות. */
+  ok('לכל שורה יש כפתור מחיקה',
+     (await page.locator('.row .rowx').count()) === (await listNums(page)).rows.length);
   await page.locator('.row .rowmain').first().click();
-  await page.waitForSelector('#sheetDelete');
-  await page.locator('#sheetDelete').click();
-  await page.waitForTimeout(190);
-  ok('המחיקה עובדת', (await listNums(page)).rows.length === 0);
+  await page.waitForSelector('#sheet #fName');
+  ok('בגיליון אין עוד כפתור מחיקה', (await page.locator('#sheetDelete').count()) === 0);
+  await page.locator('#sheetClose').click();
+  await page.waitForTimeout(170);
+  await page.locator('.row .rowx').first().click();
+  await page.waitForTimeout(220);
+  ok('המחיקה מהשורה עובדת', (await listNums(page)).rows.length === 0);
   ok('מוצע ביטול', await page.locator('#snackBtn').isVisible());
   await page.locator('#snackBtn').click();
   await page.waitForTimeout(190);
   ok('הביטול מחזיר את המשימה', (await listNums(page)).rows.length === 1);
-  await openSheet(page);
-  ok('במשימה חדשה אין כפתור מחיקה', (await page.locator('#sheetDelete').count()) === 0);
-  await page.locator('#sheetClose').click();
+
+  /* תפקיד קיים כדי לאגד משימות. ירדה האחרונה — יורד איתה. */
+  await fresh(page);
+  await addTask(page, {assign:'מוקדנית', name:'סגירת קופה יומית', minutes:30, freq:'day'});
+  await addTask(page, {assign:'צוות רכש', name:'הזמנת ציוד משרדי', minutes:30, freq:'day'});
+  await addTask(page, {assign:'צוות רכש', name:'בדיקת מלאי בבוקר', minutes:30, freq:'day'});
+  ok('שלוש משימות ושני תפקידים', await page.evaluate(() =>
+     window.__waives.state.tasks.length === 3 && window.__waives.state.groups.length === 2));
+  await page.locator('.row', {hasText:'הזמנת ציוד משרדי'}).locator('.rowx').click();
+  await page.waitForTimeout(220);
+  ok('תפקיד עם משימה נוספת נשאר', await page.evaluate(() =>
+     window.__waives.state.groups.filter(g => g.name === 'צוות רכש').length === 1));
+  await page.locator('.row', {hasText:'סגירת קופה יומית'}).locator('.rowx').click();
+  await page.waitForTimeout(220);
+  ok('תפקיד שנשאר בלי משימות יורד איתה', await page.evaluate(() =>
+     window.__waives.state.groups.filter(g => g.name === 'מוקדנית').length === 0));
+  const gone = await page.locator('#snackText').textContent();
+  ok('ההודעה אומרת שגם התפקיד ירד ("' + gone + '")',
+     gone.indexOf('מוקדנית') !== -1);
+  await page.locator('#snackBtn').click();
+  await page.waitForTimeout(220);
+  ok('ביטול מחזיר גם את המשימה וגם את התפקיד', await page.evaluate(() =>
+     window.__waives.state.tasks.length === 2 &&
+     window.__waives.state.groups.filter(g => g.name === 'מוקדנית').length === 1));
+  await fresh(page);
+  await addTask(page, {assign:'', name:'מענה לטלפונים ולמיילים', minutes:30, freq:'day'});
 
   /* ---------------------------------------------------------- */
   section('14 · שמירה, רענון, קישור');
@@ -785,18 +821,26 @@ async function main(){
   ok('מעל משרה: משרה ועוד אחוזים', words.indexOf('משרה ועוד 70% פנויים') !== -1);
   ok('שתי משרות בלשון רבים', words.indexOf('2 משרות פנויות') !== -1);
   ok('אין "0 משרה פנויה"', words.indexOf('0 משרה פנויה') === -1);
-  const tipText = await page.locator('#btnTips').textContent();
-  ok('הכפתור מזמין ללחוץ ולקבל שאלות', tipText.indexOf('לחצו ותקבלו שאלות') === 0);
-  ok('הכפתור מדבר על משימות שחוזרות על עצמן בעסק',
-     tipText.indexOf('חוזרות על עצמן') !== -1 && tipText.indexOf('היומיום') !== -1);
+  const tipText = (await page.locator('#btnTips').textContent()).trim();
+  ok('הכפתור מזמין ללחוץ לעזרה', tipText === 'לחצו לקבלת עזרה אילו עוד משימות ניתן להוריד מהיומיום שלכם');
+  ok('הכפתור קצר ממשפט וחצי', tipText.length < 70);
   const tipLook = await page.evaluate(() => {
     const b = document.getElementById('btnTips');
     const row = document.querySelector('#screenList .row');
-    return {bg:getComputedStyle(b).backgroundImage, ink:getComputedStyle(b).color,
-            rowBg: row ? getComputedStyle(row).backgroundImage : 'none'};
+    /* "הוספה לרשימה" lives in the sheet, so it is measured where it is */
+    document.getElementById('btnNew').click();
+    const save = getComputedStyle(document.getElementById('sheetSave'));
+    const out = {bg:getComputedStyle(b).backgroundImage, ink:getComputedStyle(b).color,
+                 sh:getComputedStyle(b).boxShadow,
+                 saveBg:save.backgroundImage, saveSh:save.boxShadow,
+                 rowBg: row ? getComputedStyle(row).backgroundImage : 'none'};
+    document.getElementById('sheetClose').click();
+    return out;
   });
   ok('הכפתור נבדל מהשורות ברשימה', tipLook.bg !== tipLook.rowBg);
-  ok('הכפתור בגוון הוורוד', tipLook.ink === 'rgb(178, 58, 98)');
+  ok('הכפתור הוא בדיוק המקש של "הוספה לרשימה"',
+     tipLook.bg === tipLook.saveBg && tipLook.sh === tipLook.saveSh);
+  ok('הכיתוב עליו לבן', tipLook.ink === 'rgb(255, 255, 255)');
   await snapText(page);
 
   /* ---------------------------------------------------------- */
@@ -979,6 +1023,46 @@ async function main(){
   });
   ok('"+ הוסף תפקיד" באותו משקל כמו "הוספה"', adds.bgA === adds.bgB);
   ok('הכיתוב עליו לבן, לא חיוור', adds.inkA === 'rgb(255, 255, 255)');
+
+  /* מקש מלא הוא אותו מקש בכל מקום, ולהערת המשרה המלאה יש מסך אחד */
+  const solids = await page.evaluate(() => {
+    const out = {};
+    document.getElementById('navList').click();
+    out.newbtn = getComputedStyle(document.querySelector('.newbtn')).boxShadow;
+    out.total = getComputedStyle(document.querySelector('.totalrow')).boxShadow;
+    out.tips = getComputedStyle(document.getElementById('btnTips')).boxShadow;
+    document.getElementById('btnNew').click();
+    out.freq = getComputedStyle(document.getElementById('fFreq')).boxShadow;
+    out.save = getComputedStyle(document.getElementById('sheetSave')).boxShadow;
+    document.getElementById('sheetClose').click();
+    document.getElementById('navSet').click();
+    out.addGroup = getComputedStyle(document.getElementById('btnAddGroup')).boxShadow;
+    document.getElementById('navList').click();
+    return out;
+  });
+  ok('"חדש", הסכום, התדירות ו"הוסף תפקיד" חולקים עומק אחד',
+     solids.newbtn === solids.total && solids.total === solids.freq &&
+     solids.freq === solids.addGroup && solids.newbtn.indexOf('inset') !== -1);
+  ok('המקשים הוורודים חולקים עומק אחד משלהם',
+     solids.tips === solids.save && solids.tips !== solids.newbtn);
+  const banner = await page.evaluate(() => {
+    document.getElementById('navDash').click();
+    const sh = getComputedStyle(document.querySelector('#screenDash .banner')).boxShadow;
+    document.getElementById('navList').click();
+    return sh;
+  });
+  ok('גם הבאנר עם המספרים מורם מהדף',
+     banner.indexOf('inset') !== -1 && /\b1[0-9]px\b|\b2[0-9]px\b/.test(banner));
+  for(const [nav, screen, want] of [['#navList','הרשימה',false],
+                                    ['#navSet','הגדרות',false],
+                                    ['#navDash','דשבורד',true]]){
+    await page.locator(nav).click();
+    await page.waitForTimeout(200);
+    const shown = await page.locator('#formula').isVisible();
+    ok('הערת המשרה המלאה ' + (want ? 'מופיעה ב' : 'לא מופיעה ב') + screen, shown === want);
+  }
+  await page.locator('#navList').click();
+  await page.waitForTimeout(200);
 
   /* כפתור "חדש" יושב בתוך עמודת העמוד, גם כשהחלון רחב מהעמודה */
   await page.locator('#navList').click();
