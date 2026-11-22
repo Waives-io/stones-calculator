@@ -1292,7 +1292,7 @@ async function main(){
   /* שינוי אצל אחד — נשמר למי שיפתח אחריו */
   const before = store.mem.get(code);
   await page.locator('.row .tick').first().click();
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(3400);
   ok('שינוי נשמר בענן מעצמו', store.mem.get(code) !== before);
 
   /* מכשיר אחר, אותו מיפוי */
@@ -1306,20 +1306,38 @@ async function main(){
      (await page.evaluate(() => window.__waives.cloud.code)) === code);
   const before2 = store.mem.get(code);
   await addTask(page, {assign:'מוקדנית', name:'סגירת קופה יומית', minutes:30, freq:'day'});
-  await page.waitForTimeout(1800);
+  await page.waitForTimeout(3400);
   ok('גם מה שהוא מוסיף חוזר לענן', store.mem.get(code) !== before2);
 
   /* חנות שנפלה נאמרת בקול, ולא בשקט */
   store.state.down = true;
   await page.locator('.row .tick').first().click();
-  await page.waitForTimeout(1900);
+  await page.waitForTimeout(3400);
   ok('כשהשמירה נכשלת זה כתוב על המסך',
      (await page.locator('#cloudBar.bad').count()) === 1 &&
      (await page.locator('#cloudBar').textContent()).indexOf('שמור אצלכם במכשיר') !== -1);
   store.state.down = false;
   await page.locator('.row .tick').first().click();
-  await page.waitForTimeout(1900);
+  await page.waitForTimeout(3400);
   ok('וכשהיא חוזרת, האזהרה יורדת', (await page.locator('#cloudBar.bad').count()) === 0);
+
+  /* אלף כתיבות ביום בשכבה החופשית. הקלדת שם משימה קוראת ל-save על כל אות,
+     אז בלי השהייה והשוואה מיפוי אחד היה שורף מאה כתיבות על אותו תוכן. */
+  store.state.puts = 0;
+  await page.locator('.row .rowmain').first().click();
+  await page.waitForSelector('#sheet #fName');
+  await page.locator('#fName').fill('מענה לשאלות חוזרות במייל ובוואטסאפ ובטלפון');
+  await page.keyboard.press('Escape');
+  await page.locator('#sheetSave').click();
+  await page.waitForTimeout(3400);
+  ok('הקלדה שלמה עולה כתיבה אחת (' + store.state.puts + ')',
+     store.state.puts === 1);
+  await page.waitForTimeout(3000);
+  ok('בלי שינוי אין כתיבה בכלל (' + store.state.puts + ')', store.state.puts === 1);
+  await page.locator('.row .tick').first().click();
+  await page.locator('.row .tick').first().click();
+  await page.waitForTimeout(3400);
+  ok('שינוי שחזר לעצמו לא נכתב שוב (' + store.state.puts + ')', store.state.puts === 1);
 
   /* קוד שני שמודבק לתוך לשונית פתוחה — בלי טעינה מחדש */
   await fresh(page);

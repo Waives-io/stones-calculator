@@ -1029,7 +1029,7 @@ if(location.hostname !== 'calc.waives.io' && typeof window.__WAIVES_API === 'str
   CLOUD_API = window.__WAIVES_API;
 }
 let cloud = {code:null, fail:false};
-let pushTimer = null, pushAgain = false;
+let pushTimer = null, pushAgain = false, pushedBody = null;
 
 function saveCloud(){
   try{
@@ -1061,6 +1061,7 @@ async function cloudCreate(){
   const j = await r.json();
   if(!validCode(j.code)) throw new Error('code');
   cloud.code = j.code; cloud.fail = false;
+  pushedBody = null;
   saveCloud();
   return j.code;
 }
@@ -1070,25 +1071,32 @@ async function cloudPull(code){
   const j = await r.json();
   const body = String(j.body || '');
   if(body.length < 2) return null;
+  pushedBody = body;                       // what we just read is what is stored
   try{ return sanitize(unpack(await decodeScenario(body[0], body.slice(1)))); }
   catch(e){ return null; }
 }
 async function cloudDelete(code){
   try{ await fetch(CLOUD_API + '/m/' + code, {method:'DELETE'}); }catch(e){}
 }
-/* Every change pushes, but not on every keystroke: one write a second and a bit,
-   and a change that lands mid-write queues exactly one more. */
+/* Every change pushes, but not on every keystroke. Typing a task name fires save()
+   on each letter; without a pause and a comparison, one mapping would spend a
+   hundred writes saying almost the same thing, and the store's day is a thousand.
+   So: two and a half seconds of quiet, and nothing at all if the bytes did not
+   move. */
 function schedulePush(){
   if(!cloud.code) return;
   clearTimeout(pushTimer);
-  pushTimer = setTimeout(doPush, 1200);
+  pushTimer = setTimeout(doPush, 2500);
 }
 async function doPush(){
   if(!cloud.code) return;
   const code = cloud.code;
+  const body = await cloudBody();
+  if(body === pushedBody && !cloud.fail) return;
   try{
-    const r = await fetch(CLOUD_API + '/m/' + code, {method:'PUT', body: await cloudBody()});
+    const r = await fetch(CLOUD_API + '/m/' + code, {method:'PUT', body});
     if(!r.ok) throw new Error('push');
+    pushedBody = body;
     if(cloud.fail){ cloud.fail = false; render(); }
   }catch(e){
     if(!cloud.fail){ cloud.fail = true; render(); }
@@ -2499,7 +2507,7 @@ async function openSend(){
         yes:'מחיקה מהענן',
         onYes:async () => {
           await cloudDelete(code);
-          cloud.code = null; cloud.fail = false; saveCloud();
+          cloud.code = null; cloud.fail = false; pushedBody = null; saveCloud();
           if(location.hash.indexOf('#k=') === 0){ selfHash = true; location.hash = ''; }
           render();
           toast('המיפוי נמחק מהענן');
