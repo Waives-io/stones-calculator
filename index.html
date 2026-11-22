@@ -123,6 +123,7 @@ input,select{font:inherit;color:inherit}
   margin-inline-start:auto}
 .caret{width:18px;height:18px;flex:none;color:var(--screen-soft);transition:transform .15s}
 .ghead[aria-expanded="false"] .caret{transform:rotate(90deg)}
+.subh[aria-expanded="false"] .caret{transform:rotate(90deg)}
 
 /* ---------- a task: one soft key ---------- */
 .row{
@@ -205,12 +206,17 @@ input,select{font:inherit;color:inherit}
 .btn.block{display:block;width:100%}
 .btn.sm{padding:11px 16px;font-size:14px;border-radius:16px}
 .disclink{
-  display:block;width:100%;margin-top:16px;background:var(--face);
-  border-radius:var(--r-key);padding:17px;color:var(--green-dark);
-  font-weight:700;font-size:14.5px;box-shadow:var(--lift);
+  display:block;width:100%;margin-top:16px;text-align:start;
+  background:linear-gradient(180deg,#FDE3EB,#FBD5E0);
+  border-radius:var(--r-key);padding:16px 18px;color:var(--pink-ink);
+  font-weight:700;font-size:14.5px;line-height:1.6;
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9), 0 8px 18px rgba(222,80,130,.17),
+             0 2px 5px rgba(222,80,130,.1);
 }
-.disclink:hover{transform:translateY(-1px);color:var(--ink);box-shadow:var(--lift-lg)}
-.disclink:active{transform:translateY(1px);background:var(--key-press);box-shadow:var(--press)}
+.disclink:hover{transform:translateY(-1px);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9), 0 11px 22px rgba(222,80,130,.24)}
+.disclink:active{transform:translateY(1px);
+  background:linear-gradient(180deg,#FBD5E0,#F8C2D3);box-shadow:var(--press)}
 
 /* ---------- bottom bar: a raised white bar with a mint pill on the current screen ---------- */
 nav.bar{
@@ -324,6 +330,8 @@ nav.bar button[aria-current="page"]{color:var(--gold-ink);font-weight:700;
 .chip[aria-pressed="true"] svg{color:#fff}
 .chipsub{font-size:11.5px;font-weight:600;color:var(--ink-faint)}
 .readychip{display:inline-flex;align-items:center;gap:7px;max-width:100%}
+.chips.grid .readychip{width:100%}
+.chips.grid .readychip > .chip{flex:1}
 .readychip > .chip{flex-wrap:nowrap;min-width:0}
 .readychip > .chip bdi{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 .readychip .chipsub{white-space:nowrap;flex:none}
@@ -335,6 +343,20 @@ nav.bar button[aria-current="page"]{color:var(--gold-ink);font-weight:700;
 /* quiet until you reach for it: pink is reserved for the keys that matter */
 .chipx:hover{background:linear-gradient(180deg,#FDE3EB,#FBD5E0);color:var(--pink-ink)}
 .chipx:active{background:linear-gradient(180deg, var(--pink-a), var(--pink-b));color:#fff}
+/* The two answers on the dashboard fold away. A screen that cannot be folded is a
+   screen you scroll past instead of reading. */
+.subh{display:flex;align-items:center;gap:8px;width:100%;text-align:start;
+  margin:20px 0 10px;font-size:14px;font-weight:800;color:var(--ink-soft)}
+.subh .caret{color:var(--ink-faint)}
+.subh:hover{color:var(--ink)}
+.sheet.narrow{max-width:430px}
+.askbody{padding:2px 22px 6px}
+.askbody p{margin:0 0 11px;font-size:15px;line-height:1.7;color:var(--ink-soft)}
+.askbody p strong{color:var(--ink);font-weight:800}
+.askrow{display:flex;gap:11px;padding:8px 18px calc(18px + env(safe-area-inset-bottom))}
+.askrow .btn{flex:1}
+.btn.quiet{background:var(--face);color:var(--ink);box-shadow:var(--lift)}
+.btn.quiet:active{background:var(--key-press);box-shadow:var(--press)}
 .unitrow{display:flex;gap:11px;align-items:center;margin-top:12px}
 .unitrow .field{flex:1;min-width:0}
 .unitrow .chips{flex:0 0 164px}
@@ -423,7 +445,12 @@ select.freqsel{
 .snack[hidden]{display:none}
 .snack .grow{flex:1}
 .snack button{color:var(--green-dark);font-weight:800;font-size:14px}
-.menu{position:fixed;z-index:45;top:calc(74px + env(safe-area-inset-top));inset-inline-end:16px;
+/* Fixed, so the window is what it is measured against — but the button that opens
+   it sits at the edge of the 720px column, not at the edge of the window. On a wide
+   screen those are hundreds of pixels apart, which is why the menu used to land far
+   away from the dots that opened it. The same padding as .top brings them back together. */
+.menu{position:fixed;z-index:45;top:calc(74px + env(safe-area-inset-top));
+  inset-inline-end:max(16px, calc((100% - 720px) / 2));
   background:var(--surface);border-radius:var(--r-card);overflow:hidden;
   box-shadow:var(--lift-lg);min-width:220px;padding:8px}
 .menu[hidden]{display:none}
@@ -605,6 +632,9 @@ fill="currentColor" stroke="none">
 <div class="scrim" id="scrim2" hidden>
   <div class="sheet" role="dialog" aria-modal="true" aria-labelledby="tipsTitle" id="sheet2"></div>
 </div>
+<div class="scrim" id="scrim3" hidden>
+  <div class="sheet narrow" role="alertdialog" aria-modal="true" aria-labelledby="askTitle" id="sheet3"></div>
+</div>
 
 <script>
 /* ============================================================
@@ -759,7 +789,8 @@ const DREAM_CHIPS = ['פרויקט חדש שמחכה','פיתוח מקצועי �
 /* ============================================================
    2. MODEL + VALIDATION
    ============================================================ */
-const LIMITS = {minutes:[0,12000], people:[1,999], names:120, groups:60, tasks:300, lib:60, biz:60};
+const LIMITS = {minutes:[0,12000], people:[1,999], names:120, groups:60, tasks:300, lib:60, biz:60,
+                dream:12, dreamName:80};
 
 function uid(p){ return p + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-3); }
 function clamp(n, lo, hi){ n = Number(n); if(!Number.isFinite(n)) return lo; return Math.min(hi, Math.max(lo, n)); }
@@ -769,7 +800,7 @@ function str(s, max){ return (typeof s === 'string' ? s : '').slice(0, max); }
    anything, because nothing here should assume that an organisation is made of
    teams. Galli names the groupings herself — "צוות רכש", "מנהלת HR" — and a task
    with no grouping simply counts once. */
-function emptyState(){ return { v:3, biz:'', groups:[], tasks:[], dream:{chips:[], text:''} }; }
+function emptyState(){ return { v:3, biz:'', groups:[], tasks:[], dream:{chips:[], custom:[]} }; }
 function newGroup(name, people){
   return { id:uid('g'), name: str(name, LIMITS.names), people: people || 1 };
 }
@@ -828,9 +859,25 @@ function sanitize(raw){
     t.gid = mapped || null;
     s.tasks.push(t);
   }
-  const chips = Array.isArray(raw.dream && raw.dream.chips) ? raw.dream.chips : [];
-  s.dream.chips = chips.filter(c => DREAM_CHIPS.includes(c)).slice(0, DREAM_CHIPS.length);
-  s.dream.text = str(raw.dream && raw.dream.text, 400);
+  /* The six suggestions are a starting point, not the whole world: anything she adds
+     herself joins them and is kept with the scenario. */
+  const dream = (raw.dream && typeof raw.dream === 'object') ? raw.dream : {};
+  const custom = [];
+  const addOwn = v => {
+    const t = str(v, LIMITS.dreamName).trim();
+    if(!t || DREAM_CHIPS.includes(t) || custom.includes(t)) return;
+    if(custom.length < LIMITS.dream) custom.push(t);
+  };
+  (Array.isArray(dream.custom) ? dream.custom : []).forEach(addOwn);
+  /* Older saves held one free line instead of a list. It becomes the first option she
+     added, so nothing she already wrote is dropped on the way in. */
+  let legacy = str(dream.text, LIMITS.dreamName).trim();
+  if(legacy){ addOwn(legacy); if(!custom.includes(legacy)) legacy = ''; }
+  s.dream.custom = custom;
+  const known = DREAM_CHIPS.concat(custom);
+  const chips = Array.isArray(dream.chips) ? dream.chips : [];
+  s.dream.chips = chips.filter(c => known.includes(c)).slice(0, known.length);
+  if(legacy && s.dream.chips.indexOf(legacy) === -1) s.dream.chips.push(legacy);
   return s;
 }
 function sanitizeLib(raw){
@@ -913,7 +960,7 @@ function compute(s){
       freedYear: Math.round(exactFreed * 12),
       fte: exactFreed / FTE_MONTH
     },
-    dream:{chips:s.dream.chips.slice(), text:s.dream.text}
+    dream:{chips:s.dream.chips.slice(), custom:s.dream.custom.slice()}
   };
 }
 
@@ -950,7 +997,7 @@ function pack(s){
       o:t.on === false ? 0 : 1, ic:ICON_KEYS.indexOf(t.icon),
       gi:(t.gid != null && idx[t.gid] !== undefined) ? idx[t.gid] : -1
     })),
-    dc:s.dream.chips, dt:s.dream.text
+    dc:s.dream.chips, dk:s.dream.custom
   };
 }
 function unpack(o){
@@ -962,7 +1009,7 @@ function unpack(o){
 function migrate(o){
   if(!o || typeof o !== 'object') return null;
   const groups = Array.isArray(o.g) ? o.g : [];
-  const out = {biz: str(o.b, LIMITS.biz), groups:[], tasks:[], dream:{chips:o.dc, text:o.dt}};
+  const out = {biz: str(o.b, LIMITS.biz), groups:[], tasks:[], dream:{chips:o.dc, custom:o.dk, text:o.dt}};
   groups.forEach((g,i) => {
     out.groups.push({id:'i' + i, name: g && g.n, people: g && g.p});
   });
@@ -1024,7 +1071,8 @@ function shareUrl(){
    ============================================================ */
 let state = emptyState();
 let lib = [];
-let ui = { screen:'list', editId:null, draft:null, menuOpen:false, collapsed:{}, toTop:false, open:null };
+let ui = { screen:'list', editId:null, draft:null, menuOpen:false, collapsed:{}, toTop:false,
+           open:null, dashOpen:{} };
 let undoSnapshot = null, undoTimer = null, snackTimer = null;
 
 const $ = id => document.getElementById(id);
@@ -1240,10 +1288,29 @@ function libBox(redraw){
       face.appendChild(el('bdi', null, item.name));
       const del = el('button','chipx','✕');
       del.type = 'button';
-      del.setAttribute('aria-label','הסרת ' + item.name + ' מהמשימות המוכנות');
-      del.addEventListener('click', () => {
+      del.setAttribute('aria-label','הסרת ' + item.name + ' מההצעות');
+      const drop = () => {
         const k = lib.indexOf(item);
-        if(k !== -1){ lib.splice(k,1); saveLib(); redraw(); toast('הוסר מהמשימות המוכנות'); }
+        if(k !== -1){ lib.splice(k,1); saveLib(); redraw(); toast('ההצעה הוסרה'); }
+      };
+      del.addEventListener('click', () => {
+        const used = tasksNamed(item.name);
+        /* Removing a suggestion is not the same as removing the work. If she has
+           already mapped this task — with its minutes, its people, its share — that
+           mapping is hers, and a press on an ✕ in a suggestion list must not take it. */
+        if(!used) return drop();
+        askConfirm({
+          title:'ההצעה הזו בשימוש',
+          lines:[
+            '"' + item.name + '" כבר רשומה אצלכם ברשימה ' +
+              countWord(used, 'כמשימה אחת', 'פעמים') + '.',
+            'ההסרה כאן מורידה רק את ההצעה מהרשימה הנפתחת של "חדש". ' +
+              'המשימות שכבר מיפיתם נשארות ברשימה בדיוק כפי שהן, עם הזמנים והשיוך שלהן.',
+            'רוצים להוריד גם את המשימה עצמה? מוחקים אותה במסך הרשימה, שם רואים מה נגרע מהסיכום.'
+          ],
+          yes:'הסרה מההצעות',
+          onYes:drop
+        });
       });
       pair.appendChild(face);
       pair.appendChild(del);
@@ -1269,9 +1336,13 @@ function libBox(redraw){
   box.appendChild(row);
   const reset = el('button','inline-link','החזרת הרשימה המקורית');
   reset.type = 'button'; reset.id = 'btnLibReset';
-  reset.addEventListener('click', () => {
-    lib = defaultLib(); saveLib(); redraw(); toast('המשימות המוכנות חזרו למקור');
-  });
+  reset.addEventListener('click', () => askConfirm({
+    title:'להחזיר את ההצעות המקוריות?',
+    lines:['כל השמות שהוספתם לרשימה הזו יוחלפו בעשר ההצעות שהגיעו מראש.',
+           'המשימות שכבר מיפיתם ברשימה לא משתנות.'],
+    yes:'החזרה למקור',
+    onYes:() => { lib = defaultLib(); saveLib(); redraw(); toast('ההצעות חזרו למקור'); }
+  }));
   box.appendChild(reset);
   return box;
 }
@@ -1285,7 +1356,9 @@ function addToLib(name){
   return true;
 }
 function tipsButton(){
-  const b = el('button','disclink','לא בטוחים מה להוסיף? כמה שאלות שעוזרות למצוא');
+  const b = el('button','disclink',
+    'לחצו ותקבלו שאלות שיעזרו לכם לחדד אילו עוד משימות חוזרות על עצמן בעסק שלכם ' +
+    'שאפשר להוריד מהיומיום שלכם');
   b.type = 'button';
   b.id = 'btnTips';
   b.addEventListener('click', openTips);
@@ -1388,7 +1461,25 @@ function renderSettings(res){
 
     const del = el('button','inline-link danger','מחיקה');
     del.type = 'button';
-    del.addEventListener('click', () => deleteGroup(g.id));
+    del.addEventListener('click', () => {
+      const used = tasksInGroup(g.id);
+      if(!used) return deleteGroup(g.id);
+      askConfirm({
+        title:'התפקיד הזה בשימוש',
+        lines:[
+          '"' + (g.name.trim() || 'תפקיד ללא שם') + '" משויך ל' +
+            countWord(used, 'משימה אחת', 'משימות') + '.',
+          'המשימות נשארות ברשימה ועוברות ל"ללא שיוך".' +
+            (g.people > 1
+              ? ' השעות שלהן ייספרו פעם אחת במקום להיות מוכפלות ב-' + g.people + ' אנשים, ' +
+                'כך שהסיכום בדשבורד ירד.'
+              : ''),
+          'אפשר לבטל מיד אחרי המחיקה.'
+        ],
+        yes:'מחיקת התפקיד',
+        onYes:() => deleteGroup(g.id)
+      });
+    });
     row.appendChild(del);
     gcard.appendChild(row);
   });
@@ -1428,7 +1519,7 @@ function renderDash(res){
   ban.appendChild(left);
   card.appendChild(ban);
 
-  const dreamText = res.dream.chips.concat(res.dream.text ? [res.dream.text] : []).join(' · ');
+  const dreamText = res.dream.chips.join(' · ');
   /* The bar is the way in: pressing it takes you to the question it is asking. */
   const db = el('button','dreambar');
   db.type = 'button'; db.id = 'btnDream';
@@ -1449,17 +1540,15 @@ function renderDash(res){
     const wb = el('div','block');
     wb.appendChild(el('h3', null, 'איפה הזמן יושב?'));
     if(ranked.length){
-      wb.appendChild(el('h4','subh','לפי משימה'));
       const max = ranked[0].freedMonth || 1;
-      ranked.forEach(r => wb.appendChild(
-        barItem(r.name || 'משימה ללא שם', r.freedShown, r.freedMonth / max, 'pinkbar')));
+      wb.appendChild(barGroup('task','לפי משימה', () => ranked.map(r =>
+        barItem(r.name || 'משימה ללא שם', r.freedShown, r.freedMonth / max, 'pinkbar'))));
     }
     if(groups.length){
-      wb.appendChild(el('h4','subh','לפי שיוך'));
       const max = groups[0].freed || 1;
-      groups.forEach(g => wb.appendChild(barItem(
+      wb.appendChild(barGroup('role','לפי תפקיד', () => groups.map(g => barItem(
         (g.name || 'ללא שיוך') + (g.people > 1 ? ' · ' + g.people + ' אנשים' : ''),
-        Math.round(g.freed), g.freed / max, 'goldbar')));
+        Math.round(g.freed), g.freed / max, 'goldbar'))));
     }
     card.appendChild(wb);
   }
@@ -1468,30 +1557,95 @@ function renderDash(res){
   qb.id = 'dreamBlock';
   qb.appendChild(el('h3', null, 'מה הייתם עושים עם הזמן הזה?'));
   const chips = el('div','chips grid grid2');
-  DREAM_CHIPS.forEach(c => {
+  const toggle = c => apply(() => {
+    const i = state.dream.chips.indexOf(c);
+    if(i === -1) state.dream.chips.push(c); else state.dream.chips.splice(i,1);
+  });
+  const chipFace = c => {
     const on = state.dream.chips.indexOf(c) !== -1;
-    const b = el('button','chip sm gold', c);
+    const b = el('button','chip sm gold');
     b.type = 'button';
+    b.appendChild(el('bdi', null, c));
     b.setAttribute('aria-pressed', on ? 'true' : 'false');
     if(on) b.appendChild(el('span','spark','✨'));
-    b.addEventListener('click', () => apply(() => {
-      const i = state.dream.chips.indexOf(c);
-      if(i === -1) state.dream.chips.push(c); else state.dream.chips.splice(i,1);
+    b.addEventListener('click', () => toggle(c));
+    return b;
+  };
+  DREAM_CHIPS.forEach(c => chips.appendChild(chipFace(c)));
+  /* Her own options sit among the six, not under them — the only difference is that
+     hers can be taken off again. */
+  state.dream.custom.forEach(c => {
+    const pair = el('span','readychip');
+    pair.appendChild(chipFace(c));
+    const x = el('button','chipx','✕');
+    x.type = 'button';
+    x.setAttribute('aria-label','הסרת ' + c);
+    x.addEventListener('click', () => apply(() => {
+      const i = state.dream.custom.indexOf(c);
+      if(i !== -1) state.dream.custom.splice(i,1);
+      const j = state.dream.chips.indexOf(c);
+      if(j !== -1) state.dream.chips.splice(j,1);
     }));
-    chips.appendChild(b);
+    pair.appendChild(x);
+    chips.appendChild(pair);
   });
   qb.appendChild(chips);
+
+  /* Before this, what she typed here went nowhere visible: it was saved, silently,
+     and no option appeared. Now it becomes an option like the others — by the
+     button, or by Enter. */
+  const row = el('div','unitrow');
   const free = document.createElement('input');
-  free.type = 'text'; free.className = 'field'; free.id = 'fDream'; free.style.marginTop = '10px';
-  free.placeholder = 'או כתבו בעצמכם';
-  free.maxLength = 400;
-  free.value = state.dream.text;
-  free.setAttribute('aria-label','מה הייתם עושים עם הזמן');
-  free.addEventListener('input', () => { state.dream.text = free.value.slice(0,400); save(); });
-  qb.appendChild(free);
+  free.type = 'text'; free.className = 'field'; free.id = 'fDream';
+  free.placeholder = 'הוסיפו אפשרות משלכם';
+  free.maxLength = LIMITS.dreamName;
+  free.setAttribute('aria-label','הוספת אפשרות משלכם');
+  const go = el('button','btn sm','הוספה');
+  go.type = 'button'; go.id = 'btnDreamAdd';
+  go.style.flex = '0 0 auto';
+  const send = () => {
+    const t = free.value.trim().slice(0, LIMITS.dreamName);
+    if(!t) return;
+    const known = DREAM_CHIPS.indexOf(t) !== -1 || state.dream.custom.indexOf(t) !== -1;
+    if(known){
+      if(state.dream.chips.indexOf(t) === -1) toggle(t);
+      else { free.value = ''; toast('האפשרות כבר ברשימה'); return; }
+    }else if(state.dream.custom.length >= LIMITS.dream){
+      toast('אפשר עד ' + LIMITS.dream + ' אפשרויות משלכם'); return;
+    }else{
+      apply(() => { state.dream.custom.push(t); state.dream.chips.push(t); });
+    }
+    const again = $('fDream');
+    if(again){ again.value = ''; again.focus(); }
+  };
+  go.addEventListener('click', send);
+  free.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); send(); } });
+  row.appendChild(free);
+  row.appendChild(go);
+  qb.appendChild(row);
   card.appendChild(qb);
 
   host.appendChild(card);
+}
+
+/* A folding answer. Open by default — the point of the screen is to be read — and
+   closed with one press when the other answer is the one being discussed. */
+function barGroup(key, title, build){
+  const open = ui.dashOpen[key] !== false;
+  const wrap = el('div','bargroup');
+  const h = el('button','subh', title);
+  h.type = 'button';
+  h.id = 'sub' + key;
+  h.setAttribute('aria-expanded', open ? 'true' : 'false');
+  h.appendChild(pathSvg(CARET_D)).setAttribute('class','caret');
+  h.addEventListener('click', () => { ui.dashOpen[key] = !open; render(); });
+  wrap.appendChild(h);
+  if(open){
+    const body = el('div','barbody');
+    build().forEach(n => body.appendChild(n));
+    wrap.appendChild(body);
+  }
+  return wrap;
 }
 
 function barItem(name, hours, frac, tone){
@@ -1515,6 +1669,53 @@ function renderFormula(){
     ' ימי עבודה, יום של ' + DAY_HOURS + ' שעות). משימה יומית מוכפלת ב-' + DAYS_MONTH +
     ', שבועית ב-' + WEEKS_MONTH + '. הזמנים הם הערכה, משנים לפי מה שקורה אצלכם.';
 }
+
+/* ---- a question before a deletion that reaches past the thing being deleted ----
+   A dialog that only asks "are you sure?" teaches nothing. This one names what is
+   in use and says what will happen to it, so the answer is an informed one. */
+function askConfirm(o){
+  const sheet = $('sheet3');
+  sheet.textContent = '';
+  const head = el('div','sheethead plain');
+  const h = el('h2', null, o.title);
+  h.id = 'askTitle';
+  head.appendChild(h);
+  sheet.appendChild(head);
+  const body = el('div','askbody');
+  o.lines.forEach(t => {
+    const line = el('p');
+    line.appendChild(el('bdi', null, t));
+    body.appendChild(line);
+  });
+  sheet.appendChild(body);
+  const row = el('div','askrow');
+  const yes = el('button','btn pink', o.yes);
+  yes.type = 'button'; yes.id = 'askYes';
+  yes.addEventListener('click', () => { closeAsk(); o.onYes(); });
+  const no = el('button','btn quiet','ביטול');
+  no.type = 'button'; no.id = 'askNo';
+  no.addEventListener('click', closeAsk);
+  row.appendChild(yes);
+  row.appendChild(no);
+  sheet.appendChild(row);
+  $('scrim3').hidden = false;
+  document.body.style.overflow = 'hidden';
+  /* The safe button takes the focus, so a stray Enter cancels and never deletes. */
+  no.focus();
+}
+function closeAsk(){
+  $('scrim3').hidden = true;
+  $('sheet3').textContent = '';
+  if($('scrim').hidden && $('scrim2').hidden) document.body.style.overflow = '';
+}
+/* How far a name reaches into the work she has already mapped. */
+function tasksNamed(nm){
+  const t = String(nm || '').trim();
+  if(!t) return 0;
+  return state.tasks.filter(x => String(x.name || '').trim() === t).length;
+}
+function tasksInGroup(id){ return state.tasks.filter(t => t.gid === id).length; }
+function countWord(n, one, many){ return n === 1 ? one : n + ' ' + many; }
 
 /* ---- the tips sheet ---- */
 function openTips(){
@@ -2097,8 +2298,11 @@ $('navSet').addEventListener('click', () => go('set'));
 $('snackBtn').addEventListener('click', doUndo);
 $('scrim').addEventListener('click', ev => { if(ev.target === $('scrim')) closeSheet(); });
 $('scrim2').addEventListener('click', ev => { if(ev.target === $('scrim2')) closeTips(); });
+$('scrim3').addEventListener('click', ev => { if(ev.target === $('scrim3')) closeAsk(); });
 document.addEventListener('keydown', ev => {
   if(ev.key !== 'Escape') return;
+  /* The question on top answers first: it is the only thing that can delete. */
+  if(!$('scrim3').hidden){ closeAsk(); return; }
   /* The first Escape closes the open list, the second closes the sheet. */
   if(ui.open){ closeComboNow(); return; }
   if(ui.draft) closeSheet();

@@ -668,8 +668,10 @@ async function main(){
   ok('"איפה הזמן יושב?" היא כותרת אחת',
      (await page.locator('#screenDash .block h3', {hasText:'איפה הזמן יושב?'}).count()) === 1);
   const subs = await page.locator('#screenDash .subh').allTextContents();
-  ok('מתחתיה "לפי משימה" ואחריה "לפי שיוך"',
-     subs[0] === 'לפי משימה' && subs[1] === 'לפי שיוך');
+  ok('מתחתיה "לפי משימה" ואחריה "לפי תפקיד"',
+     subs[0] === 'לפי משימה' && subs[1] === 'לפי תפקיד');
+  ok('אין יותר "לפי שיוך" בדשבורד',
+     (await page.locator('#screenDash .subh', {hasText:'לפי שיוך'}).count()) === 0);
   const tones = await page.evaluate(() => {
     const g = sel => [...document.querySelectorAll(sel)]
       .map(b => getComputedStyle(b.querySelector('.bar-fill')).backgroundImage);
@@ -681,6 +683,21 @@ async function main(){
      tones.gold.length > 0 && tones.gold.every(b => b.indexOf('233, 182, 74') !== -1));
   ok('אין בר ירוק בודד שמתחזה לכותרת',
      (await page.locator('#screenDash .bar-item:not(.pinkbar):not(.goldbar)').count()) === 0);
+  ok('שתי הכותרות הן כפתורים פתוחים',
+     (await page.locator('#subtask').getAttribute('aria-expanded')) === 'true' &&
+     (await page.locator('#subrole').getAttribute('aria-expanded')) === 'true');
+  const pinkCount = await page.locator('#screenDash .bar-item.pinkbar').count();
+  await page.locator('#subtask').click();
+  await page.waitForTimeout(190);
+  ok('לחיצה על "לפי משימה" מקפלת רק אותה',
+     (await page.locator('#screenDash .bar-item.pinkbar').count()) === 0 &&
+     (await page.locator('#screenDash .bar-item.goldbar').count()) > 0);
+  ok('הכותרת מסומנת כמקופלת',
+     (await page.locator('#subtask').getAttribute('aria-expanded')) === 'false');
+  await page.locator('#subtask').click();
+  await page.waitForTimeout(190);
+  ok('לחיצה נוספת פותחת אותה בחזרה',
+     (await page.locator('#screenDash .bar-item.pinkbar').count()) === pinkCount);
   await snapText(page);
 
   /* ---------------------------------------------------------- */
@@ -694,8 +711,18 @@ async function main(){
   ok('מעל משרה: משרה ועוד אחוזים', words.indexOf('משרה ועוד 70% פנויים') !== -1);
   ok('שתי משרות בלשון רבים', words.indexOf('2 משרות פנויות') !== -1);
   ok('אין "0 משרה פנויה"', words.indexOf('0 משרה פנויה') === -1);
-  ok('הכפתור שואל "לא בטוחים מה להוסיף"',
-     (await page.locator('#btnTips').textContent()).indexOf('לא בטוחים מה להוסיף') === 0);
+  const tipText = await page.locator('#btnTips').textContent();
+  ok('הכפתור מזמין ללחוץ ולקבל שאלות', tipText.indexOf('לחצו ותקבלו שאלות') === 0);
+  ok('הכפתור מדבר על משימות שחוזרות על עצמן בעסק',
+     tipText.indexOf('חוזרות על עצמן') !== -1 && tipText.indexOf('היומיום') !== -1);
+  const tipLook = await page.evaluate(() => {
+    const b = document.getElementById('btnTips');
+    const row = document.querySelector('#screenList .row');
+    return {bg:getComputedStyle(b).backgroundImage, ink:getComputedStyle(b).color,
+            rowBg: row ? getComputedStyle(row).backgroundImage : 'none'};
+  });
+  ok('הכפתור נבדל מהשורות ברשימה', tipLook.bg !== tipLook.rowBg);
+  ok('הכפתור בגוון הוורוד', tipLook.ink === 'rgb(178, 58, 98)');
   await snapText(page);
 
   /* ---------------------------------------------------------- */
@@ -842,7 +869,122 @@ async function main(){
   }));
 
   /* ---------------------------------------------------------- */
-  section('23 · צילומי מסך');
+  section('23 · אזהרה לפני מחיקה, אפשרות משלה, ותפריט במקום');
+  await fresh(page);
+  await page.locator('#emptyDemo').click();
+  await page.waitForTimeout(240);
+
+  /* התפריט נפתח ליד שלוש הנקודות, לא בקצה החלון. position:fixed נמדד מול החלון,
+     והכפתור יושב בקצה עמודה של 720 פיקסלים — על מסך רחב אלו שני מקומות שונים. */
+  await page.setViewportSize({width:1280, height:900});
+  await page.waitForTimeout(200);
+  await page.locator('#btnMenu').click();
+  await page.waitForTimeout(190);
+  const mp = await page.evaluate(() => {
+    const m = document.getElementById('menu').getBoundingClientRect();
+    const b = document.getElementById('btnMenu').getBoundingClientRect();
+    return {ml:m.left, mr:m.right, bc:(b.left + b.right)/2};
+  });
+  ok('התפריט נפתח מתחת לשלוש הנקודות', mp.bc > mp.ml && mp.bc < mp.mr,
+     'menu ' + Math.round(mp.ml) + '-' + Math.round(mp.mr) + ', dots ' + Math.round(mp.bc));
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(150);
+  await page.setViewportSize({width:430, height:950});
+  await page.waitForTimeout(190);
+
+  /* מחיקת תפקיד שמשויכות אליו משימות שואלת קודם */
+  await page.locator('#navSet').click();
+  await page.waitForTimeout(220);
+  const groups0 = await page.evaluate(() => window.__waives.state.groups.length);
+  await page.locator('#screenSet .setrow .danger').first().click();
+  await page.waitForTimeout(200);
+  ok('מחיקת תפקיד בשימוש פותחת שאלה', !(await page.locator('#scrim3').isHidden()));
+  const askTxt = await page.locator('#sheet3').textContent();
+  ok('השאלה אומרת כמה משימות משויכות', /\d/.test(askTxt) && askTxt.indexOf('משויך') !== -1);
+  ok('השאלה אומרת מה יקרה למשימות', askTxt.indexOf('ללא שיוך') !== -1);
+  await page.locator('#askNo').click();
+  await page.waitForTimeout(190);
+  ok('ביטול לא מוחק דבר',
+     (await page.evaluate(() => window.__waives.state.groups.length)) === groups0);
+  await page.locator('#screenSet .setrow .danger').first().click();
+  await page.waitForTimeout(200);
+  await page.locator('#askYes').click();
+  await page.waitForTimeout(240);
+  ok('אישור מוחק את התפקיד',
+     (await page.evaluate(() => window.__waives.state.groups.length)) === groups0 - 1);
+  ok('המשימות נשארו, בלי שיוך', await page.evaluate(() =>
+     window.__waives.state.tasks.filter(t => t.gid === null).length > 0));
+
+  /* הסרת הצעה ששם שלה כבר בשימוש ברשימה */
+  await fresh(page);
+  await page.locator('#emptyDemo').click();
+  await page.waitForTimeout(240);
+  const used = 'מיון קורות חיים';
+  await page.locator('#navSet').click();
+  await page.waitForTimeout(220);
+  const chipx = page.locator('#screenSet .readychip',
+    {has: page.locator('bdi', {hasText: used})}).locator('.chipx').first();
+  await chipx.click();
+  await page.waitForTimeout(200);
+  ok('הסרת הצעה בשימוש פותחת שאלה', !(await page.locator('#scrim3').isHidden()));
+  const libTxt = await page.locator('#sheet3').textContent();
+  ok('השאלה אומרת שהמשימות נשארות', libTxt.indexOf('נשארות ברשימה') !== -1);
+  ok('השאלה מסבירה איפה מוחקים את המשימה עצמה',
+     libTxt.indexOf('מסך הרשימה') !== -1);
+  await page.locator('#askYes').click();
+  await page.waitForTimeout(240);
+  ok('ההצעה ירדה מהרשימה הנפתחת',
+     await page.evaluate(n => window.__waives.lib.every(x => x.name !== n), used));
+  await page.locator('#navList').click();
+  await page.waitForTimeout(220);
+  ok('המשימה עצמה נשארה ברשימה עם השם שלה',
+     (await page.locator('.row .nm', {hasText: used}).count()) === 1);
+
+  /* אפשרות משלה ב"מה הייתם עושים עם הזמן הזה" */
+  await page.locator('#navDash').click();
+  await page.waitForTimeout(240);
+  await page.locator('#fDream').fill('לפתוח סניף נוסף');
+  await page.locator('#btnDreamAdd').click();
+  await page.waitForTimeout(240);
+  ok('האפשרות שהוקלדה הפכה לכפתור',
+     (await page.locator('#dreamBlock .chip', {hasText:'לפתוח סניף נוסף'}).count()) === 1);
+  ok('האפשרות נבחרה מיד', await page.evaluate(() =>
+     window.__waives.state.dream.chips.indexOf('לפתוח סניף נוסף') !== -1));
+  ok('האפשרות מופיעה בבאנר הקטן',
+     (await page.locator('.dreambar').textContent()).indexOf('לפתוח סניף נוסף') !== -1);
+  ok('השדה התרוקן אחרי ההוספה', (await page.locator('#fDream').inputValue()) === '');
+  await page.locator('#fDream').fill('לקחת שבוע חופש');
+  await page.locator('#fDream').press('Enter');
+  await page.waitForTimeout(240);
+  ok('גם אנטר מוסיף', await page.evaluate(() =>
+     window.__waives.state.dream.custom.length === 2));
+  await page.reload();
+  await page.waitForTimeout(260);
+  await page.locator('#navDash').click();
+  await page.waitForTimeout(240);
+  ok('האפשרויות שלה נשמרות אחרי רענון', await page.evaluate(() =>
+     window.__waives.state.dream.custom.indexOf('לפתוח סניף נוסף') !== -1 &&
+     window.__waives.state.dream.chips.indexOf('לקחת שבוע חופש') !== -1));
+  ok('רק האפשרויות שלה ניתנות להסרה',
+     (await page.locator('#dreamBlock .chipx').count()) === 2);
+  await page.locator('#dreamBlock .readychip',
+    {has: page.locator('bdi', {hasText:'לקחת שבוע חופש'})}).locator('.chipx').click();
+  await page.waitForTimeout(240);
+  ok('הסרה מורידה אותה גם מהנבחרות', await page.evaluate(() =>
+     window.__waives.state.dream.custom.length === 1 &&
+     window.__waives.state.dream.chips.indexOf('לקחת שבוע חופש') === -1));
+  ok('שש ההצעות הקבועות נשארו',
+     (await page.locator('#dreamBlock .chip').count()) === 7);
+  /* קישור שיתוף נושא איתו גם את מה שהיא הוסיפה */
+  const dreamLink = await page.evaluate(() => window.__waives.shareUrl());
+  await page.goto(dreamLink);
+  await page.waitForTimeout(300);
+  ok('הקישור נושא את האפשרות שלה', await page.evaluate(() =>
+     window.__waives.state.dream.custom.indexOf('לפתוח סניף נוסף') !== -1));
+  await snapText(page);
+
+  /* ---------------------------------------------------------- */
+  section('24 · צילומי מסך');
   const shots = [];
   const shot = async (n, w) => {
     await page.setViewportSize({width:w || 430, height:950});
