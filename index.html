@@ -27,14 +27,21 @@
   --pink:#F7799F; --pink-a:#F7799F; --pink-b:#EE5C8A; --pink-soft:#FBD5E0; --pink-ink:#B23A62;
   --gold-a:#F7D685; --gold-b:#E9B64A; --gold-rim:#C9961F; --gold-ink:#5E4310;
   --ring-track:rgba(30,66,32,.10); --ring-arc:#E9B64A;
-  --shadow:rgba(72,96,70,.22); --shadow-soft:rgba(72,96,70,.11);
+  --shadow:rgba(62,88,60,.26); --shadow-soft:rgba(62,88,60,.13);
   --r-key:22px; --r-card:28px; --r-screen:26px; --r-pill:18px; --r-round:999px;
   --bar:84px; --sheet-max:560px;
   /* a raised face: white top edge, a soft wide shadow, a close contact shadow */
-  --lift:inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1.5px 0 rgba(72,96,70,.07), 0 10px 20px var(--shadow), 0 3px 6px var(--shadow-soft);
-  --lift-sm:inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1.5px 0 rgba(72,96,70,.07), 0 6px 13px var(--shadow), 0 2px 4px var(--shadow-soft);
-  --lift-lg:inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1.5px 0 rgba(72,96,70,.07), 0 16px 30px var(--shadow), 0 4px 9px var(--shadow-soft);
-  --press:inset 0 1px 0 rgba(255,255,255,.7), 0 2px 5px var(--shadow);
+  /* A key has a thickness, not just a blur under it: a bright top edge, a dark
+     bottom edge that reads as its side, a tight contact shadow where it meets the
+     surface, and a wide soft one for the height. Press it and the light flips —
+     the inset shadow is the key going down into the board. */
+  --edge-hi:inset 0 2px 0 rgba(255,255,255,1);
+  --edge-lo:inset 0 -3px 0 rgba(62,88,60,.11);
+  --contact:0 2px 3px rgba(62,88,60,.16);
+  --lift:var(--edge-hi), var(--edge-lo), var(--contact), 0 12px 22px var(--shadow), 0 4px 8px var(--shadow-soft);
+  --lift-sm:var(--edge-hi), inset 0 -2.5px 0 rgba(62,88,60,.11), var(--contact), 0 7px 14px var(--shadow), 0 2px 4px var(--shadow-soft);
+  --lift-lg:var(--edge-hi), var(--edge-lo), var(--contact), 0 20px 34px var(--shadow), 0 7px 13px var(--shadow-soft);
+  --press:inset 0 3px 6px rgba(62,88,60,.26), inset 0 1px 0 rgba(255,255,255,.5), 0 1px 2px var(--shadow-soft);
   --face:linear-gradient(180deg, var(--key-a), var(--key-b));
 }
 *{box-sizing:border-box}
@@ -61,7 +68,10 @@ input,select{font:inherit;color:inherit}
   background:linear-gradient(180deg, var(--bg) 70%, rgba(231,236,230,.78));
   -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
   padding-block:calc(14px + env(safe-area-inset-top)) 14px;
-  padding-inline:max(16px, calc((100% - 720px) / 2));
+  /* .wrap is 720px WITH its own 16px padding, so the cards start 16px further in
+     than the raw column edge. Without those 16px the "חדש" key hangs outside the
+     page it belongs to. */
+  padding-inline:max(16px, calc((100% - 720px) / 2 + 16px));
   display:flex; align-items:center; gap:11px;
 }
 .top .brand{display:flex;align-items:center;gap:10px;min-width:0}
@@ -95,26 +105,28 @@ input,select{font:inherit;color:inherit}
 
 /* ---------- page frame ---------- */
 .wrap{max-width:720px;margin:0 auto;padding:4px 16px 28px}
-.card{background:var(--surface);border-radius:var(--r-card);
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,1), 0 7px 18px var(--shadow-soft)}
-.card + .card{margin-top:16px}
-.cardhead{padding:16px 18px 12px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
-.cardhead h2{margin:0;font-size:15.5px;font-weight:700;color:var(--ink)}
+/* Every screen is the "חדש" screen: the question sits on the background and the
+   controls under it are raised keys. A white card behind a white key swallows the
+   shadow that gives the key its depth, which is why the dashboard and the settings
+   read flat next to the sheet. So there is no card — only headings and keys. */
+.card{background:none;box-shadow:none}
+.card + .card{margin-top:24px}
+.cardhead{padding:12px 6px 10px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
+.cardhead h2{margin:0;font-size:15.5px;font-weight:800;color:var(--ink)}
 .cardhead .sub{font-size:12.5px;color:var(--ink-faint);font-weight:500}
-
-/* the list is a keypad: the card behind it steps back, the rows are the keys */
-#screenList > .card:first-child{background:none;box-shadow:none}
-#screenList > .card:first-child > .cardhead{padding:10px 6px 8px}
 
 /* ---------- a group of tasks ---------- */
 .ghead{
   display:flex;align-items:center;gap:9px;width:100%;
   background:linear-gradient(180deg,#E3F1DB,#D2E7C7); border-radius:var(--r-key);
   padding:13px 17px; text-align:start; margin:18px 0 11px;
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85), 0 5px 13px var(--shadow-soft);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.9), inset 0 -3px 0 rgba(40,80,40,.09),
+             0 2px 3px rgba(62,88,60,.14), 0 9px 17px var(--shadow);
 }
 .ghead:first-of-type{margin-top:0}
-.ghead:hover{box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85), 0 8px 18px var(--shadow)}
+.ghead:hover{transform:translateY(-1px);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.9), inset 0 -3px 0 rgba(40,80,40,.09),
+             0 2px 3px rgba(62,88,60,.14), 0 14px 24px var(--shadow)}
 .ghead:active{transform:translateY(1px);box-shadow:var(--press)}
 .ghead .gname{font-weight:700;font-size:15px;color:var(--screen-ink);min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
@@ -182,7 +194,8 @@ input,select{font:inherit;color:inherit}
 .totalrow .tvalue{font-weight:800;font-size:20px;color:var(--screen-ink);flex:none}
 
 /* ---------- empty state ---------- */
-.empty{padding:34px 24px;text-align:center}
+.empty{padding:34px 24px;text-align:center;background:var(--face);
+  border-radius:var(--r-card);box-shadow:var(--lift)}
 .empty h3{margin:0 0 8px;font-size:19px;color:var(--ink)}
 .empty p{margin:0 0 20px;color:var(--ink-soft);font-size:14px;line-height:1.65}
 
@@ -190,16 +203,18 @@ input,select{font:inherit;color:inherit}
 .btn{
   background:linear-gradient(180deg, var(--green-a), var(--green-b)); color:#fff;
   border-radius:var(--r-key); padding:16px 24px; font-weight:700; font-size:16px;
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(30,66,32,.14),
-             0 8px 18px rgba(78,143,61,.3), 0 2px 5px rgba(78,143,61,.18);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.5), inset 0 -3.5px 0 rgba(30,66,32,.26),
+             0 2px 3px rgba(40,80,40,.22), 0 10px 20px rgba(78,143,61,.34),
+             0 3px 7px rgba(78,143,61,.2);
 }
 .btn:hover{transform:translateY(-1px)}
 .btn:active{transform:translateY(1px);
   background:linear-gradient(180deg, var(--green-b), var(--green-dark));
   box-shadow:inset 0 1px 0 rgba(255,255,255,.3), 0 2px 6px rgba(78,143,61,.3)}
 .btn.pink{background:linear-gradient(180deg, var(--pink-a), var(--pink-b));
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.45), inset 0 -2px 0 rgba(150,40,80,.14),
-             0 8px 18px rgba(222,80,130,.3), 0 2px 5px rgba(222,80,130,.18)}
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.5), inset 0 -3.5px 0 rgba(150,40,80,.26),
+             0 2px 3px rgba(150,40,80,.2), 0 10px 20px rgba(222,80,130,.34),
+             0 3px 7px rgba(222,80,130,.2)}
 .btn.pink:active{background:linear-gradient(180deg, var(--pink-b), #D94A77)}
 .btn.ghost{background:linear-gradient(180deg,#FDE3EB,#FBD5E0);color:var(--pink-ink);
   box-shadow:inset 0 1.5px 0 rgba(255,255,255,.9), 0 6px 14px rgba(222,80,130,.16)}
@@ -225,7 +240,7 @@ nav.bar{
   box-shadow:inset 0 1.5px 0 rgba(255,255,255,1), 0 -8px 24px var(--shadow-soft);
   display:flex;gap:8px;
   padding-block:10px calc(10px + env(safe-area-inset-bottom));
-  padding-inline:max(12px, calc((100% - 720px) / 2));
+  padding-inline:max(16px, calc((100% - 720px) / 2 + 16px));
 }
 nav.bar button{
   flex:1;padding:9px 4px;border-radius:var(--r-key);
@@ -377,7 +392,7 @@ select.freqsel{
 .danger{color:var(--pink-ink)}
 
 /* ---------- settings ---------- */
-.setrow{display:flex;align-items:center;gap:11px;padding:11px 16px}
+.setrow{display:flex;align-items:center;gap:11px;padding:7px 0}
 .setrow input[type=text]{flex:1;min-width:0;padding:13px 16px;border:0;border-radius:var(--r-pill);
   background:var(--face);font-size:15px;box-shadow:var(--lift-sm)}
 .setrow input[type=text]:focus{outline:none;background:#fff;
@@ -389,7 +404,7 @@ select.freqsel{
 .stepper input{width:46px;height:46px;border:0;text-align:center;font-weight:800;
   font-size:16px;background:none;color:var(--ink)}
 .stepper input:focus{outline:none;background:var(--green-soft)}
-.padbox{padding:4px 18px 18px}
+.padbox{padding:2px 0 6px}
 
 /* ---------- dashboard ---------- */
 .banner{
@@ -418,8 +433,8 @@ select.freqsel{
 .dreambar:active{transform:translateY(1px);background:var(--key-press);box-shadow:var(--press)}
 .dreambar .k{display:block;color:var(--ink);font-weight:800}
 .dreambar b{display:block;margin-top:3px;color:var(--pink-ink);font-weight:800}
-.block{padding:18px}
-.block + .block{box-shadow:inset 0 1.5px 0 var(--green-line)}
+.block{padding:6px 2px 14px}
+.block + .block{margin-top:10px}
 .block h3{margin:0 0 16px;font-size:15px;font-weight:800;color:var(--ink)}
 .bar-item{margin-bottom:15px}
 .bar-item:last-child{margin-bottom:0}
@@ -450,7 +465,7 @@ select.freqsel{
    screen those are hundreds of pixels apart, which is why the menu used to land far
    away from the dots that opened it. The same padding as .top brings them back together. */
 .menu{position:fixed;z-index:45;top:calc(74px + env(safe-area-inset-top));
-  inset-inline-end:max(16px, calc((100% - 720px) / 2));
+  inset-inline-end:max(16px, calc((100% - 720px) / 2 + 16px));
   background:var(--surface);border-radius:var(--r-card);overflow:hidden;
   box-shadow:var(--lift-lg);min-width:220px;padding:8px}
 .menu[hidden]{display:none}
@@ -1484,7 +1499,7 @@ function renderSettings(res){
     gcard.appendChild(row);
   });
   const gfoot = el('div','padbox');
-  const addg = el('button','btn ghost block','+ הוסף תפקיד');
+  const addg = el('button','btn block','+ הוסף תפקיד');
   addg.type = 'button'; addg.id = 'btnAddGroup';
   addg.addEventListener('click', () => apply(() => { state.groups.push(newGroup('', 1)); }));
   gfoot.appendChild(addg);

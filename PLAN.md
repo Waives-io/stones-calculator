@@ -85,6 +85,27 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
    "יותר מדי משתנים ולא מבינים מה צריך להקליד ואיפה" (2026-11-22). The list opens
    over the questions below it, never among them, and opening it never rebuilds
    the sheet: focus arrives while someone is typing into that very field.
+20. **A deletion that reaches past the thing being deleted asks first, and says
+   what will happen.** Removing a suggested name whose task she has already mapped
+   does NOT take the mapping: the minutes, the people and the share are hers, and
+   an ✕ in a suggestion list must not spend them. Deleting a role in use says how
+   many tasks move to "ללא שיוך" and that the total will drop. She asked for the
+   warning on 2026-11-22; keeping the mapped task is my call, and it is said out
+   loud in the dialog.
+21. **"מה הייתם עושים עם הזמן הזה" takes her own options.** Before this, what she
+   typed there was saved silently and no option appeared — she read it as a bug,
+   correctly. Her options join the six, by the button or by Enter, travel in the
+   share link, and can be removed.
+22. **Every screen is the "חדש" screen.** No white card anywhere: the heading sits
+   on the mint background and the controls under it are raised keys. A white card
+   behind a white key swallows the shadow that gives the key its depth, which is
+   exactly why the dashboard and the settings read flat next to the sheet
+   (2026-11-22). Keys carry four layers: a bright top edge, a dark bottom edge that
+   reads as the key's side, a tight contact shadow, and a wide soft one.
+23. **One column edge for the whole page.** `.wrap` is 720px *including* its own
+   16px padding, so the top bar, the overflow menu and the bottom bar all inset by
+   `(100% - 720px)/2 + 16px`. Without those 16px the "חדש" key hung outside the page
+   it belongs to.
 
 ## Approach
 - **State**: `{ v:3, biz, groups:[{id,name,people}], tasks:[{id,name,minutes,freq,auto,on,
@@ -124,7 +145,7 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
 - `index.html` — the entire tool
 - `PLAN.md` — this file
 - `.nojekyll`, `CNAME` — GitHub Pages
-- `qa/qa.js` — 220 Playwright checks (not deployed)
+- `qa/qa.js` — 293 Playwright checks (not deployed)
 - `design-options/` — the five look directions GPT drew; option 4 was chosen
 
 ## Definition of done

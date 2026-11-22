@@ -851,7 +851,16 @@ async function main(){
   });
   ok('הרקע מנטה בהיר', look.bg === 'rgb(231, 236, 230)');
   ok('הרקע של הדף הוא הרקע של הגיליון', look.bg === look.sheetBg);
-  ok('שורה היא מקש רך עם צל', look.rowShadow.indexOf('inset') !== -1 && look.rowShadow.indexOf('rgba(72, 96, 70') !== -1);
+  /* A key has a thickness: a bright top edge, a dark bottom edge that reads as its
+     side, a tight contact shadow, and a wide soft one for the height. */
+  const shadowParts = look.rowShadow.split(/,(?![^(]*\))/).map(x => x.trim());
+  ok('שורה היא מקש רך עם צל', look.rowShadow.indexOf('inset') !== -1);
+  ok('למקש יש קצה עליון בהיר', shadowParts.some(x =>
+     x.indexOf('inset') !== -1 && x.indexOf('rgb(255, 255, 255)') !== -1));
+  ok('למקש יש צד תחתון כהה', shadowParts.some(x =>
+     x.indexOf('inset') !== -1 && /-[\d.]+px 0px/.test(x)));
+  ok('למקש יש ארבעה רבדים של עומק לפחות (' + shadowParts.length + ')',
+     shadowParts.length >= 4);
   ok('לשורה פינות גדולות (' + look.rowRadius + ')', parseFloat(look.rowRadius) >= 18);
   ok('פני המקש הם מעבר מלבן', look.rowFace.indexOf('gradient') !== -1 && look.rowFace.indexOf('rgb(255, 255, 255)') !== -1);
   ok('שורת הסכום היא צג ירוק', look.screen.indexOf('gradient') !== -1);
@@ -867,6 +876,58 @@ async function main(){
     document.getElementById('sheetClose').click();
     return got;
   }));
+
+  /* כל מסך הוא מסך "חדש": הכותרת על הרקע, ומתחתיה מקשים. קופסה לבנה מאחורי מקש
+     לבן בולעת את הצל שנותן לו את העומק — וזה מה שהשטיח את הדשבורד וההגדרות. */
+  for(const [nav, screen, label] of [['#navSet','#screenSet','הגדרות'],
+                                     ['#navDash','#screenDash','דשבורד'],
+                                     ['#navList','#screenList','הרשימה']]){
+    await page.locator(nav).click();
+    await page.waitForTimeout(220);
+    const box = await page.evaluate(sel => {
+      const c = [...document.querySelectorAll(sel + ' > .card')]
+        .map(e => getComputedStyle(e));
+      return {n:c.length, bg:c.map(x => x.backgroundColor), sh:c.map(x => x.boxShadow)};
+    }, screen);
+    ok('אין קופסה לבנה מאחורי ה' + label,
+       box.n > 0 && box.bg.every(b => b === 'rgba(0, 0, 0, 0)') &&
+       box.sh.every(h => h === 'none'));
+  }
+  await page.locator('#navSet').click();
+  await page.waitForTimeout(220);
+  const adds = await page.evaluate(() => {
+    const a = document.getElementById('btnAddGroup');
+    const b = [...document.querySelectorAll('#screenSet .btn')]
+      .filter(x => x.textContent.trim() === 'הוספה')[0];
+    const cs = e => getComputedStyle(e);
+    return {bgA:cs(a).backgroundImage, bgB:b ? cs(b).backgroundImage : 'missing',
+            inkA:cs(a).color};
+  });
+  ok('"+ הוסף תפקיד" באותו משקל כמו "הוספה"', adds.bgA === adds.bgB);
+  ok('הכיתוב עליו לבן, לא חיוור', adds.inkA === 'rgb(255, 255, 255)');
+
+  /* כפתור "חדש" יושב בתוך עמודת העמוד, גם כשהחלון רחב מהעמודה */
+  await page.locator('#navList').click();
+  await page.waitForTimeout(220);
+  for(const w of [430, 868, 1280]){
+    await page.setViewportSize({width:w, height:900});
+    await page.waitForTimeout(200);
+    const edge = await page.evaluate(() => {
+      const r = s => { const e = document.querySelector(s); return e ? e.getBoundingClientRect() : null; };
+      const n = r('.newbtn'), row = r('#screenList .row'), nav = r('nav.bar button');
+      return {nl:Math.round(n.left), nr:Math.round(n.right),
+              rl:Math.round(row.left), rr:Math.round(row.right),
+              vl:Math.round(nav.left), vr:Math.round(nav.right)};
+    });
+    ok('ברוחב ' + w + ' כפתור "חדש" לא חורג מהעמודה',
+       edge.nl >= edge.rl - 1 && edge.nr <= edge.rr + 1,
+       'new ' + edge.nl + '-' + edge.nr + ', row ' + edge.rl + '-' + edge.rr);
+    ok('ברוחב ' + w + ' הסרגל התחתון מיושר לעמודה',
+       edge.vl >= edge.rl - 1 && edge.vr <= edge.rr + 1,
+       'nav ' + edge.vl + '-' + edge.vr + ', row ' + edge.rl + '-' + edge.rr);
+  }
+  await page.setViewportSize({width:1280, height:900});
+  await page.waitForTimeout(200);
 
   /* ---------------------------------------------------------- */
   section('23 · אזהרה לפני מחיקה, אפשרות משלה, ותפריט במקום');
