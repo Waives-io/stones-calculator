@@ -41,16 +41,27 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
    share of a position with its people and ring on the left, and a small band under it —
    "מה אפשרי בזמן שהתפנה?" with whatever she ticked. Then the big tasks ranked and the
    breakdown per assignment.
-10. **The ready-made task list is hers to keep and prune.** It lives under its own
-   storage key, a task she types joins it automatically, she can remove what does not fit
-   a given business, and "תרחיש חדש" clears the scenario without bringing the original
-   list back.
-11. **הגדרות replaces צוותים**: the business name (which joins the calculator's title),
-   the assignments with their headcount, and the ready-made list.
+10. **The ready-made task list is hers to keep and prune, and it lives on the LIST
+   screen** (2026-11-22): one press adds a task, the ✕ removes it from the ready list.
+   It has its own storage key, a task she types joins it automatically, and
+   "תרחיש חדש" clears the scenario without bringing the original list back.
+11. **הגדרות replaces צוותים**: the business name (which joins the calculator's title)
+   and the assignments with their headcount. Nothing else belongs there.
 12. **Nothing jumps.** A press keeps the page where it was; only a deliberate move
    between screens, and closing the tips window, returns to the top.
 13. **One place per action.** The link is copied from the ⋯ menu and says
    "הקישור הועתק"; "העתקת סיכום" is gone.
+14. **The look is the soft mint calculator she attached (2026-11-22), and nothing else.**
+   Four objects only: a KEY (near-white face, large radius, soft green-grey shadow, it
+   lifts on hover and presses on click), a SCREEN (mint glass with a diagonal sheen —
+   the sheet header, the list total, the dashboard banner), a CARD and a PILL. Mint page,
+   dark-green text, green for anything chosen or primary, pink for the one key that
+   commits (and for the leading bar). No dark surface anywhere. The time and automation
+   keys sit on a GRID, like a keypad. GPT drew the token sheet; it is in the file.
+15. **The sheet asks in this order**: who it belongs to (free text, empty = nobody),
+   what the task is, how long it takes (a dropdown inside the question, presets on a
+   grid, "אחר" opening a number with a דקות/שעות switch that re-reads the same number),
+   and how much can be automated "(הערכה)". The display carries the task's own name.
 
 ## Approach
 - **State**: `{ v:3, biz, groups:[{id,name,people}], tasks:[{id,name,minutes,freq,auto,on,
@@ -90,7 +101,7 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
 - `index.html` — the entire tool
 - `PLAN.md` — this file
 - `.nojekyll`, `CNAME` — GitHub Pages
-- `qa/qa.js` — 187 Playwright checks (not deployed)
+- `qa/qa.js` — 220 Playwright checks (not deployed)
 - `design-options/` — the five look directions GPT drew; option 4 was chosen
 
 ## Definition of done
@@ -103,6 +114,6 @@ total · a press does not scroll the page to the top · the icon matches the tas
 hash (truncated, non-base64, negative minutes, 1e9 people, auto 99, unknown frequency,
 unknown domain, `<img src=x onerror=…>`, and a v1 link) · Hebrew and Latin names survive
 a round trip · an incoming link with Undo · storage denied · the wording at 0, under a
-position, exactly one, two, and above one · no stones, no ₪, no cutting words · RTL and
-keyboard · no horizontal overflow at 320/390/768/1280 · ten screenshots.
+position, exactly one, two, and above one · no stones, no ₪, no cutting words · the look itself (mint page, key shadows,
+the green screen, the two accent colours, no dark surface) · RTL and keyboard · no horizontal overflow at 320/390/768/1280 · ten screenshots.
 Then verified live on calc.waives.io against the bytes the site actually serves.

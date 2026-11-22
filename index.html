@@ -11,243 +11,381 @@
 <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
 <style>
 /* ============================================================
-   WAIVES Waterline Light — the token values are fixed.
+   WAIVES · the soft calculator look (Galli's reference, 2026-11-21)
+   Light only. Everything is one of four objects: a KEY, a SCREEN,
+   a CARD or a PILL. No dark surfaces, no hard borders, no flat fills.
+   RTL first: logical properties only, never left/right.
    ============================================================ */
 :root{
-  --white:#FFFFFF; --ink:#1B2436; --deep:#04091A; --mute:#54637C;
-  --teal:#1A8FA0; --teal-ink:#14707E; --gold:#C9A84C; --gold-dark:#A07830;
-  --panel:#F5F7FA; --line:#E3E8EF;
-  --bar:72px; --sheet-max:560px;
+  --bg:#E9EFE8; --bg-top:#F3F7F2; --surface:#FFFFFF;
+  --key:#F8FAF7; --key-press:#EDF2EB; --key-edge:rgba(255,255,255,.95);
+  --ink:#1F3A24; --ink-soft:#5E7360; --ink-faint:#8A9C8B;
+  --screen-a:#D2E6C5; --screen-b:#B9D7AA; --screen-ink:#1C4A22; --screen-soft:#4E7250;
+  --green:#84BE74; --green-dark:#5E9B4E; --green-soft:#DCEDD4; --green-line:#D3E6CA;
+  --pink:#F2A0B5; --pink-strong:#ED87A3; --pink-soft:#F9CBD8; --pink-ink:#A8415C;
+  --ring-track:rgba(31,58,36,.12); --ring-arc:#EE8CA6;
+  --shadow:rgba(63,88,61,.16); --shadow-soft:rgba(63,88,61,.08);
+  --r-key:20px; --r-card:26px; --r-screen:26px; --r-pill:14px;
+  --bar:76px; --sheet-max:560px;
+  --lift:inset 0 2px 0 rgba(255,255,255,.9), 0 6px 13px var(--shadow), 0 1px 2px var(--shadow-soft);
+  --lift-sm:inset 0 2px 0 rgba(255,255,255,.85), 0 3px 7px var(--shadow), 0 1px 1px var(--shadow-soft);
 }
 *{box-sizing:border-box}
 html,body{margin:0;padding:0}
+html{-webkit-tap-highlight-color:transparent}
 body{
   font-family:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
-  background:var(--panel); color:var(--ink);
+  background:var(--bg);
+  background-image:linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 340px);
+  background-attachment:fixed;
+  color:var(--ink);
   -webkit-font-smoothing:antialiased;
   padding-bottom:calc(var(--bar) + env(safe-area-inset-bottom));
 }
-button{font:inherit;color:inherit;cursor:pointer}
+button{font:inherit;color:inherit;cursor:pointer;border:0;background:none}
 input,select{font:inherit;color:inherit}
-:focus-visible{outline:3px solid var(--gold); outline-offset:2px; border-radius:10px}
+:focus-visible{outline:3px solid var(--green-dark); outline-offset:2px; border-radius:12px}
 .sr{position:absolute;width:1px;height:1px;overflow:hidden;clip:rect(0 0 0 0);white-space:nowrap}
 
-/* ---------- top bar ---------- */
+/* ---------- the top bar sits ON the page, it is not a band ---------- */
 .top{
   position:sticky; top:0; z-index:30;
-  background:var(--teal-ink); color:#fff;
-  padding:calc(10px + env(safe-area-inset-top)) 14px 10px;
+  background:linear-gradient(180deg, var(--bg-top) 60%, rgba(243,247,242,.72));
+  -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
+  padding-block:calc(12px + env(safe-area-inset-top)) 12px;
+  padding-inline:max(14px, calc((100% - 720px) / 2));
   display:flex; align-items:center; gap:10px;
-  box-shadow:0 1px 0 rgba(0,0,0,.08);
 }
-.top .brand{display:flex;align-items:center;gap:8px;min-width:0}
-.top .mark{width:20px;height:20px;flex:none}
-.top h1{font-size:16px;font-weight:700;margin:0;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.top .brand{display:flex;align-items:center;gap:9px;min-width:0}
+.top .mark{width:22px;height:22px;flex:none;color:var(--ink)}
+.top h1{font-size:16.5px;font-weight:700;margin:0;color:var(--ink);
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .top .grow{flex:1}
+
+/* ---------- KEY: the object the whole look is built from ---------- */
+.icobtn,.newbtn,.chip,.btn,.tick,.row,.ghead,.stepper,.disclink,.readychip > .chip{
+  transition:transform .12s ease, box-shadow .12s ease, background .12s ease;
+}
 .icobtn{
-  background:rgba(255,255,255,.14); border:0; color:#fff;
-  width:38px;height:38px;border-radius:11px;display:grid;place-items:center;flex:none;
+  background:var(--key); color:var(--ink-soft);
+  width:42px;height:42px;border-radius:var(--r-key);
+  display:grid;place-items:center;flex:none;box-shadow:var(--lift);
 }
-.icobtn:hover{background:rgba(255,255,255,.24)}
+.icobtn:hover{transform:translateY(-1px);color:var(--ink)}
+.icobtn:active{transform:translateY(1px);background:var(--key-press);box-shadow:var(--lift-sm)}
 .newbtn{
-  background:var(--gold); color:var(--deep); border:0; font-weight:700;
-  height:38px; padding:0 14px; border-radius:11px; display:flex; align-items:center; gap:6px; flex:none;
+  background:linear-gradient(180deg,#8CC47C,#74B063); color:#fff; font-weight:700;
+  height:42px; padding:0 17px; border-radius:var(--r-key);
+  display:flex; align-items:center; gap:7px; flex:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 6px 13px rgba(70,110,60,.26);
 }
-.newbtn:hover{background:#d8ba63}
+.newbtn:hover{transform:translateY(-1px)}
+.newbtn:active{transform:translateY(1px);box-shadow:0 2px 6px rgba(70,110,60,.26)}
 
 /* ---------- page frame ---------- */
-.wrap{max-width:720px;margin:0 auto;padding:14px 12px 24px}
-.card{background:#fff;border:1px solid var(--line);border-radius:16px;overflow:hidden}
-.card + .card{margin-top:12px}
-.cardhead{
-  padding:13px 15px 11px;border-bottom:1px solid var(--line);
-  display:flex;align-items:baseline;gap:8px;
-}
-.cardhead h2{margin:0;font-size:15px;font-weight:700}
-.cardhead .sub{font-size:12.5px;color:var(--mute)}
+.wrap{max-width:720px;margin:0 auto;padding:6px 12px 26px}
+.card{background:var(--surface);border-radius:var(--r-card);
+  box-shadow:0 4px 16px var(--shadow-soft)}
+.card + .card{margin-top:14px}
+.cardhead{padding:14px 16px 10px;display:flex;align-items:baseline;gap:8px}
+.cardhead h2{margin:0;font-size:15px;font-weight:700;color:var(--ink)}
+.cardhead .sub{font-size:12.5px;color:var(--ink-faint);font-weight:500}
 
-/* ---------- the list ---------- */
+/* the list is a keypad: the card behind it steps back and the rows are the keys */
+#screenList > .card:first-child{background:none;box-shadow:none}
+#screenList > .card:first-child > .cardhead{padding-inline:4px}
+
+/* ---------- a group of tasks ---------- */
 .ghead{
   display:flex;align-items:center;gap:10px;width:100%;
-  background:var(--panel);border:0;border-bottom:1px solid var(--line);
-  padding:10px 14px;text-align:start;
+  background:var(--green-soft); border-radius:var(--r-key);
+  padding:11px 15px; text-align:start; margin:14px 0 9px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 3px 8px var(--shadow-soft);
 }
-.ghead .gname{font-weight:700;font-size:14px;flex:1;min-width:0;
+.ghead:first-of-type{margin-top:2px}
+.ghead:hover{box-shadow:inset 0 1px 0 rgba(255,255,255,.7), 0 5px 11px var(--shadow)}
+.ghead:active{transform:translateY(1px)}
+.ghead .gname{font-weight:700;font-size:14.5px;color:var(--ink);flex:1;min-width:0;
   white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.ghead .gsub{font-size:12px;color:var(--mute);font-weight:500}
-.ghead .gtot{font-weight:700;font-size:14px;color:var(--teal-ink);flex:none}
-.caret{width:16px;height:16px;flex:none;color:var(--mute);transition:transform .15s}
-.ghead[aria-expanded="false"] .caret{transform:rotate(-90deg)}
-.row{
-  display:flex;align-items:center;gap:11px;width:100%;
-  background:#fff;border:0;border-bottom:1px solid var(--line);
-  padding:11px 14px;text-align:start;
-}
-.row:hover{background:#FBFCFE}
-.row.off .nm,.row.off .meta{opacity:.42}
-.ico{width:32px;height:32px;border-radius:9px;display:grid;place-items:center;flex:none;color:#fff}
-.ico svg{width:18px;height:18px}
-.rowmain{flex:1;min-width:0}
-.nm{font-weight:600;font-size:14.5px;line-height:1.3;display:block;
-    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meta{display:block;font-size:12px;color:var(--mute);margin-top:2px;
-      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.hrs{font-weight:700;font-size:14.5px;color:var(--teal-ink);flex:none;white-space:nowrap}
-.row.off .hrs{color:var(--mute);text-decoration:line-through;opacity:.5}
-.tick{
-  width:25px;height:25px;border-radius:8px;border:2px solid var(--line);
-  background:#fff;flex:none;display:grid;place-items:center;padding:0;
-}
-.tick[aria-checked="true"]{background:var(--teal);border-color:var(--teal)}
-.tick svg{width:14px;height:14px;color:#fff;opacity:0}
-.tick[aria-checked="true"] svg{opacity:1}
+.ghead .gsub{font-size:12px;color:var(--screen-soft);font-weight:600}
+.ghead .gtot{font-weight:800;font-size:14.5px;color:var(--screen-ink);flex:none}
+.caret{width:17px;height:17px;flex:none;color:var(--screen-soft);transition:transform .15s}
+.ghead[aria-expanded="false"] .caret{transform:rotate(90deg)}
 
-/* ---------- a plain total row, the weight of the rows above it ---------- */
-.totalrow{
-  display:flex;align-items:center;gap:11px;
-  padding:13px 14px;border-top:2px solid var(--ink);background:#fff;
+/* ---------- a task: one soft key ---------- */
+.row{
+  display:flex;align-items:center;gap:12px;width:100%;
+  background:var(--key); border-radius:var(--r-key);
+  padding:11px 13px; text-align:start; margin-bottom:9px;
+  box-shadow:var(--lift);
 }
-.totalrow .tlabel{flex:1;font-weight:700;font-size:15px}
-.totalrow .tvalue{font-weight:800;font-size:15.5px;color:var(--teal-ink);flex:none}
+.row:hover{transform:translateY(-1px);
+  box-shadow:inset 0 1px 0 var(--key-edge), 0 8px 16px var(--shadow)}
+.row.off{background:var(--key-press);box-shadow:var(--lift-sm)}
+.row.off .nm,.row.off .meta{opacity:.5}
+.ico{width:36px;height:36px;border-radius:13px;display:grid;place-items:center;flex:none;
+  background:var(--green-soft); color:var(--green-dark)}
+.ico svg{width:19px;height:19px}
+.rowmain{flex:1;min-width:0}
+.nm{font-weight:600;font-size:14.5px;line-height:1.3;display:block;color:var(--ink);
+    white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meta{display:block;font-size:12px;color:var(--ink-faint);margin-top:2px;
+      white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.hrs{font-weight:800;font-size:15px;color:var(--screen-ink);flex:none;white-space:nowrap}
+.row.off .hrs{color:var(--ink-faint);text-decoration:line-through;opacity:.6}
+.tick{
+  width:28px;height:28px;border-radius:10px;background:var(--surface);flex:none;
+  display:grid;place-items:center;padding:0;box-shadow:var(--lift-sm);
+}
+.tick[aria-checked="true"]{background:linear-gradient(180deg,#8CC47C,#74B063);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 3px 7px rgba(70,110,60,.3)}
+.tick svg{width:15px;height:15px;color:#fff;opacity:0}
+.tick[aria-checked="true"] svg{opacity:1}
+.tick:active{transform:translateY(1px)}
+
+/* ---------- SCREEN: the glass display ---------- */
+.screen{
+  position:relative; isolation:isolate; overflow:hidden;
+  background:linear-gradient(160deg, var(--screen-a), var(--screen-b));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75), inset 0 -2px 7px rgba(80,120,75,.12),
+             0 5px 15px var(--shadow-soft);
+}
+.screen::before{
+  content:''; position:absolute; inset:0 0 auto 0; height:58%;
+  background:linear-gradient(170deg, rgba(255,255,255,.34), rgba(255,255,255,0));
+  z-index:-1; pointer-events:none;
+}
+
+/* the total of the list IS a screen, so nobody can miss that it is the sum */
+.totalrow{
+  display:flex;align-items:center;gap:12px;
+  padding:15px 17px; margin-top:4px; border-radius:var(--r-screen);
+}
+.totalrow .tlabel{flex:1;font-weight:700;font-size:15px;color:var(--screen-ink)}
+.totalrow .tvalue{font-weight:800;font-size:19px;color:var(--screen-ink);flex:none}
 
 /* ---------- empty state ---------- */
-.empty{padding:32px 20px;text-align:center}
-.empty h3{margin:0 0 6px;font-size:17px}
-.empty p{margin:0 0 18px;color:var(--mute);font-size:13.5px;line-height:1.6}
-.btn{background:var(--teal);color:#fff;border:0;border-radius:12px;
-  padding:12px 20px;font-weight:700;font-size:15px}
-.btn:hover{background:var(--teal-ink)}
-.btn.ghost{background:#fff;color:var(--teal-ink);border:1.5px solid var(--line)}
-.btn.ghost:hover{background:var(--panel)}
+.empty{padding:30px 22px;text-align:center}
+.empty h3{margin:0 0 7px;font-size:18px;color:var(--ink)}
+.empty p{margin:0 0 18px;color:var(--ink-soft);font-size:13.5px;line-height:1.65}
+
+/* ---------- buttons ---------- */
+.btn{
+  background:linear-gradient(180deg,#8CC47C,#74B063); color:#fff;
+  border-radius:var(--r-key); padding:14px 22px; font-weight:700; font-size:15.5px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 6px 14px rgba(70,110,60,.26);
+}
+.btn:hover{transform:translateY(-1px)}
+.btn:active{transform:translateY(1px);box-shadow:0 2px 6px rgba(70,110,60,.26)}
+.btn.pink{background:linear-gradient(180deg,#F4A8BC,#EC87A3);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.45), 0 6px 14px rgba(190,80,110,.24)}
+.btn.ghost{background:var(--pink-soft);color:var(--pink-ink);
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.6), 0 5px 12px rgba(190,80,110,.16)}
 .btn.block{display:block;width:100%}
-.btn.sm{padding:9px 14px;font-size:13.5px;border-radius:10px}
+.btn.sm{padding:10px 15px;font-size:14px;border-radius:16px}
+.disclink{
+  display:block;width:100%;margin-top:14px;background:var(--key);
+  border-radius:var(--r-key);padding:15px;color:var(--green-dark);
+  font-weight:700;font-size:14px;box-shadow:var(--lift);
+}
+.disclink:hover{transform:translateY(-1px);color:var(--ink)}
+.disclink:active{transform:translateY(1px);background:var(--key-press);box-shadow:var(--lift-sm)}
 
-.disclink{display:block;width:100%;margin-top:12px;background:#fff;
-  border:1.5px dashed var(--line);border-radius:14px;padding:13px;
-  color:var(--teal-ink);font-weight:600;font-size:13.5px}
-.disclink:hover{border-color:var(--teal);background:#FBFCFE}
-
-/* ---------- bottom navigation ---------- */
+/* ---------- bottom bar: the mode pills of the reference ---------- */
 nav.bar{
   position:fixed;inset-inline:0;bottom:0;z-index:30;
-  background:#fff;border-top:1px solid var(--line);
-  display:flex;padding-bottom:env(safe-area-inset-bottom);
+  background:rgba(248,250,247,.92);
+  -webkit-backdrop-filter:blur(14px); backdrop-filter:blur(14px);
+  box-shadow:0 -1px 0 rgba(255,255,255,.9), 0 -6px 20px var(--shadow-soft);
+  display:flex;padding-block:8px calc(8px + env(safe-area-inset-bottom));
+  padding-inline:max(10px, calc((100% - 720px) / 2));
 }
 nav.bar button{
-  flex:1;background:none;border:0;padding:10px 4px 12px;
+  flex:1;padding:7px 4px;border-radius:16px;
   display:flex;flex-direction:column;align-items:center;gap:4px;
-  color:var(--mute);font-size:11.5px;font-weight:600;
+  color:var(--ink-faint);font-size:11.5px;font-weight:600;
 }
 nav.bar button svg{width:21px;height:21px}
-nav.bar button[aria-current="page"]{color:var(--teal-ink)}
+nav.bar button[aria-current="page"]{color:var(--green-dark);background:var(--green-soft)}
 
 /* ---------- sheets ---------- */
-.scrim{position:fixed;inset:0;background:rgba(4,9,26,.55);z-index:40;display:grid;align-items:end}
+.scrim{position:fixed;inset:0;background:rgba(28,48,30,.42);z-index:40;display:grid;align-items:end}
 .scrim[hidden]{display:none}
-.sheet{background:#fff;width:100%;max-width:var(--sheet-max);margin:0 auto;
-  border-radius:20px 20px 0 0;max-height:94vh;display:flex;flex-direction:column}
-@media(min-width:700px){ .scrim{align-items:center} .sheet{border-radius:20px;max-height:88vh} }
-.sheethead{background:var(--deep);color:#fff;padding:15px;border-radius:20px 20px 0 0;
-  display:flex;align-items:center;gap:14px;flex:none}
-.sheethead .t{font-size:13px;color:#C7D0DD;font-weight:600}
-.sheethead .n{font-size:30px;font-weight:800;line-height:1.05}
-.sheethead .u{font-size:12px;color:var(--gold);font-weight:700}
-.sheethead.plain{background:var(--teal-ink)}
-.sheethead.plain h2{margin:0;font-size:17px;font-weight:700}
-.sheetbody{padding:16px;overflow:auto;flex:1}
-.sheetfoot{padding:12px 16px calc(12px + env(safe-area-inset-bottom));
-  border-top:1px solid var(--line);display:flex;gap:10px;flex:none;background:#fff;
-  border-radius:0 0 20px 20px}
+.sheet{background:var(--bg);width:100%;max-width:var(--sheet-max);margin:0 auto;
+  border-radius:28px 28px 0 0;max-height:94vh;display:flex;flex-direction:column;
+  box-shadow:0 -10px 40px var(--shadow)}
+@media(min-width:700px){ .scrim{align-items:center} .sheet{border-radius:28px;max-height:88vh} }
+.sheethead{
+  position:relative; overflow:hidden; flex:none; display:flex; align-items:flex-start; gap:12px;
+  margin:14px 14px 4px; padding:16px 18px; border-radius:var(--r-screen);
+  background:linear-gradient(160deg, var(--screen-a), var(--screen-b));
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.75), inset 0 -2px 7px rgba(80,120,75,.12);
+}
+.sheethead::before{
+  content:''; position:absolute; inset:0 0 auto 0; height:58%;
+  background:linear-gradient(170deg, rgba(255,255,255,.30), rgba(255,255,255,0));
+  pointer-events:none;
+}
+.sheethead > *{position:relative}
+.sheethead .headtext{flex:1;min-width:0}
+.sheethead .t{font-size:12px;color:var(--screen-soft);font-weight:700}
+.sheethead .tname{font-size:16px;font-weight:700;color:var(--screen-ink);margin-top:3px;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.sheethead .n{font-size:34px;font-weight:800;line-height:1.1;color:var(--screen-ink);
+  letter-spacing:-1px;margin-top:4px}
+.sheethead .u{font-size:12px;color:var(--screen-soft);font-weight:700}
+.sheethead .icobtn{background:rgba(255,255,255,.72);color:var(--screen-soft);
+  width:38px;height:38px;border-radius:14px;font-size:15px;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.9), 0 3px 7px rgba(80,120,75,.14)}
+.sheethead.plain{background:linear-gradient(160deg, var(--screen-a), var(--screen-b));
+  align-items:center}
+.sheethead.plain h2{margin:0;font-size:17px;font-weight:700;color:var(--screen-ink);flex:1}
+.sheetbody{padding:12px 16px 18px;overflow:auto;flex:1}
+.sheetfoot{padding:12px 16px calc(14px + env(safe-area-inset-bottom));
+  display:flex;gap:10px;flex:none;background:var(--bg)}
 .sheetfoot .btn{flex:1}
 
-.q{margin-bottom:20px}
-.q > label,.qlabel{display:flex;align-items:center;gap:7px;flex-wrap:wrap;
-  font-weight:700;font-size:14.5px;margin-bottom:9px}
-.field{width:100%;padding:12px 14px;border:1.5px solid var(--line);border-radius:12px;
-  background:var(--panel);font-size:16px}
-.field:focus{background:#fff;border-color:var(--teal);outline:none}
-.chips{display:flex;flex-wrap:wrap;gap:8px}
-.chip{background:#fff;border:1.5px solid var(--line);border-radius:11px;
-  padding:9px 13px;font-size:13.5px;font-weight:600;color:var(--ink);
-  display:inline-flex;align-items:center;gap:7px}
-.chip:hover{border-color:var(--teal)}
-.chip[aria-pressed="true"]{background:var(--teal);border-color:var(--teal);color:#fff}
-.chip.sm{padding:7px 11px;font-size:12.5px}
-.chip svg{width:15px;height:15px;flex:none}
-select.freqsel{
-  background:var(--gold);border:0;color:var(--deep);border-radius:9px;
-  padding:5px 26px 5px 10px;font-weight:700;font-size:14px;
-  appearance:none;-webkit-appearance:none;
-  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%2304091A' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
-  background-repeat:no-repeat;background-position:left 7px center;background-size:12px;
+/* ---------- questions ---------- */
+.q{margin-bottom:22px}
+.q > label,.qlabel{display:flex;align-items:center;gap:8px;flex-wrap:wrap;
+  font-weight:700;font-size:15px;color:var(--ink);margin-bottom:10px}
+.field{width:100%;padding:14px 16px;border:0;border-radius:16px;
+  background:#F1F6F0;font-size:16px;color:var(--ink);
+  box-shadow:inset 0 2px 5px rgba(63,88,61,.10)}
+.field::placeholder{color:var(--ink-faint)}
+.field:focus{outline:none;background:#fff;
+  box-shadow:inset 0 2px 5px rgba(63,88,61,.07), 0 0 0 2px var(--green)}
+.chips{display:flex;flex-wrap:wrap;gap:9px}
+.chips.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.chips.grid2{grid-template-columns:repeat(2,1fr)}
+.chips.grid .chip{justify-content:center;text-align:center;padding-inline:8px}
+.chip{
+  background:var(--key); border-radius:var(--r-pill); padding:11px 15px;
+  font-size:14px; font-weight:600; color:var(--ink);
+  display:inline-flex; align-items:center; gap:8px; box-shadow:var(--lift-sm);
 }
-select.freqsel:hover{background-color:#d8ba63}
-.hint{font-size:12.5px;color:var(--mute);margin-top:8px;line-height:1.55}
-.hint.warn{color:var(--gold-dark);font-weight:600}
-.inline-link{background:none;border:0;color:var(--teal-ink);
-  text-decoration:underline;font-size:13px;padding:4px 0;font-weight:600}
-.danger{color:var(--gold-dark)}
+.chip:hover{transform:translateY(-1px);box-shadow:var(--lift)}
+.chip:active{transform:translateY(1px);background:var(--key-press);box-shadow:var(--lift-sm)}
+.chip[aria-pressed="true"]:active{background:linear-gradient(180deg,#7EB86F,#6FA65F)}
+.chip[aria-pressed="true"]{background:linear-gradient(180deg,#8CC47C,#74B063);color:#fff;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 4px 10px rgba(70,110,60,.28)}
+.chip[aria-pressed="true"] .chipsub{color:rgba(255,255,255,.85)}
+.chip.sm{padding:9px 13px;font-size:13px}
+.chip svg{width:16px;height:16px;flex:none;color:var(--green-dark)}
+.chip[aria-pressed="true"] svg{color:#fff}
+.chipsub{font-size:11.5px;font-weight:600;color:var(--ink-faint)}
+.readychip{display:inline-flex;align-items:stretch;gap:0;max-width:100%}
+.readychip > .chip{flex-wrap:nowrap;min-width:0}
+.readychip > .chip bdi{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.readychip .chipsub{white-space:nowrap;flex:none}
+.readychip > .chip{border-start-start-radius:var(--r-pill);border-end-start-radius:var(--r-pill);
+  border-start-end-radius:6px;border-end-end-radius:6px}
+.chipx{
+  width:30px;flex:none;border-radius:6px var(--r-pill) var(--r-pill) 6px;
+  border-start-start-radius:6px;border-end-start-radius:6px;
+  border-start-end-radius:var(--r-pill);border-end-end-radius:var(--r-pill);
+  margin-inline-start:3px;background:var(--key);color:var(--ink-faint);
+  font-size:12px;font-weight:700;box-shadow:var(--lift-sm);
+}
+/* quiet until you reach for it: pink is reserved for the two keys that matter */
+.chipx:hover{background:var(--pink-soft);color:var(--pink-ink)}
+.chipx:active{background:var(--pink);color:#fff}
+.unitrow{display:flex;gap:9px;align-items:center;margin-top:10px}
+.unitrow .field{flex:1;min-width:0}
+.unitrow .chips{flex:0 0 156px}
+select.freqsel{
+  background-color:#7EB86F;color:#fff;border:0;border-radius:var(--r-pill);
+  padding:8px 30px 8px 13px;font-weight:700;font-size:14.5px;
+  appearance:none;-webkit-appearance:none;
+  box-shadow:inset 0 1px 0 rgba(255,255,255,.4), 0 4px 10px rgba(70,110,60,.26);
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23ffffff' stroke-width='3' stroke-linecap='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E"), linear-gradient(180deg,#8CC47C,#74B063);
+  background-repeat:no-repeat,no-repeat;background-position:left 9px center,0 0;background-size:13px,100% 100%;
+}
+.hint{font-size:12.5px;color:var(--ink-faint);margin:10px 0 0;line-height:1.6}
+.hint.warn{color:var(--pink-ink);font-weight:600}
+.inline-link{color:var(--green-dark);text-decoration:underline;font-size:13px;
+  padding:6px 0;font-weight:700;display:inline-block}
+.danger{color:var(--pink-ink)}
 
 /* ---------- settings ---------- */
-.setrow{display:flex;align-items:center;gap:10px;padding:11px 14px;border-bottom:1px solid var(--line)}
-.setrow:last-child{border-bottom:0}
-.setrow input[type=text]{flex:1;min-width:0;padding:10px 12px;border:1.5px solid var(--line);
-  border-radius:10px;background:var(--panel);font-size:15px}
-.setrow input[type=text]:focus{background:#fff;border-color:var(--teal);outline:none}
-.stepper{display:flex;align-items:center;gap:2px;flex:none;
-  border:1.5px solid var(--line);border-radius:10px;overflow:hidden;background:#fff}
-.stepper button{background:#fff;border:0;width:32px;height:38px;font-size:19px;font-weight:700;color:var(--teal-ink)}
-.stepper button:hover{background:var(--panel)}
-.stepper input{width:44px;height:38px;border:0;text-align:center;font-weight:700;font-size:15px;background:#fff}
-.stepper input:focus{outline:none;background:var(--panel)}
-.libname{flex:1;min-width:0;font-size:14px;font-weight:600;
-  white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.padbox{padding:13px 15px}
+.setrow{display:flex;align-items:center;gap:10px;padding:10px 14px}
+.setrow input[type=text]{flex:1;min-width:0;padding:12px 14px;border:0;border-radius:15px;
+  background:#F1F6F0;font-size:15px;box-shadow:inset 0 2px 5px rgba(63,88,61,.10)}
+.setrow input[type=text]:focus{outline:none;background:#fff;
+  box-shadow:inset 0 2px 5px rgba(63,88,61,.07), 0 0 0 2px var(--green)}
+.stepper{display:flex;align-items:center;flex:none;
+  border-radius:15px;overflow:hidden;background:var(--surface);box-shadow:var(--lift-sm)}
+.stepper button{width:36px;height:42px;font-size:19px;font-weight:700;color:var(--green-dark)}
+.stepper button:hover{background:var(--green-soft)}
+.stepper input{width:44px;height:42px;border:0;text-align:center;font-weight:700;
+  font-size:15px;background:none;color:var(--ink)}
+.stepper input:focus{outline:none;background:var(--green-soft)}
+.padbox{padding:4px 16px 16px}
 
 /* ---------- dashboard ---------- */
-.banner{background:var(--deep);color:#fff;padding:20px 18px;display:flex;
-  align-items:center;gap:18px;flex-wrap:wrap}
-.banner .side{flex:1;min-width:140px}
-.banner .big{font-size:50px;font-weight:800;line-height:.95;letter-spacing:-1.5px}
-.banner .lbl{font-size:12.5px;color:var(--gold);font-weight:700;margin-top:5px}
-.banner .sub{font-size:13px;color:#C7D0DD;margin-top:7px;line-height:1.5}
-.banner .posrow{display:flex;align-items:center;gap:8px;margin-top:8px;flex-wrap:wrap}
-.banner .divider{width:1px;align-self:stretch;background:rgba(255,255,255,.14);flex:none}
-.posmore{font-size:13px;font-weight:700;color:var(--gold)}
-.dreambar{background:#0C1324;color:#fff;padding:13px 18px;font-size:13.5px;line-height:1.55}
-.dreambar .k{color:#C7D0DD;font-weight:600}
-.dreambar b{color:var(--gold)}
-.block{padding:16px 15px}
-.block + .block{border-top:1px solid var(--line)}
-.block h3{margin:0 0 12px;font-size:14px;font-weight:700;color:var(--gold-dark)}
-.bar-item{margin-bottom:12px}
+.banner{
+  display:flex;align-items:stretch;gap:14px;padding:20px 16px;
+  border-radius:var(--r-screen);
+}
+.banner .side{flex:1;min-width:132px;display:flex;flex-direction:column;align-items:center;
+  text-align:center}
+.banner .fig{height:118px;display:flex;align-items:center;justify-content:center}
+.banner .big{font-size:42px;font-weight:800;line-height:1;letter-spacing:-1.5px;
+  color:var(--screen-ink)}
+.banner .lbl{font-size:13px;color:var(--screen-ink);font-weight:800;margin-top:10px}
+.banner .sub{font-size:12.5px;color:var(--screen-soft);margin-top:4px;line-height:1.5}
+.banner .divider{width:1px;background:rgba(31,58,36,.12);flex:none;margin:8px 0}
+.ring{position:relative}
+.ringnum{position:absolute;inset:0;display:grid;place-items:center;
+  font-size:26px;font-weight:800;color:var(--screen-ink);letter-spacing:-.5px}
+.dreambar{margin-top:12px;background:var(--surface);border-radius:var(--r-card);
+  padding:14px 17px;font-size:13.5px;line-height:1.6;box-shadow:0 4px 16px var(--shadow-soft)}
+.dreambar .k{color:var(--ink-soft);font-weight:700}
+.dreambar b{color:var(--green-dark)}
+.block{padding:16px}
+.block + .block{box-shadow:inset 0 1px 0 var(--green-line)}
+.block h3{margin:0 0 14px;font-size:14px;font-weight:800;color:var(--ink-soft)}
+.bar-item{margin-bottom:13px}
 .bar-item:last-child{margin-bottom:0}
-.bar-top{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;margin-bottom:5px}
-.bar-top .v{font-weight:700;color:var(--teal-ink);flex:none}
-.bar-track{height:9px;background:var(--panel);border-radius:6px;overflow:hidden}
-.bar-fill{height:100%;background:var(--teal);border-radius:6px}
-.bar-item.lead .bar-fill{background:var(--gold)}
-.bar-item.lead .bar-top .v{color:var(--gold-dark)}
+.bar-top{display:flex;justify-content:space-between;gap:10px;font-size:13.5px;
+  margin-bottom:6px;color:var(--ink)}
+.bar-top .v{font-weight:800;color:var(--green-dark);flex:none}
+.bar-track{height:10px;background:#EAF1E7;border-radius:7px;overflow:hidden;
+  box-shadow:inset 0 1px 3px rgba(63,88,61,.12)}
+.bar-fill{height:100%;background:linear-gradient(90deg,#8CC47C,#74B063);border-radius:7px}
+.bar-item.lead .bar-fill{background:linear-gradient(90deg,#F4A8BC,#EC87A3)}
+.bar-item.lead .bar-top .v{color:var(--pink-ink)}
 
 /* ---------- snackbar & menu ---------- */
 .snack{position:fixed;inset-inline:12px;bottom:calc(var(--bar) + 12px + env(safe-area-inset-bottom));
-  max-width:520px;margin:0 auto;background:var(--deep);color:#fff;
-  border-radius:14px;padding:13px 16px;display:flex;align-items:center;gap:12px;
-  z-index:50;font-size:13.5px;box-shadow:0 10px 30px rgba(4,9,26,.3)}
+  max-width:520px;margin:0 auto;background:var(--surface);color:var(--ink);
+  border-radius:20px;padding:14px 18px;display:flex;align-items:center;gap:12px;
+  z-index:50;font-size:13.5px;font-weight:600;box-shadow:0 10px 30px var(--shadow)}
 .snack[hidden]{display:none}
 .snack .grow{flex:1}
-.snack button{background:none;border:0;color:var(--gold);font-weight:700;font-size:13.5px}
-.menu{position:fixed;z-index:45;top:calc(58px + env(safe-area-inset-top));inset-inline-end:12px;
-  background:#fff;border:1px solid var(--line);border-radius:14px;overflow:hidden;
-  box-shadow:0 14px 40px rgba(4,9,26,.18);min-width:210px}
+.snack button{color:var(--green-dark);font-weight:800;font-size:13.5px}
+.menu{position:fixed;z-index:45;top:calc(66px + env(safe-area-inset-top));inset-inline-end:12px;
+  background:var(--surface);border-radius:20px;overflow:hidden;
+  box-shadow:0 14px 40px var(--shadow);min-width:214px;padding:6px}
 .menu[hidden]{display:none}
-.menu button{display:block;width:100%;text-align:start;background:#fff;border:0;
-  padding:13px 16px;font-size:14px;font-weight:600;border-bottom:1px solid var(--line)}
-.menu button:last-child{border-bottom:0}
-.menu button:hover{background:var(--panel)}
-.foot{margin-top:16px;font-size:11.5px;color:var(--mute);line-height:1.65;text-align:center}
+.menu button{display:block;width:100%;text-align:start;border-radius:14px;
+  padding:13px 15px;font-size:14px;font-weight:600;color:var(--ink)}
+.menu button:hover{background:var(--green-soft);color:var(--green-dark)}
+.foot{margin-top:18px;font-size:11.5px;color:var(--ink-faint);line-height:1.7;text-align:center}
 .tips{margin:0;padding:0 18px 0 0}
-.tips li{color:var(--ink);font-size:14.5px;line-height:1.75;margin-bottom:10px}
+.tips li{color:var(--ink);font-size:15px;line-height:1.75;margin-bottom:12px}
+
+@media (hover: none){
+  .row:hover,.chip:hover,.btn:hover,.icobtn:hover,.newbtn:hover,.disclink:hover,.ghead:hover{
+    transform:none; box-shadow:var(--lift);
+  }
+}
+@media (prefers-reduced-motion: reduce){
+  *{transition:none !important}
+  .row:hover,.chip:hover,.btn:hover,.icobtn:hover,.newbtn:hover,.disclink:hover,
+  .row:active,.chip:active,.btn:active,.icobtn:active,.newbtn:active,.tick:active,
+  .ghead:active,.disclink:active{transform:none}
+}
 </style>
 </head>
 <body>
@@ -445,19 +583,19 @@ const TIME_KEYS = [15, 30, 45, 60, 120];
    and not whatever bucket a domain list would have put it in. First match wins,
    so the more specific words come first. */
 const ICONS = {
-  phone:{color:'var(--teal)',      d:'M15.8 21a16.9 16.9 0 0 1-12.8-12.8 2 2 0 0 1 1.3-2.3l2-.7a1.6 1.6 0 0 1 1.9.8l1 2a1.6 1.6 0 0 1-.4 2l-1 .8a12 12 0 0 0 4.4 4.4l.8-1a1.6 1.6 0 0 1 2-.4l2 1a1.6 1.6 0 0 1 .8 1.9l-.7 2a2 2 0 0 1-1.3 1.3Z'},
-  mail:{color:'var(--teal)',       d:'M3.5 6.5h17v11h-17zM3.5 7.5l8.5 6 8.5-6'},
-  chat:{color:'var(--gold)',       d:'M21 11.5a7.5 7.5 0 0 1-10.8 6.7L4 20l1.9-5.9A7.5 7.5 0 1 1 21 11.5Z'},
-  money:{color:'var(--gold-dark)', d:'M3 6.5h18v11H3zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM6.5 10v.01M17.5 14v.01'},
-  chart:{color:'var(--gold-dark)', d:'M4 20h16M7.5 20v-6M12 20V8M16.5 20v-9'},
-  calendar:{color:'var(--teal-ink)',d:'M4.5 6.5h15v13h-15zM4.5 10.5h15M8.5 3.5v4M15.5 3.5v4'},
-  people:{color:'var(--teal)',     d:'M15 18v-1.2a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3V18M9 8.2a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6ZM21 18v-1.2a3 3 0 0 0-2.2-2.9M14.5 2.8a3 3 0 0 1 0 5.4'},
-  doc:{color:'var(--mute)',        d:'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4'},
-  box:{color:'var(--teal-ink)',    d:'M21 8 12 3 3 8l9 5 9-5ZM3 8v8l9 5 9-5V8M12 13v8'},
-  truck:{color:'var(--mute)',      d:'M3 16V6h11v10M14 9h4l3 3v4h-7M7.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6ZM17.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6Z'},
-  data:{color:'var(--deep)',       d:'M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3ZM4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3'},
-  search:{color:'var(--teal-ink)', d:'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-4-4'},
-  clip:{color:'var(--mute)',       d:'M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1ZM8 6H6.5A1.5 1.5 0 0 0 5 7.5v12A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 17.5 6H16M9 12h6M9 16h4'}
+  phone:{d:'M15.8 21a16.9 16.9 0 0 1-12.8-12.8 2 2 0 0 1 1.3-2.3l2-.7a1.6 1.6 0 0 1 1.9.8l1 2a1.6 1.6 0 0 1-.4 2l-1 .8a12 12 0 0 0 4.4 4.4l.8-1a1.6 1.6 0 0 1 2-.4l2 1a1.6 1.6 0 0 1 .8 1.9l-.7 2a2 2 0 0 1-1.3 1.3Z'},
+  mail:{d:'M3.5 6.5h17v11h-17zM3.5 7.5l8.5 6 8.5-6'},
+  chat:{d:'M21 11.5a7.5 7.5 0 0 1-10.8 6.7L4 20l1.9-5.9A7.5 7.5 0 1 1 21 11.5Z'},
+  money:{d:'M3 6.5h18v11H3zM12 14.5a2.5 2.5 0 1 0 0-5 2.5 2.5 0 0 0 0 5ZM6.5 10v.01M17.5 14v.01'},
+  chart:{d:'M4 20h16M7.5 20v-6M12 20V8M16.5 20v-9'},
+  calendar:{d:'M4.5 6.5h15v13h-15zM4.5 10.5h15M8.5 3.5v4M15.5 3.5v4'},
+  people:{d:'M15 18v-1.2a3 3 0 0 0-3-3H6a3 3 0 0 0-3 3V18M9 8.2a2.8 2.8 0 1 0 0-5.6 2.8 2.8 0 0 0 0 5.6ZM21 18v-1.2a3 3 0 0 0-2.2-2.9M14.5 2.8a3 3 0 0 1 0 5.4'},
+  doc:{d:'M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5ZM14 3v5h5M9 13h6M9 17h4'},
+  box:{d:'M21 8 12 3 3 8l9 5 9-5ZM3 8v8l9 5 9-5V8M12 13v8'},
+  truck:{d:'M3 16V6h11v10M14 9h4l3 3v4h-7M7.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6ZM17.5 19a1.8 1.8 0 1 0 0-3.6 1.8 1.8 0 0 0 0 3.6Z'},
+  data:{d:'M4 7c0-1.7 3.6-3 8-3s8 1.3 8 3-3.6 3-8 3-8-1.3-8-3ZM4 7v10c0 1.7 3.6 3 8 3s8-1.3 8-3V7M4 12c0 1.7 3.6 3 8 3s8-1.3 8-3'},
+  search:{d:'M11 18a7 7 0 1 0 0-14 7 7 0 0 0 0 14ZM20 20l-4-4'},
+  clip:{d:'M9 4h6a1 1 0 0 1 1 1v1H8V5a1 1 0 0 1 1-1ZM8 6H6.5A1.5 1.5 0 0 0 5 7.5v12A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-12A1.5 1.5 0 0 0 17.5 6H16M9 12h6M9 16h4'}
 };
 const ICON_KEYS = Object.keys(ICONS);
 const ICON_WORDS = [
@@ -580,7 +718,21 @@ function newTask(name, minutes, freq, icon){
 }
 function findTask(id){ return state.tasks.filter(t => t.id === id)[0] || null; }
 function findGroup(id){ return id ? (state.groups.filter(g => g.id === id)[0] || null) : null; }
-function peopleOf(gid){ const g = findGroup(gid); return g ? g.people : 1; }
+/* An assignment is whatever she wrote. There is no "unassigned" button: an empty
+   name IS unassigned, and a name she has not used before opens a new one. */
+function groupByName(nm){
+  const t = String(nm || '').trim();
+  if(!t) return null;
+  return state.groups.filter(g => g.name.trim() === t)[0] || null;
+}
+function peopleByName(nm){ const g = groupByName(nm); return g ? g.people : 1; }
+function ensureGroupByName(nm){
+  const g = groupByName(nm);
+  if(g) return g.id;
+  const ng = newGroup(nm, 1);
+  state.groups.push(ng);
+  return ng.id;
+}
 
 /* Validation never throws. Anything unknown is clamped or defaulted. */
 function sanitize(raw){
@@ -841,7 +993,6 @@ function pathSvg(d, size){
   return svg;
 }
 function iconSvg(key, size){ return pathSvg((ICONS[key] || ICONS.clip).d, size); }
-function iconColor(key){ return (ICONS[key] || ICONS.clip).color; }
 const CHECK_D = 'm4 12.5 5 5L20 6.5';
 const CARET_D = 'm6 9 6 6 6-6';
 
@@ -889,7 +1040,6 @@ function taskRow(r){
   const row = el('div','row' + (r.on ? '' : ' off'));
 
   const ico = el('span','ico');
-  ico.style.background = iconColor(r.icon);
   ico.appendChild(iconSvg(r.icon));
 
   /* The name and the small print are isolated from each other: a name that ends
@@ -971,6 +1121,7 @@ function renderList(res){
     e.appendChild(demo);
     card.appendChild(e);
     host.appendChild(card);
+    host.appendChild(readyStrip());
     host.appendChild(tipsButton());
     return;
   }
@@ -1001,7 +1152,7 @@ function renderList(res){
 
   /* A plain total row, the weight of the rows above it. Everything else about
      the number — the year, the share of a position — lives on the dashboard. */
-  const tot = el('div','totalrow');
+  const tot = el('div','totalrow screen');
   tot.appendChild(el('span','tlabel','סה״כ מתפנה החודש'));
   const v = el('span','tvalue');
   v.appendChild(el('bdi', null, fmtHours(res.totals.freedMonth)));
@@ -1009,7 +1160,62 @@ function renderList(res){
   card.appendChild(tot);
 
   host.appendChild(card);
+  host.appendChild(readyStrip());
   host.appendChild(tipsButton());
+}
+/* Her own list of ready-made tasks, on the screen where the list is: one press
+   adds it, the ✕ takes it out of the ready list for good. */
+function readyStrip(){
+  const card = el('div','card');
+  const head = el('div','cardhead');
+  head.appendChild(el('h2', null, 'משימות מוכנות'));
+  head.appendChild(el('span','sub','לחיצה מוסיפה לרשימה'));
+  card.appendChild(head);
+  const box = el('div','padbox');
+  const used = {};
+  state.tasks.forEach(t => { used[t.name.trim()] = true; });
+  const free = lib.filter(x => !used[x.name.trim()]);
+  if(!free.length){
+    box.appendChild(el('p','hint','כל המשימות המוכנות כבר ברשימה.'));
+  }else{
+    const chips = el('div','chips');
+    free.forEach(item => {
+      const pair = el('span','readychip');
+      const add = el('button','chip');
+      add.type = 'button';
+      add.appendChild(iconSvg(item.icon));
+      add.appendChild(el('bdi', null, item.name));
+      add.appendChild(el('span','chipsub', fmtMinutes(item.minutes) + ' · ' + FREQ_SHORT[item.freq]));
+      add.setAttribute('aria-label','הוספת ' + item.name + ' לרשימה');
+      add.addEventListener('click', () => addFromLib(item));
+      const del = el('button','chipx','✕');
+      del.type = 'button';
+      del.setAttribute('aria-label','הסרת ' + item.name + ' מהמשימות המוכנות');
+      del.addEventListener('click', () => {
+        const i = lib.indexOf(item);
+        if(i !== -1){ lib.splice(i,1); saveLib(); render(); toast('הוסר מהמשימות המוכנות'); }
+      });
+      pair.appendChild(add);
+      pair.appendChild(del);
+      chips.appendChild(pair);
+    });
+    box.appendChild(chips);
+  }
+  const reset = el('button','inline-link','החזרת הרשימה המקורית');
+  reset.type = 'button';
+  reset.id = 'btnLibReset';
+  reset.addEventListener('click', () => {
+    lib = defaultLib(); saveLib(); render(); toast('המשימות המוכנות חזרו למקור');
+  });
+  box.appendChild(reset);
+  card.appendChild(box);
+  return card;
+}
+function addFromLib(item){
+  apply(() => {
+    if(state.tasks.length >= LIMITS.tasks){ toast('הרשימה מלאה'); return; }
+    state.tasks.push(newTask(item.name, item.minutes, item.freq, item.icon));
+  });
 }
 function tipsButton(){
   const b = el('button','disclink','לא בטוחים מה להוסיף? כמה שאלות שעוזרות למצוא');
@@ -1019,52 +1225,34 @@ function tipsButton(){
   return b;
 }
 
-/* ---- positions: a person per whole position, a ring for the remainder ---- */
-function fillPositions(wrap, fte, empty, size){
-  wrap.textContent = '';
+/* ---- the share of a position: one ring, the number inside it, nothing else ---- */
+function ringPct(fte, size){
+  const wrap = el('div','fig ring');
   const pct = Math.max(0, Math.round(fte * 100));
-  const full = Math.floor(pct / 100);
-  const rem = pct - full * 100;
-  for(let i=0; i<Math.min(full,4); i++) wrap.appendChild(personSvg(size));
-  if(full > 4) wrap.appendChild(el('span','posmore','+' + (full-4)));
-  if(empty || rem > 0 || full === 0) wrap.appendChild(ringSvg(empty ? 0 : rem/100, size));
-}
-function personSvg(size){
-  const s = size || 40;
-  const svg = document.createElementNS(NS,'svg');
-  svg.setAttribute('width', s*0.72); svg.setAttribute('height', s);
-  svg.setAttribute('viewBox','0 0 34 46');
-  svg.setAttribute('aria-hidden','true');
-  const head = document.createElementNS(NS,'circle');
-  head.setAttribute('cx','17'); head.setAttribute('cy','12'); head.setAttribute('r','8.5');
-  head.setAttribute('fill','var(--gold)');
-  const body = document.createElementNS(NS,'path');
-  body.setAttribute('d','M17 24c-8 0-14 5.2-14 12.4V44h28v-7.6C31 29.2 25 24 17 24Z');
-  body.setAttribute('fill','var(--gold)');
-  svg.appendChild(head); svg.appendChild(body);
-  return svg;
-}
-function ringSvg(frac, size){
-  const s = size || 40, r = s/2 - 4, c = 2*Math.PI*r;
+  const frac = Math.min(1, Math.max(0, fte));
+  const s = size || 112, r = s/2 - 9, c = 2 * Math.PI * r;
   const svg = document.createElementNS(NS,'svg');
   svg.setAttribute('width', s); svg.setAttribute('height', s);
-  svg.setAttribute('viewBox','0 0 '+s+' '+s);
+  svg.setAttribute('viewBox', '0 0 ' + s + ' ' + s);
   svg.setAttribute('aria-hidden','true');
-  const base = document.createElementNS(NS,'circle');
-  base.setAttribute('cx',s/2); base.setAttribute('cy',s/2); base.setAttribute('r',r);
-  base.setAttribute('fill','none'); base.setAttribute('stroke','rgba(255,255,255,.18)');
-  base.setAttribute('stroke-width','5');
-  svg.appendChild(base);
+  const ring = (stroke, dash) => {
+    const c2 = document.createElementNS(NS,'circle');
+    c2.setAttribute('cx', s/2); c2.setAttribute('cy', s/2); c2.setAttribute('r', r);
+    c2.setAttribute('fill','none'); c2.setAttribute('stroke', stroke);
+    c2.setAttribute('stroke-width','11'); c2.setAttribute('stroke-linecap','round');
+    if(dash !== undefined) c2.setAttribute('stroke-dasharray', dash + ' ' + c);
+    return c2;
+  };
+  svg.appendChild(ring('var(--ring-track)'));
   if(frac > 0){
-    const arc = document.createElementNS(NS,'circle');
-    arc.setAttribute('cx',s/2); arc.setAttribute('cy',s/2); arc.setAttribute('r',r);
-    arc.setAttribute('fill','none'); arc.setAttribute('stroke','var(--gold)');
-    arc.setAttribute('stroke-width','5'); arc.setAttribute('stroke-linecap','round');
-    arc.setAttribute('stroke-dasharray', (c*frac) + ' ' + c);
-    arc.setAttribute('transform','rotate(-90 '+(s/2)+' '+(s/2)+')');
+    const arc = ring('var(--ring-arc)', c * frac);
+    arc.setAttribute('transform','rotate(-90 ' + (s/2) + ' ' + (s/2) + ')');
     svg.appendChild(arc);
   }
-  return svg;
+  wrap.appendChild(svg);
+  const num = el('span','ringnum', pct + '%');
+  wrap.appendChild(num);
+  return wrap;
 }
 
 /* ---- settings: the business name, the groupings, and her task list ---- */
@@ -1145,40 +1333,6 @@ function renderSettings(res){
   gfoot.appendChild(el('p','hint','מספר האנשים מכפיל את כל המשימות המשויכות, בהנחה שכולם עושים אותן באותו זמן.'));
   gcard.appendChild(gfoot);
   host.appendChild(gcard);
-
-  const lcard = el('div','card');
-  const lh = el('div','cardhead');
-  lh.appendChild(el('h2', null, 'המשימות המוכנות'));
-  lh.appendChild(el('span','sub', lib.length + ' ברשימה'));
-  lcard.appendChild(lh);
-  lib.forEach((item, i) => {
-    const row = el('div','setrow');
-    const ico = el('span','ico');
-    ico.style.background = iconColor(item.icon);
-    ico.appendChild(iconSvg(item.icon));
-    row.appendChild(ico);
-    const nm = el('span','libname');
-    nm.appendChild(el('bdi', null, item.name));
-    row.appendChild(nm);
-    row.appendChild(el('span','hint', fmtMinutes(item.minutes) + ' · ' + FREQ_SHORT[item.freq])).style.margin = '0';
-    const del = el('button','inline-link danger','הסרה');
-    del.type = 'button';
-    del.setAttribute('aria-label','הסרת ' + item.name + ' מהרשימה המוכנה');
-    del.addEventListener('click', () => {
-      lib.splice(i,1); saveLib(); render();
-      toast('הוסר מהרשימה המוכנה');
-    });
-    row.appendChild(del);
-    lcard.appendChild(row);
-  });
-  const lfoot = el('div','padbox');
-  lfoot.appendChild(el('p','hint','אלה הכפתורים שמופיעים כשמוסיפים משימה. משימה שתכתבו בעצמכם מצטרפת לכאן אוטומטית, והרשימה נשמרת גם כשמתחילים תרחיש חדש.'));
-  const reset = el('button','inline-link','החזרת הרשימה המקורית');
-  reset.type = 'button'; reset.id = 'btnLibReset';
-  reset.addEventListener('click', () => { lib = defaultLib(); saveLib(); render(); toast('הרשימה המוכנה חזרה למקור'); });
-  lfoot.appendChild(reset);
-  lcard.appendChild(lfoot);
-  host.appendChild(lcard);
 }
 
 /* ---- dashboard: one banner carries the whole headline ---- */
@@ -1188,24 +1342,20 @@ function renderDash(res){
   const t = res.totals;
   const card = el('div','card');
 
-  const ban = el('div','banner');
+  const ban = el('div','banner screen');
   const right = el('div','side');
+  const fig = el('div','fig');
   const big = el('div','big');
   big.appendChild(el('bdi', null, nf(t.freedMonth)));
-  right.appendChild(big);
+  fig.appendChild(big);
+  right.appendChild(fig);
   right.appendChild(el('div','lbl','שעות בחודש'));
   right.appendChild(el('div','sub', nf(t.freedYear) + ' שעות בשנה'));
   ban.appendChild(right);
   ban.appendChild(el('span','divider'));
   const left = el('div','side');
-  const pbig = el('div','big');
-  pbig.appendChild(el('bdi', null, ftePct(t.fte)));
-  left.appendChild(pbig);
+  left.appendChild(ringPct(t.fte, 112));
   left.appendChild(el('div','lbl','מתוך משרה מלאה'));
-  const prow = el('div','posrow');
-  fillPositions(prow, t.fte, t.freedMonthExact === 0, 40);
-  left.appendChild(prow);
-  left.appendChild(el('div','sub', freeText(t.fte)));
   ban.appendChild(left);
   card.appendChild(ban);
 
@@ -1338,10 +1488,16 @@ function openSheet(id){
   const t = id ? findTask(id) : null;
   if(id && !t) return;
   ui.editId = id;
+  const g = t ? findGroup(t.gid) : null;
+  const hourly = !!(t && t.minutes && t.minutes % 60 === 0 && t.minutes >= 120);
   ui.draft = t
-    ? {name:t.name, minutes:t.minutes, freq:t.freq, auto:t.auto, icon:t.icon, gid:t.gid,
-       custom: TIME_KEYS.indexOf(t.minutes) === -1 && t.minutes > 0}
-    : {name:'', minutes:0, freq:'day', auto:0.7, icon:'clip', gid:null, custom:false};
+    ? {name:t.name, minutes:t.minutes, freq:t.freq, auto:t.auto, icon:t.icon,
+       gname: g ? g.name : '',
+       custom: TIME_KEYS.indexOf(t.minutes) === -1 && t.minutes > 0,
+       unit: hourly ? 'hr' : 'min',
+       amount: hourly ? t.minutes/60 : t.minutes}
+    : {name:'', minutes:0, freq:'day', auto:0.7, icon:'clip', gname:'',
+       custom:false, unit:'min', amount:0};
   $('scrim').hidden = false;
   document.body.style.overflow = 'hidden';
   renderSheet(ui.draft);
@@ -1356,26 +1512,37 @@ function closeSheet(){
 }
 /* The draft is computed on its own, so the number at the top of the sheet moves on
    every press — the list screen is a list, but adding an item is still a calculator. */
+function minutesOf(d){
+  const raw = Number(d.amount) || 0;
+  return Math.round(clamp(d.unit === 'hr' ? raw * 60 : raw, LIMITS.minutes[0], LIMITS.minutes[1]));
+}
 function draftHours(d){
-  return (d.minutes/60) * freqFactor(d.freq) * peopleOf(d.gid) * d.auto;
+  return (d.minutes/60) * freqFactor(d.freq) * peopleByName(d.gname) * d.auto;
 }
 function renderSheet(d){
   const sheet = $('sheet');
+  /* Rebuilding the sheet would drop it back to its first question. Remember where
+     it was, so choosing a time or a frequency leaves you where you were. */
+  const oldBody = sheet.querySelector('.sheetbody');
+  const sy = oldBody ? oldBody.scrollTop : 0;
   const active = document.activeElement;
   const keep = active && sheet.contains(active) ? active.getAttribute('data-k') : null;
   const caret = (keep && active.selectionStart != null) ? active.selectionStart : null;
   sheet.textContent = '';
 
+  /* The display carries the name of the task and what it returns a month. */
   const head = el('div','sheethead');
-  const ht = el('div');
+  const ht = el('div','headtext');
   ht.appendChild(el('div','t', ui.editId ? 'עדכון משימה' : 'משימה חדשה'));
+  const nameLine = el('div','tname');
+  nameLine.appendChild(el('bdi', null, d.name.trim() || 'בלי שם עדיין'));
+  ht.appendChild(nameLine);
   const hv = el('div','n');
   const hrs = draftHours(d);
   hv.appendChild(el('bdi', null, hrs > 0 && hrs < 10 ? nf(Math.round(hrs*10)/10) : nf(Math.round(hrs))));
   ht.appendChild(hv);
   ht.appendChild(el('div','u','שעות בחודש מהמשימה הזאת'));
   head.appendChild(ht);
-  head.appendChild(el('span','grow')).style.flex = '1';
   const x = el('button','icobtn','✕');
   x.type = 'button'; x.id = 'sheetClose';
   x.setAttribute('aria-label','סגירה');
@@ -1388,16 +1555,55 @@ function renderSheet(d){
 
   const body = el('div','sheetbody');
 
-  /* 1 — what the task is. The free field is the main control: anything typed here
-     becomes a task, whether or not it appears among the ready-made keys. */
+  /* 1 — who it belongs to. First, because it is the thing she is asked in the room,
+     and nothing is assumed: an empty field is a task that belongs to no one. */
   const q1 = el('div','q');
-  const l1 = el('label', null, 'מה המשימה?');
-  l1.setAttribute('for','fName');
+  const l1 = el('label','qlabel','למי משויכת המשימה?');
+  l1.setAttribute('for','fAssign');
   q1.appendChild(l1);
+  const assign = document.createElement('input');
+  assign.type = 'text'; assign.className = 'field'; assign.id = 'fAssign';
+  assign.setAttribute('data-k','assign');
+  assign.placeholder = 'צוות רכש · מנהלת HR · אפשר להשאיר ריק';
+  assign.maxLength = LIMITS.names;
+  assign.value = d.gname;
+  assign.addEventListener('input', () => {
+    d.gname = assign.value.slice(0, LIMITS.names);
+    renderSheet(d);
+  });
+  q1.appendChild(assign);
+  if(state.groups.length){
+    const c1 = el('div','chips');
+    c1.style.marginTop = '10px';
+    state.groups.forEach(g => {
+      const b = el('button','chip sm');
+      b.type = 'button';
+      b.appendChild(el('bdi', null, g.name.trim() || 'שיוך ללא שם'));
+      if(g.people > 1) b.appendChild(el('span','chipsub', g.people + ' אנשים'));
+      b.setAttribute('aria-pressed', d.gname.trim() === g.name.trim() ? 'true' : 'false');
+      b.addEventListener('click', () => {
+        d.gname = (d.gname.trim() === g.name.trim()) ? '' : g.name;
+        renderSheet(d);
+      });
+      c1.appendChild(b);
+    });
+    q1.appendChild(c1);
+  }
+  const gnow = groupByName(d.gname);
+  q1.appendChild(el('p','hint', gnow && gnow.people > 1
+    ? 'המשימה מוכפלת ב-' + gnow.people + ' אנשים. את הכמות משנים במסך "הגדרות".'
+    : 'שם חדש נפתח כשיוך של אדם אחד, ואת הכמות משנים במסך "הגדרות".'));
+  body.appendChild(q1);
+
+  /* 2 — what the task is. The name also chooses the icon. */
+  const q2 = el('div','q');
+  const l2 = el('label','qlabel','מה המשימה?');
+  l2.setAttribute('for','fName');
+  q2.appendChild(l2);
   const name = document.createElement('input');
   name.type = 'text'; name.className = 'field'; name.id = 'fName';
   name.setAttribute('data-k','name');
-  name.placeholder = 'כתבו משימה, או בחרו מהרשימה';
+  name.placeholder = 'למשל: מענה לשאלות חוזרות במייל';
   name.maxLength = LIMITS.names;
   name.value = d.name;
   name.addEventListener('input', () => {
@@ -1405,30 +1611,15 @@ function renderSheet(d){
     d.icon = iconFor(d.name);
     renderSheet(d);
   });
-  q1.appendChild(name);
-  const c1 = el('div','chips');
-  c1.style.marginTop = '10px';
-  lib.forEach(item => {
-    const b = el('button','chip sm');
-    b.type = 'button';
-    b.appendChild(iconSvg(item.icon));
-    b.appendChild(el('bdi', null, item.name));
-    b.setAttribute('aria-pressed', d.name === item.name ? 'true' : 'false');
-    b.addEventListener('click', () => {
-      d.name = item.name; d.minutes = item.minutes; d.freq = item.freq; d.icon = item.icon;
-      d.custom = TIME_KEYS.indexOf(item.minutes) === -1;
-      renderSheet(d);
-    });
-    c1.appendChild(b);
-  });
-  q1.appendChild(c1);
-  body.appendChild(q1);
+  q2.appendChild(name);
+  q2.appendChild(el('p','hint','בשמכם שלכם. השם גם בוחר את האייקון, והמשימה מצטרפת למשימות המוכנות.'));
+  body.appendChild(q2);
 
-  /* 2 — how long it takes. The frequency is a dropdown INSIDE the question, so the
-     assumption is on screen and changing it is one choice, not four presses. */
-  const q2 = el('div','q');
-  const l2 = el('div','qlabel');
-  l2.appendChild(document.createTextNode('כמה זמן היא לוקחת'));
+  /* 3 — how long it takes. The frequency is a dropdown INSIDE the question, and the
+     minutes box appears only behind "אחר" — with the unit written next to it. */
+  const q3 = el('div','q');
+  const l3 = el('div','qlabel');
+  l3.appendChild(document.createTextNode('כמה זמן היא לוקחת'));
   const sel = document.createElement('select');
   sel.className = 'freqsel'; sel.id = 'fFreq';
   sel.setAttribute('aria-label','תדירות');
@@ -1438,111 +1629,77 @@ function renderSheet(d){
     if(d.freq === f) o.selected = true;
     sel.appendChild(o);
   });
-  sel.addEventListener('change', () => { d.freq = FREQS.includes(sel.value) ? sel.value : 'day'; renderSheet(d); });
-  l2.appendChild(sel);
-  l2.appendChild(document.createTextNode('?'));
-  q2.appendChild(l2);
-  const c2 = el('div','chips');
+  sel.addEventListener('change', () => {
+    d.freq = FREQS.includes(sel.value) ? sel.value : 'day';
+    renderSheet(d);
+  });
+  l3.appendChild(sel);
+  l3.appendChild(document.createTextNode('?'));
+  q3.appendChild(l3);
+  const c3 = el('div','chips grid');
   TIME_KEYS.forEach(m => {
     const b = el('button','chip', fmtMinutes(m));
     b.type = 'button';
     b.setAttribute('aria-pressed', (!d.custom && d.minutes === m) ? 'true' : 'false');
-    b.addEventListener('click', () => { d.minutes = m; d.custom = false; renderSheet(d); });
-    c2.appendChild(b);
+    b.addEventListener('click', () => {
+      d.minutes = m; d.custom = false; d.unit = 'min'; d.amount = m;
+      renderSheet(d);
+    });
+    c3.appendChild(b);
   });
   const other = el('button','chip','אחר');
   other.type = 'button'; other.id = 'fOther';
   other.setAttribute('aria-pressed', d.custom ? 'true' : 'false');
   other.addEventListener('click', () => { d.custom = true; renderSheet(d); });
-  c2.appendChild(other);
-  q2.appendChild(c2);
-  /* The minutes box appears only when "אחר" is chosen: a second place showing the
-     same 30 minutes you just pressed is noise. */
+  c3.appendChild(other);
+  q3.appendChild(c3);
   if(d.custom){
+    const row = el('div','unitrow');
     const mins = document.createElement('input');
     mins.type = 'text'; mins.inputMode = 'numeric'; mins.className = 'field';
-    mins.style.marginTop = '10px';
     mins.id = 'fMinutes';
     mins.setAttribute('data-k','mins');
-    mins.setAttribute('aria-label','מספר דקות');
-    mins.placeholder = 'מספר דקות';
-    mins.value = d.minutes ? String(d.minutes) : '';
+    mins.setAttribute('aria-label','כמה זמן, במספר');
+    mins.placeholder = 'מספר, למשל 3';
+    mins.value = d.amount ? String(d.amount) : '';
     mins.addEventListener('input', () => {
-      d.minutes = Math.round(clamp(mins.value, LIMITS.minutes[0], LIMITS.minutes[1]));
+      d.amount = clamp(mins.value, 0, 10000);
+      d.minutes = minutesOf(d);
       renderSheet(d);
     });
-    q2.appendChild(mins);
+    row.appendChild(mins);
+    const units = el('div','chips grid grid2');
+    [['min','דקות'],['hr','שעות']].forEach(u => {
+      const b = el('button','chip sm', u[1]);
+      b.type = 'button';
+      b.setAttribute('aria-pressed', (d.unit || 'min') === u[0] ? 'true' : 'false');
+      b.setAttribute('data-unit', u[0]);
+      b.addEventListener('click', () => { d.unit = u[0]; d.minutes = minutesOf(d); renderSheet(d); });
+      units.appendChild(b);
+    });
+    row.appendChild(units);
+    q3.appendChild(row);
+    q3.appendChild(el('p','hint','כותבים מספר ובוחרים אם הוא בדקות או בשעות.'));
   }
   const weekly = (d.minutes/60) * freqFactor(d.freq) / WEEKS_MONTH;
   if(weekly > 42){
-    q2.appendChild(el('p','hint warn','זה יותר מ-42 שעות בשבוע לאדם אחד. אם זה נעשה בכמה ידיים, אפשר להגדיר שיוך עם כמה אנשים במסך "הגדרות".'));
+    q3.appendChild(el('p','hint warn','זה יותר מ-42 שעות בשבוע לאדם אחד. אם זה נעשה בכמה ידיים, כדאי לשייך את המשימה לשיוך עם כמה אנשים.'));
   }
-  body.appendChild(q2);
+  body.appendChild(q3);
 
-  /* 3 — how much of it can run by itself. */
-  const q3 = el('div','q');
-  q3.appendChild(el('div','qlabel','כמה מזה אפשר להפוך לאוטומטי?'));
-  const c3 = el('div','chips');
+  /* 4 — how much of it can run by itself. An estimate, and it says so. */
+  const q4 = el('div','q');
+  q4.appendChild(el('div','qlabel','כמה מזה אפשר להפוך לאוטומטי? (הערכה)'));
+  const c4 = el('div','chips grid grid2');
   AUTOS.slice().reverse().forEach(a => {
     const b = el('button','chip', AUTO_LABEL[a] + ' (' + Math.round(a*100) + '%)');
     b.type = 'button';
     b.setAttribute('aria-pressed', d.auto === a ? 'true' : 'false');
     b.addEventListener('click', () => { d.auto = a; renderSheet(d); });
-    c3.appendChild(b);
-  });
-  q3.appendChild(c3);
-  q3.appendChild(el('p','hint','הערכה. אפשר לשנות בכל רגע ולראות איך המספר זז.'));
-  body.appendChild(q3);
-
-  /* 4 — who it belongs to. Nothing is assumed: no grouping is a valid answer, and
-     the names are hers — "צוות רכש", "מנהלת HR", whatever fits. */
-  const q4 = el('div','q');
-  q4.appendChild(el('div','qlabel','למי משויכת המשימה?'));
-  const c4 = el('div','chips');
-  const none = el('button','chip sm','לא משויכת');
-  none.type = 'button';
-  none.setAttribute('aria-pressed', d.gid == null ? 'true' : 'false');
-  none.addEventListener('click', () => { d.gid = null; renderSheet(d); });
-  c4.appendChild(none);
-  state.groups.forEach(g => {
-    const b = el('button','chip sm', g.name || 'שיוך ללא שם');
-    b.type = 'button';
-    b.setAttribute('aria-pressed', d.gid === g.id ? 'true' : 'false');
-    b.addEventListener('click', () => { d.gid = g.id; renderSheet(d); });
     c4.appendChild(b);
   });
   q4.appendChild(c4);
-  const addRow = el('div');
-  addRow.style.cssText = 'display:flex;gap:8px;margin-top:10px';
-  const newName = document.createElement('input');
-  newName.type = 'text'; newName.className = 'field'; newName.id = 'fNewGroup';
-  newName.setAttribute('data-k','newg');
-  newName.placeholder = 'שם חדש: צוות רכש, מנהלת HR…';
-  newName.maxLength = LIMITS.names;
-  const addBtn = el('button','btn sm','הוספה');
-  addBtn.type = 'button'; addBtn.id = 'fAddGroup';
-  const doAdd = () => {
-    const nm = newName.value.trim().slice(0, LIMITS.names);
-    if(!nm) return;
-    const exist = state.groups.filter(g => g.name === nm)[0];
-    if(exist){ d.gid = exist.id; }
-    else{
-      const g = newGroup(nm, 1);
-      state.groups.push(g);
-      d.gid = g.id;
-    }
-    save(); renderSheet(d);
-  };
-  addBtn.addEventListener('click', doAdd);
-  newName.addEventListener('keydown', ev => { if(ev.key === 'Enter'){ ev.preventDefault(); doAdd(); } });
-  addRow.appendChild(newName);
-  addRow.appendChild(addBtn);
-  q4.appendChild(addRow);
-  const gnow = findGroup(d.gid);
-  if(gnow && gnow.people > 1)
-    q4.appendChild(el('p','hint','המשימה מוכפלת ב-' + gnow.people + ' אנשים. את הכמות משנים במסך "הגדרות".'));
-  else
-    q4.appendChild(el('p','hint','אפשר להשאיר בלי שיוך. את מספר האנשים בכל שיוך מגדירים פעם אחת, במסך "הגדרות".'));
+  q4.appendChild(el('p','hint','אפשר לשנות בכל רגע ולראות איך המספר למעלה זז.'));
   body.appendChild(q4);
 
   sheet.appendChild(body);
@@ -1555,12 +1712,13 @@ function renderSheet(d){
     del.addEventListener('click', () => { const id = ui.editId; closeSheet(); deleteTask(id); });
     foot.appendChild(del);
   }
-  const okb = el('button','btn', ui.editId ? 'שמירה' : 'הוספה לרשימה');
+  const okb = el('button','btn pink', ui.editId ? 'שמירה' : 'הוספה לרשימה');
   okb.type = 'button'; okb.id = 'sheetSave';
   okb.addEventListener('click', commitDraft);
   foot.appendChild(okb);
   sheet.appendChild(foot);
 
+  body.scrollTop = sy;
   if(keep){
     const again = sheet.querySelector('[data-k="' + keep + '"]');
     if(again){
@@ -1587,16 +1745,17 @@ function commitDraft(){
   closeSheet();
   if(!editId) rememberInLib(d);
   apply(() => {
+    const gid = d.gname.trim() ? ensureGroupByName(d.gname.trim()) : null;
     if(editId){
       const t = findTask(editId);
       if(t){
         t.name = d.name; t.minutes = d.minutes; t.freq = d.freq;
-        t.auto = d.auto; t.icon = d.icon; t.gid = d.gid;
+        t.auto = d.auto; t.icon = d.icon; t.gid = gid;
       }
     }else{
       if(state.tasks.length >= LIMITS.tasks){ toast('הרשימה מלאה'); return; }
       const t = newTask(d.name, d.minutes, d.freq, d.icon);
-      t.auto = d.auto; t.gid = d.gid;
+      t.auto = d.auto; t.gid = gid;
       state.tasks.push(t);
     }
   });

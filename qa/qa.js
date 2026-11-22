@@ -1,4 +1,4 @@
-/* QA for מחשבון האבנים הקטנות (list model).   node qa.js [baseUrl]
+/* QA for מחשבון האבנים הקטנות.   node qa.js [baseUrl]
    With no argument it serves ../index.html on localhost and tests that. */
 const http = require('http');
 const fs = require('fs');
@@ -39,6 +39,7 @@ function minLabel(m){
   const h = m/60;
   return (Number.isInteger(h) ? h : h.toFixed(1).replace('.0','')) + ' ש׳';
 }
+const sheetNum = async p => numOf(await p.locator('#sheet .sheethead .n').textContent());
 async function listNums(p){
   return p.evaluate(() => {
     const n = e => Number(e.textContent.replace(/[^\d.]/g,''));
@@ -59,7 +60,8 @@ async function listNums(p){
       rows, live, groups,
       sum: Math.round(live.reduce((a,r) => a + r.hrs, 0) * 10) / 10,
       total: tot ? n(tot) : null,
-      label: (document.querySelector('.totalrow .tlabel') || {}).textContent || ''
+      label: (document.querySelector('.totalrow .tlabel') || {}).textContent || '',
+      ready: [...document.querySelectorAll('.readychip > .chip bdi')].map(b => b.textContent)
     };
   });
 }
@@ -67,29 +69,28 @@ async function openSheet(p){
   await p.locator('#btnNew').click();
   await p.waitForSelector('#sheet #fName');
 }
+async function pickTime(p, o){
+  if(o.minutes !== undefined && TIME_KEYS.indexOf(o.minutes) !== -1){
+    await p.locator('#sheet .chip', {hasText: minLabel(o.minutes)}).first().click();
+    return;
+  }
+  await p.locator('#fOther').click();
+  if(o.hours !== undefined){
+    await p.locator('#fMinutes').fill(String(o.hours));
+    await p.locator('#sheet .chip[data-unit="hr"]').click();
+  }else{
+    await p.locator('#fMinutes').fill(String(o.minutes));
+  }
+}
 async function addTask(p, o){
   await openSheet(p);
-  if(o.chip) await p.locator('#sheet .chip', {hasText:o.chip}).first().click();
+  if(o.assign) await p.locator('#fAssign').fill(o.assign);
   if(o.name) await p.locator('#fName').fill(o.name);
   if(o.freq) await p.selectOption('#fFreq', o.freq);
-  if(o.minutes !== undefined){
-    if(TIME_KEYS.indexOf(o.minutes) !== -1){
-      await p.locator('#sheet .chip', {hasText: minLabel(o.minutes)}).first().click();
-    }else{
-      await p.locator('#fOther').click();
-      await p.locator('#fMinutes').fill(String(o.minutes));
-    }
-  }
+  if(o.minutes !== undefined || o.hours !== undefined) await pickTime(p, o);
   if(o.auto) await p.locator('#sheet .chip', {hasText:o.auto}).first().click();
-  if(o.newGroup){
-    await p.locator('#fNewGroup').fill(o.newGroup);
-    await p.locator('#fAddGroup').click();
-    await p.waitForTimeout(120);
-  }else if(o.group){
-    await p.locator('#sheet .chip', {hasText:o.group}).first().click();
-  }
   await p.locator('#sheetSave').click();
-  await p.waitForTimeout(160);
+  await p.waitForTimeout(170);
 }
 
 async function main(){
@@ -122,7 +123,6 @@ async function main(){
   section('1 · הרשימה היא המסך הראשון');
   ok('הכותרת היא מחשבון האבנים הקטנות',
      (await page.locator('#appTitle').textContent()).indexOf('מחשבון האבנים הקטנות') === 0);
-  ok('כפתור "חדש" קיים', await page.locator('#btnNew').isVisible());
   ok('כפתור "חדש" בצד שמאל למעלה', await page.evaluate(() => {
     const b = document.getElementById('btnNew').getBoundingClientRect();
     return b.left < window.innerWidth/2 && b.top < 90;
@@ -140,18 +140,26 @@ async function main(){
   await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('2 · הגיליון הוא המחשבון');
+  section('2 · הגיליון: סדר השאלות והמספר החי');
   await openSheet(page);
-  ok('הגיליון נפתח עם שאלה ראשונה',
-     (await page.locator('#sheet').textContent()).indexOf('מה המשימה?') !== -1);
+  const labels = await page.locator('#sheet .qlabel').allTextContents();
+  ok('השאלה הראשונה היא השיוך', labels[0].indexOf('למי משויכת המשימה?') === 0);
+  ok('השאלה השנייה היא שם המשימה', labels[1].indexOf('מה המשימה?') === 0);
+  ok('אחריה השאלה על הזמן', labels[2].indexOf('כמה זמן היא לוקחת') === 0);
+  ok('השאלה על האוטומציה אומרת שזו הערכה',
+     labels[3].indexOf('כמה מזה אפשר להפוך לאוטומטי? (הערכה)') === 0);
   ok('מספר חי בראש הגיליון', await page.locator('#sheet .sheethead .n').isVisible());
-  ok('המספר מתחיל באפס', numOf(await page.locator('#sheet .sheethead .n').textContent()) === 0);
-  await page.locator('#sheet .chip', {hasText:'מיון קורות חיים'}).first().click();
-  const afterPick = numOf(await page.locator('#sheet .sheethead .n').textContent());
-  ok('המספר זז אחרי בחירת משימה מוכנה (' + afterPick + ')', afterPick === 28);
+  ok('המספר מתחיל באפס', (await sheetNum(page)) === 0);
+  ok('בראש הגיליון כתוב שאין עדיין שם',
+     (await page.locator('#sheet .tname').textContent()).indexOf('בלי שם') !== -1);
+  await page.locator('#fName').fill('מענה לשאלות חוזרות');
+  await page.waitForTimeout(120);
+  ok('שם המשימה מופיע בראש הגיליון',
+     (await page.locator('#sheet .tname').textContent()) === 'מענה לשאלות חוזרות');
+  await page.locator('#sheet .chip', {hasText:'2 ש׳'}).first().click();
+  ok('שעתיים ביום = 28 ש׳ בחודש', (await sheetNum(page)) === 28);
   await page.locator('#sheet .chip', {hasText:'כמעט הכול'}).first().click();
-  ok('המספר זז אחרי שינוי אוטומציה',
-     numOf(await page.locator('#sheet .sheethead .n').textContent()) === 36);
+  ok('שינוי האוטומציה מזיז את המספר', (await sheetNum(page)) === 36);
   ok('התדירות היא תפריט בחירה, לא כפתור מדלג',
      await page.evaluate(() => document.getElementById('fFreq').tagName === 'SELECT'));
   ok('בתפריט התדירות ארבע אפשרויות', (await page.locator('#fFreq option').count()) === 4);
@@ -160,18 +168,15 @@ async function main(){
     return !!l && l.textContent.indexOf('כמה זמן היא לוקחת') === 0;
   }));
   await page.selectOption('#fFreq', 'week');
-  ok('בחירת "פעם בשבוע" משנה את המספר',
-     near(numOf(await page.locator('#sheet .sheethead .n').textContent()), 8.1));
-  await page.selectOption('#fFreq', 'day');
-  ok('יש שאלת שיוך', (await page.locator('#sheet').textContent()).indexOf('למי משויכת המשימה?') !== -1);
-  ok('השאלות בגיליון לא מניחות צוות',
-     (await page.locator('#sheet .qlabel').allTextContents()).join(' ').indexOf('צוות') === -1);
+  ok('"פעם בשבוע" משנה את המספר', near(await sheetNum(page), 8.1));
+  ok('אין רשימת משימות מוכנות בתוך הגיליון',
+     (await page.locator('#sheet .readychip').count()) === 0);
   await page.locator('#sheetClose').click();
   await page.waitForTimeout(140);
   ok('הגיליון נסגר', await page.locator('#scrim').isHidden());
 
   /* ---------------------------------------------------------- */
-  section('3 · תיבת הדקות מופיעה רק ב"אחר"');
+  section('3 · הזמן: כפתורים, "אחר", ודקות מול שעות');
   await openSheet(page);
   ok('תיבת דקות לא קיימת מראש', (await page.locator('#fMinutes').count()) === 0);
   await page.locator('#sheet .chip', {hasText:'30 דק׳'}).first().click();
@@ -180,37 +185,64 @@ async function main(){
     const b = [...document.querySelectorAll('#sheet .chip')].filter(x => x.textContent.trim() === '30 דק׳')[0];
     return !!b && b.getAttribute('aria-pressed') === 'true';
   }));
-  ok('יש כפתור "אחר"', await page.locator('#fOther').isVisible());
   await page.locator('#fOther').click();
-  ok('"אחר" פותח תיבת דקות', await page.locator('#fMinutes').isVisible());
-  await page.locator('#fMinutes').fill('25');
+  ok('"אחר" פותח תיבת מספר', await page.locator('#fMinutes').isVisible());
+  ok('יש בחירה בין דקות לשעות', (await page.locator('#sheet .chip[data-unit]').count()) === 2);
+  ok('ברירת המחדל היא דקות',
+     (await page.locator('#sheet .chip[data-unit="min"]').getAttribute('aria-pressed')) === 'true');
+  await page.locator('#fMinutes').fill('3');
   await page.waitForTimeout(120);
-  ok('הדקות החופשיות נכנסות לחישוב',
-     near(numOf(await page.locator('#sheet .sheethead .n').textContent()), 5.8));
-  ok('"אחר" מסומן', (await page.locator('#fOther').getAttribute('aria-pressed')) === 'true');
+  ok('3 דקות ביום = 0.7 ש׳ בחודש', near(await sheetNum(page), 0.7));
+  await page.locator('#sheet .chip[data-unit="hr"]').click();
+  await page.waitForTimeout(120);
+  ok('מעבר לשעות קורא את אותו מספר כשעות', near(await sheetNum(page), 42));
+  ok('המספר שנכתב נשאר 3', (await page.locator('#fMinutes').inputValue()) === '3');
+  ok('"שעות" מסומן',
+     (await page.locator('#sheet .chip[data-unit="hr"]').getAttribute('aria-pressed')) === 'true');
   await page.locator('#sheet .chip', {hasText:'45 דק׳'}).first().click();
   ok('חזרה לכפתור מוכן סוגרת את התיבה', (await page.locator('#fMinutes').count()) === 0);
   await page.locator('#sheetClose').click();
 
   /* ---------------------------------------------------------- */
-  section('4 · משימה שנכתבת ביד');
+  section('4 · המשימות המוכנות יושבות במסך הרשימה');
+  await fresh(page);
+  let L = await listNums(page);
+  ok('הרצועה מופיעה גם כשהרשימה ריקה', L.ready.length === 10);
+  ok('הרצועה מסבירה שהלחיצה מוסיפה',
+     (await page.locator('#screenList').textContent()).indexOf('לחיצה מוסיפה לרשימה') !== -1);
+  await page.locator('.readychip > .chip', {hasText:'תיאום פגישות ביומן'}).click();
+  await page.waitForTimeout(200);
+  L = await listNums(page);
+  ok('לחיצה מוסיפה את המשימה לרשימה', L.rows.length === 1 && L.rows[0].name === 'תיאום פגישות ביומן');
+  ok('המשימה שנוספה יורדת מהרצועה', L.ready.indexOf('תיאום פגישות ביומן') === -1);
+  ok('שעה ביום × 20 × 0.7 = 14', L.rows[0].hrs === 14);
+  const readyBefore = L.ready.length;
+  await page.locator('.chipx').first().click();
+  await page.waitForTimeout(200);
+  L = await listNums(page);
+  ok('אפשר להוריד משימה מוכנה מהרשימה', L.ready.length === readyBefore - 1);
+  ok('ההסרה לא נוגעת ברשימה עצמה', L.rows.length === 1);
+  await page.locator('#btnLibReset').click();
+  await page.waitForTimeout(200);
+  ok('אפשר להחזיר את הרשימה המקורית',
+     await page.evaluate(() => window.__waives.lib.length === 10));
+  await snapText(page);
+
+  /* ---------------------------------------------------------- */
+  section('5 · משימה שנכתבת ביד');
   await fresh(page);
   await addTask(page, {name:'מענה לטלפונים של הסניף', minutes:30, freq:'day', auto:'רוב'});
-  let L = await listNums(page);
+  L = await listNums(page);
   ok('משימה חופשית נכנסת לרשימה', L.rows.length === 1);
   ok('השם נשמר', L.rows[0].name === 'מענה לטלפונים של הסניף');
   ok('החישוב נכון (7 ש׳)', L.rows[0].hrs === 7);
-  ok('המשימה הצטרפה לרשימה המוכנה',
+  ok('המשימה הצטרפה למשימות המוכנות',
      await page.evaluate(() => window.__waives.lib[0].name === 'מענה לטלפונים של הסניף'));
-  await openSheet(page);
-  ok('היא מופיעה ככפתור מוכן בגיליון',
-     (await page.locator('#sheet .chips').first().textContent()).indexOf('מענה לטלפונים של הסניף') !== -1);
-  await page.locator('#sheetClose').click();
   ok('הרשימה המוכנה נשמרת במפתח נפרד',
      await page.evaluate(() => !!localStorage.getItem('waives.stones.lib')));
 
   /* ---------------------------------------------------------- */
-  section('5 · חישוב מדויק לפי הקבועים');
+  section('6 · חישוב מדויק לפי הקבועים');
   const calc = await page.evaluate(() => {
     const w = window.__waives;
     return {fte:w.FTE_MONTH, days:w.DAYS_MONTH, weeks:w.WEEKS_MONTH};
@@ -227,18 +259,17 @@ async function main(){
   await one({name:'יומי', minutes:60, freq:'day', auto:'כמעט הכול'}, 18, 'שעה ביום × 20 × 0.9 = 18');
   await one({name:'שבועי', minutes:120, freq:'week', auto:'חצי'}, 4.5, 'שעתיים בשבוע × 4.5 × 0.5 = 4.5');
   await one({name:'חודשי', minutes:120, freq:'month', auto:'רוב'}, 1.4, 'שעתיים בחודש × 0.7 = 1.4');
-  await one({name:'רבעוני', minutes:120, freq:'quarter', auto:'רוב'}, 0.5, 'שעתיים ברבעון = כחצי שעה בחודש');
+  await one({name:'רבעוני', minutes:120, freq:'quarter', auto:'רוב'}, 0.5, 'שעתיים ברבעון = כחצי שעה');
+  await one({name:'שלוש שעות', hours:3, freq:'week', auto:'רוב'}, 9.45, '3 שעות בשבוע × 4.5 × 0.7 = 9.5');
   await addTask(page, {name:'עוד אחת', minutes:45, freq:'day', auto:'רוב'});
-  await addTask(page, {name:'ועוד אחת', minutes:15, freq:'week', auto:'חצי'});
   L = await listNums(page);
   ok('הסכום על המסך = סכום השורות (' + L.total + ')', near(L.total, L.sum, 0.051));
-  await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('6 · הרשימה מסתכמת, כפי שהיא נקראת מהמסך');
+  section('7 · הרשימה מסתכמת, כפי שהיא נקראת מהמסך');
   await fresh(page);
   await page.locator('#emptyDemo').click();
-  await page.waitForTimeout(220);
+  await page.waitForTimeout(240);
   L = await listNums(page);
   ok('הדוגמה טוענת עשר משימות', L.rows.length === 10);
   ok('סכום הדוגמה 303 שעות (' + L.total + ')', L.total === 303);
@@ -252,122 +283,121 @@ async function main(){
     const v = document.querySelector('.totalrow .tvalue').getBoundingClientRect();
     return (v.left - row.left) < row.width/2;
   }));
-  ok('שורת הסכום באותו משקל כמו השורות מעליה', await page.evaluate(() => {
-    const a = parseFloat(getComputedStyle(document.querySelector('.totalrow .tvalue')).fontSize);
-    const b = parseFloat(getComputedStyle(document.querySelector('.row .hrs')).fontSize);
-    return Math.abs(a - b) <= 2;
+  ok('שורת הסכום צבועה אחרת מהשורות', await page.evaluate(() => {
+    const t = getComputedStyle(document.querySelector('.totalrow')).backgroundImage;
+    const r = getComputedStyle(document.querySelector('.row')).backgroundColor;
+    return t.indexOf('gradient') !== -1 && t !== r;
   }));
   await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('7 · תיבת הסימון מכניסה ומוציאה מהסכום');
-  const before7 = (await listNums(page)).total;
+  section('8 · תיבת הסימון מכניסה ומוציאה מהסכום');
+  const before8 = (await listNums(page)).total;
   const firstRow = page.locator('.row').first();
   const firstHrs = numOf(await firstRow.locator('.hrs').textContent());
   await firstRow.locator('.tick').click();
-  await page.waitForTimeout(160);
+  await page.waitForTimeout(170);
   L = await listNums(page);
-  ok('הסרת סימון מקטינה את הסכום', L.total === before7 - firstHrs);
+  ok('הסרת סימון מקטינה את הסכום', L.total === before8 - firstHrs);
   ok('השורה נשארת על המסך', L.rows.length === 10);
   ok('השורה שהוסרה לא נספרת', L.live.length === 9);
   ok('השורות המסומנות מסתכמות לסכום', near(L.sum, L.total, 0.051));
   await firstRow.locator('.tick').click();
-  await page.waitForTimeout(160);
-  ok('החזרת הסימון מחזירה את הסכום', (await listNums(page)).total === before7);
+  await page.waitForTimeout(170);
+  ok('החזרת הסימון מחזירה את הסכום', (await listNums(page)).total === before8);
 
   /* ---------------------------------------------------------- */
-  section('8 · שיוך: נקרא בשם שלה, ולא נוצר לבד');
+  section('9 · שיוך: נקרא בשם שלה, ולא נוצר לבד');
   await fresh(page);
   await openSheet(page);
-  ok('ברירת המחדל היא "לא משויכת"', await page.evaluate(() => {
-    const b = [...document.querySelectorAll('#sheet .chip')].filter(x => x.textContent.trim() === 'לא משויכת')[0];
-    return !!b && b.getAttribute('aria-pressed') === 'true';
-  }));
+  ok('שדה השיוך ריק כברירת מחדל', (await page.locator('#fAssign').inputValue()) === '');
+  ok('אין כפתור "לא משויכת"',
+     (await page.locator('#sheet').textContent()).indexOf('לא משויכת') === -1);
+  ok('השדה מסביר שאפשר להשאיר ריק',
+     ((await page.locator('#fAssign').getAttribute('placeholder')) || '').indexOf('אפשר להשאיר ריק') !== -1);
   await page.locator('#fName').fill('בדיקה בלי שיוך');
   await page.locator('#sheet .chip', {hasText:'30 דק׳'}).first().click();
   await page.locator('#sheetSave').click();
-  await page.waitForTimeout(160);
+  await page.waitForTimeout(170);
   ok('לא נוצר שיוך מעצמו', await page.evaluate(() => window.__waives.state.groups.length === 0));
   L = await listNums(page);
   ok('משימה בלי שיוך נספרת פעם אחת', L.rows[0].hrs === 7);
   ok('אין כותרות שיוך כשאין שיוכים', L.groups.length === 0);
-  await addTask(page, {name:'השוואת הצעות מחיר', minutes:60, freq:'week', newGroup:'צוות רכש'});
-  ok('שיוך חדש נוצר רק כשכותבים אותו',
+  await addTask(page, {name:'השוואת הצעות מחיר', minutes:60, freq:'week', assign:'צוות רכש'});
+  ok('שיוך חדש נוצר מהשם שנכתב',
      await page.evaluate(() => window.__waives.state.groups.length === 1 &&
                                window.__waives.state.groups[0].name === 'צוות רכש'));
-  await addTask(page, {name:'מענה לעובדים', minutes:30, freq:'day', newGroup:'צוות רכש'});
+  await addTask(page, {name:'מענה לעובדים', minutes:30, freq:'day', assign:'צוות רכש'});
   ok('שם שכבר קיים לא יוצר שיוך כפול',
      await page.evaluate(() => window.__waives.state.groups.length === 1));
   ok('שיוך חדש מתחיל באדם אחד',
      await page.evaluate(() => window.__waives.state.groups[0].people === 1));
+  await openSheet(page);
+  ok('שיוך קיים מוצע ככפתור',
+     (await page.locator('#sheet .chip', {hasText:'צוות רכש'}).count()) === 1);
+  await page.locator('#sheet .chip', {hasText:'צוות רכש'}).click();
+  ok('לחיצה על הכפתור ממלאת את השדה',
+     (await page.locator('#fAssign').inputValue()) === 'צוות רכש');
+  await page.locator('#sheet .chip', {hasText:'צוות רכש'}).click();
+  ok('לחיצה נוספת מרוקנת אותו', (await page.locator('#fAssign').inputValue()) === '');
+  await page.locator('#sheetClose').click();
 
   /* ---------------------------------------------------------- */
-  section('9 · היררכיה לפי שיוך, עם כיווץ');
+  section('10 · היררכיה לפי שיוך, עם כיווץ');
   L = await listNums(page);
   ok('יש כותרת לשיוך', L.groups.some(g => g.name.indexOf('צוות רכש') !== -1));
   ok('יש כותרת "ללא שיוך"', L.groups.some(g => g.name.indexOf('ללא שיוך') !== -1));
   ok('כותרת השיוך מראה סכום שעות', L.groups[0].tot > 0);
   ok('כל השורות גלויות בהתחלה', L.rows.length === 3);
-  const totalBefore9 = L.total;
+  const total10 = L.total;
   await page.locator('.ghead').first().click();
-  await page.waitForTimeout(170);
+  await page.waitForTimeout(180);
   L = await listNums(page);
   ok('כיווץ מסתיר את הפירוט', L.rows.length === 1);
   ok('הכותרת המכווצת עדיין מראה את הסכום', L.groups[0].tot > 0);
-  ok('הסכום הכולל לא זז בכיווץ', L.total === totalBefore9);
+  ok('הסכום הכולל לא זז בכיווץ', L.total === total10);
   await page.locator('.ghead').first().click();
-  await page.waitForTimeout(170);
+  await page.waitForTimeout(180);
   ok('פתיחה מחזירה את הפירוט', (await listNums(page)).rows.length === 3);
 
   /* ---------------------------------------------------------- */
-  section('10 · הגדרות: שם העסק, שיוכים, רשימה מוכנה');
+  section('11 · הגדרות: שם העסק והשיוכים בלבד');
   await page.locator('#navSet').click();
-  await page.waitForTimeout(170);
+  await page.waitForTimeout(180);
   ok('המסך נקרא הגדרות', (await page.locator('#navSet').textContent()).indexOf('הגדרות') !== -1);
   ok('אין יותר מסך בשם צוותים', (await page.locator('nav.bar').textContent()).indexOf('צוותים') === -1);
+  ok('אין בהגדרות רשימת משימות מוכנות',
+     (await page.locator('#screenSet').textContent()).indexOf('המשימות המוכנות') === -1);
   ok('יש שדה שם עסק', await page.locator('#fBiz').isVisible());
   await page.locator('#fBiz').fill('משרד עורכי דין לוי');
-  await page.waitForTimeout(160);
+  await page.waitForTimeout(170);
   ok('שם העסק מצטרף לכותרת',
      (await page.locator('#appTitle').textContent()).indexOf('משרד עורכי דין לוי') !== -1);
   ok('השיוך מופיע בהגדרות',
      (await page.locator('#screenSet .setrow input[type=text]').first().inputValue()) === 'צוות רכש');
   ok('מספר האנשים מוגדר בהגדרות', await page.locator('.stepper').first().isVisible());
   await page.locator('.stepper button').first().click();
-  await page.waitForTimeout(170);
+  await page.waitForTimeout(180);
   ok('אפשר להוסיף אנשים לשיוך',
      await page.evaluate(() => window.__waives.state.groups[0].people === 2));
   ok('כפתור שיוך חדש קיים', await page.locator('#btnAddGroup').isVisible());
-  ok('הרשימה המוכנה מוצגת בהגדרות',
-     (await page.locator('#screenSet').textContent()).indexOf('המשימות המוכנות') !== -1);
-  const libBefore = await page.evaluate(() => window.__waives.lib.length);
-  await page.locator('#screenSet [aria-label^="הסרת"]').first().click();
-  await page.waitForTimeout(170);
-  ok('אפשר להסיר משימה מוכנה שלא רלוונטית',
-     await page.evaluate(l => window.__waives.lib.length === l - 1, libBefore));
   await page.locator('#navList').click();
-  await page.waitForTimeout(160);
+  await page.waitForTimeout(170);
   ok('יש משימות לפני תרחיש חדש',
      (await page.evaluate(() => window.__waives.state.tasks.length)) === 3);
+  const libNow = await page.evaluate(() => window.__waives.lib.length);
   await page.locator('#btnMenu').click();
   await page.locator('#menu button', {hasText:'תרחיש חדש'}).click();
-  await page.waitForTimeout(200);
+  await page.waitForTimeout(220);
   ok('תרחיש חדש מרוקן את הרשימה',
      await page.evaluate(() => window.__waives.state.tasks.length === 0));
-  ok('תרחיש חדש לא מחזיר את הרשימה המוכנה המקורית',
-     await page.evaluate(l => window.__waives.lib.length === l - 1, libBefore));
+  ok('תרחיש חדש לא נוגע במשימות המוכנות',
+     await page.evaluate(l => window.__waives.lib.length === l, libNow));
   ok('תרחיש חדש מנקה גם את שם העסק',
      (await page.locator('#appTitle').textContent()).indexOf('לוי') === -1);
-  await page.locator('#navSet').click();
-  await page.waitForTimeout(160);
-  await page.locator('#btnLibReset').click();
-  await page.waitForTimeout(170);
-  ok('אפשר להחזיר את הרשימה המוכנה המקורית',
-     await page.evaluate(() => window.__waives.lib.length === 10));
-  await page.locator('#navList').click();
 
   /* ---------------------------------------------------------- */
-  section('11 · האייקון מתאים למשימה');
+  section('12 · האייקון מתאים למשימה');
   const iconOf = n => page.evaluate(x => window.__waives.iconFor(x), n);
   ok('מענה לטלפונים → טלפון', (await iconOf('מענה לטלפונים')) === 'phone');
   ok('הקלדת חשבוניות → כספים', (await iconOf('הקלדת חשבוניות ספקים')) === 'money');
@@ -387,34 +417,35 @@ async function main(){
   }));
 
   /* ---------------------------------------------------------- */
-  section('12 · עריכה, מחיקה, ביטול');
+  section('13 · עריכה, מחיקה, ביטול');
   await page.locator('.row .rowmain').first().click();
   await page.waitForSelector('#sheet #fName');
   ok('לחיצה על שורה פותחת אותה לעריכה',
      (await page.locator('#fName').inputValue()) === 'מענה לטלפונים');
   ok('הגיליון מראה "עדכון משימה"',
      (await page.locator('#sheet .sheethead .t').textContent()).indexOf('עדכון') !== -1);
+  ok('שם המשימה מופיע בצג', (await page.locator('#sheet .tname').textContent()) === 'מענה לטלפונים');
   await page.locator('#fName').fill('מענה לטלפונים ולמיילים');
   await page.locator('#sheetSave').click();
-  await page.waitForTimeout(170);
+  await page.waitForTimeout(180);
   L = await listNums(page);
   ok('העריכה נשמרה', L.rows[0].name === 'מענה לטלפונים ולמיילים');
   ok('עריכה לא מוסיפה שורה', L.rows.length === 1);
   await page.locator('.row .rowmain').first().click();
   await page.waitForSelector('#sheetDelete');
   await page.locator('#sheetDelete').click();
-  await page.waitForTimeout(180);
+  await page.waitForTimeout(190);
   ok('המחיקה עובדת', (await listNums(page)).rows.length === 0);
   ok('מוצע ביטול', await page.locator('#snackBtn').isVisible());
   await page.locator('#snackBtn').click();
-  await page.waitForTimeout(180);
+  await page.waitForTimeout(190);
   ok('הביטול מחזיר את המשימה', (await listNums(page)).rows.length === 1);
   await openSheet(page);
   ok('במשימה חדשה אין כפתור מחיקה', (await page.locator('#sheetDelete').count()) === 0);
   await page.locator('#sheetClose').click();
 
   /* ---------------------------------------------------------- */
-  section('13 · שמירה, רענון, קישור');
+  section('14 · שמירה, רענון, קישור');
   await page.reload();
   await page.waitForTimeout(220);
   ok('הרשימה שורדת רענון', (await listNums(page)).rows.length === 1);
@@ -433,14 +464,14 @@ async function main(){
   ok('המילים "העתקת סיכום" לא קיימות באפליקציה',
      (await page.evaluate(() => document.body.innerText)).indexOf('העתקת סיכום') === -1);
   await page.goto(url);
-  await page.waitForTimeout(160);
+  await page.waitForTimeout(170);
   await page.goto(url + '#' + share.split('#')[1]);
   await page.waitForTimeout(240);
   ok('קישור נפתח עם אותה משימה', (await listNums(page)).rows.length === 1);
   ok('קישור מציע ביטול', await page.locator('#snackBtn').isVisible());
 
   /* ---------------------------------------------------------- */
-  section('14 · קישורים עוינים');
+  section('15 · קישורים עוינים');
   const bad = [
     {},
     {v:3, g:'nope', t:'nope'},
@@ -473,7 +504,7 @@ async function main(){
      (await page.locator('#snackText').textContent()).indexOf('לא נקרא') !== -1);
 
   /* ---------------------------------------------------------- */
-  section('15 · אחסון חסום');
+  section('16 · אחסון חסום');
   const ctx2 = await browser.newContext({viewport:{width:420, height:900}, locale:'he-IL'});
   const p2 = await ctx2.newPage();
   await p2.addInitScript(() => {
@@ -492,42 +523,49 @@ async function main(){
   await ctx2.close();
 
   /* ---------------------------------------------------------- */
-  section('16 · דשבורד: באנר אחד');
+  section('17 · דשבורד: באנר אחד, גלגל אחד');
   await fresh(page);
   await page.locator('#emptyDemo').click();
-  await page.waitForTimeout(220);
+  await page.waitForTimeout(240);
   await page.locator('#navDash').click();
-  await page.waitForTimeout(220);
+  await page.waitForTimeout(240);
   ok('הדשבורד נפתח', !(await page.locator('#screenDash').isHidden()));
   ok('הרשימה מוסתרת', await page.locator('#screenList').isHidden());
   ok('יש באנר אחד, לא שניים', (await page.locator('#screenDash .banner').count()) === 1);
   const ban = await page.evaluate(() => {
     const b = document.querySelector('#screenDash .banner');
     const sides = [...b.querySelectorAll('.side')];
+    const figs = [...b.querySelectorAll('.fig')].map(f => f.getBoundingClientRect());
     return {
       count: sides.length,
       right: sides[0].innerText,
       left: sides[1].innerText,
       rx: sides[0].getBoundingClientRect().right,
-      lx: sides[1].getBoundingClientRect().right
+      lx: sides[1].getBoundingClientRect().right,
+      figTop: figs.map(f => Math.round(f.top)),
+      figMid: figs.map(f => Math.round(f.top + f.height/2)),
+      bigSize: parseFloat(getComputedStyle(b.querySelector('.big')).fontSize),
+      ringSize: parseFloat(getComputedStyle(b.querySelector('.ringnum')).fontSize)
     };
   });
   ok('בבאנר שני צדדים', ban.count === 2);
+  ok('שני הצדדים באותו גובה', ban.figMid[0] === ban.figMid[1]);
+  ok('הפונט של המספר לא ענק (' + ban.bigSize + ')', ban.bigSize <= 44);
+  ok('האחוז בתוך הגלגל (' + ban.ringSize + ')', ban.ringSize <= 30);
   ok('בצד ימין השעות בחודש', ban.right.indexOf('שעות בחודש') !== -1);
   ok('בצד ימין גם השעות בשנה', ban.right.indexOf('שעות בשנה') !== -1);
-  ok('בצד שמאל אחוז המשרה', ban.left.indexOf('%') !== -1);
   ok('הצד הימני אכן מימין', ban.rx > ban.lx);
   ok('המספר בבאנר הוא 303', numOf(ban.right.split('\n')[0]) === 303);
-  ok('אחוז המשרה 169%', ban.left.indexOf('169%') !== -1);
-  ok('משרה מצוירת כאיש', (await page.locator('#screenDash .banner svg circle[fill]').count()) > 0);
-  ok('יש גלגל להשארית', await page.evaluate(() =>
+  ok('בצד שמאל רק אחוז ותווית', ban.left.replace(/\s+/g,' ').trim() === '169% מתוך משרה מלאה');
+  ok('אין ציורי אנשים בבאנר',
+     (await page.locator('#screenDash .banner svg circle[fill]:not([stroke])').count()) === 0);
+  ok('יש גלגל אחד בבאנר', await page.evaluate(() =>
      [...document.querySelectorAll('#screenDash .banner svg circle')]
-       .some(c => c.getAttribute('stroke-dasharray'))));
-  ok('הניסוח "משרה ועוד 69%"', ban.left.indexOf('משרה ועוד 69%') !== -1);
+       .filter(c => c.getAttribute('stroke-dasharray')).length === 1));
   ok('באנר קטן שואל מה אפשרי בזמן שהתפנה',
      (await page.locator('.dreambar').textContent()).indexOf('מה אפשרי בזמן שהתפנה?') === 0);
   await page.locator('#screenDash .chip', {hasText:'פרויקט חדש שמחכה'}).first().click();
-  await page.waitForTimeout(180);
+  await page.waitForTimeout(190);
   ok('מה שסומן מופיע בבאנר הקטן',
      (await page.locator('.dreambar').textContent()).indexOf('פרויקט חדש שמחכה') !== -1);
   ok('יש פירוט איפה הזמן יושב',
@@ -537,9 +575,9 @@ async function main(){
   await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('17 · ניסוח');
+  section('18 · ניסוח');
   await page.locator('#navList').click();
-  await page.waitForTimeout(170);
+  await page.waitForTimeout(180);
   const words = (await page.evaluate(() => window.__waives.freeText(0.2)))
     + ' | ' + (await page.evaluate(() => window.__waives.freeText(1.7)))
     + ' | ' + (await page.evaluate(() => window.__waives.freeText(2)));
@@ -552,7 +590,7 @@ async function main(){
   await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('18 · אין אבנים, אין ₪, אין קיצוץ');
+  section('19 · אין אבנים, אין ₪, אין קיצוץ');
   const src = await page.evaluate(() => document.documentElement.outerHTML);
   const seen = screenText.join('\n');
   ok('אין ציור אבנים בקוד', !/function mountain|mountain\(|stoneSvg|pebble|cairn/i.test(src));
@@ -566,25 +604,38 @@ async function main(){
   ok('המסר הוא זמן שמתפנה', seen.indexOf('מתפנה') !== -1);
 
   /* ---------------------------------------------------------- */
-  section('19 · הגלילה נשארת במקום, וחלון הטיפים');
+  section('20 · שום דבר לא קופץ');
   await fresh(page);
   await page.locator('#emptyDemo').click();
-  await page.waitForTimeout(220);
+  await page.waitForTimeout(240);
   await page.setViewportSize({width:420, height:700});
-  await page.waitForTimeout(170);
+  await page.waitForTimeout(180);
   await page.evaluate(() => window.scrollTo(0, 400));
   await page.waitForTimeout(140);
   const y0 = await page.evaluate(() => window.scrollY);
   ok('אפשר לגלול למטה (' + y0 + ')', y0 > 200);
   await page.locator('.row .tick').nth(4).click();
   await page.waitForTimeout(220);
-  const y1 = await page.evaluate(() => window.scrollY);
-  ok('לחיצה על תיבת סימון לא קופצת לראש הדף (' + y1 + ')', Math.abs(y1 - y0) < 40);
+  ok('לחיצה על תיבת סימון לא קופצת לראש הדף',
+     Math.abs((await page.evaluate(() => window.scrollY)) - y0) < 40);
   await page.locator('.row .rowmain').nth(4).click();
   await page.waitForSelector('#sheet #fName');
+  /* the sheet itself must not jump back to its first question */
+  await page.evaluate(() => { document.querySelector('.sheetbody').scrollTop = 260; });
+  await page.waitForTimeout(140);
+  const s0 = await page.evaluate(() => document.querySelector('.sheetbody').scrollTop);
+  ok('אפשר לגלול בתוך הגיליון (' + s0 + ')', s0 > 100);
+  await page.locator('#sheet .chip', {hasText:'45 דק׳'}).first().click();
+  await page.waitForTimeout(200);
+  ok('בחירת זמן לא מקפיצה את הגיליון לראש',
+     Math.abs((await page.evaluate(() => document.querySelector('.sheetbody').scrollTop)) - s0) < 30);
+  await page.selectOption('#fFreq', 'week');
+  await page.waitForTimeout(200);
+  ok('בחירת תדירות לא מקפיצה את הגיליון לראש',
+     Math.abs((await page.evaluate(() => document.querySelector('.sheetbody').scrollTop)) - s0) < 30);
   await page.locator('#sheetClose').click();
-  await page.waitForTimeout(220);
-  ok('פתיחה וסגירה של משימה לא קופצות לראש הדף',
+  await page.waitForTimeout(200);
+  ok('סגירת הגיליון לא קופצת לראש הדף',
      Math.abs((await page.evaluate(() => window.scrollY)) - y0) < 60);
   await page.evaluate(() => window.scrollTo(0, 600));
   await page.locator('#btnTips').click();
@@ -599,16 +650,10 @@ async function main(){
   await page.waitForTimeout(240);
   ok('סגירת הטיפים מחזירה לראש הדף', (await page.evaluate(() => window.scrollY)) === 0);
   ok('החלון נסגר', await page.locator('#scrim2').isHidden());
-  await page.locator('#btnTips').click();
-  await page.waitForTimeout(180);
-  await page.locator('#tipsAdd').click();
-  await page.waitForTimeout(220);
-  ok('"הוספת משימה" מהטיפים פותח את הגיליון', await page.locator('#fName').isVisible());
-  await page.locator('#sheetClose').click();
   await page.setViewportSize({width:1280, height:900});
 
   /* ---------------------------------------------------------- */
-  section('20 · כיווניות, נגישות, רוחב');
+  section('21 · כיווניות, נגישות, רוחב');
   ok('הדף בעברית מימין לשמאל', await page.evaluate(() =>
      document.documentElement.lang === 'he' && document.documentElement.dir === 'rtl'));
   ok('לכל תיבת סימון יש תיאור', await page.evaluate(() =>
@@ -617,6 +662,8 @@ async function main(){
      [...document.querySelectorAll('.tick')].every(t => t.hasAttribute('aria-checked'))));
   ok('לכותרת השיוך יש מצב פתיחה', await page.evaluate(() =>
      [...document.querySelectorAll('.ghead')].every(g => g.hasAttribute('aria-expanded'))));
+  ok('לכל כפתור הסרה יש תיאור', await page.evaluate(() =>
+     [...document.querySelectorAll('.chipx')].every(b => (b.getAttribute('aria-label') || '').length > 3)));
   ok('לכל שדה יש תיאור', await page.evaluate(() =>
      [...document.querySelectorAll('input,select')].every(i =>
        i.getAttribute('aria-label') || (i.id && document.querySelector('label[for="' + i.id + '"]')))));
@@ -626,17 +673,59 @@ async function main(){
      document.getElementById('navList').getAttribute('aria-current') === 'page'));
   for(const w of [360, 420, 768, 1280]){
     await page.setViewportSize({width:w, height:900});
-    await page.waitForTimeout(160);
+    await page.waitForTimeout(170);
     const over = await page.evaluate(() => document.documentElement.scrollWidth - window.innerWidth);
     ok('אין גלילה אופקית ברוחב ' + w + ' (' + over + ')', over <= 1);
   }
   ok('אין שגיאות בקונסול', consoleErrors.length === 0, consoleErrors.slice(0,3).join(' | '));
 
   /* ---------------------------------------------------------- */
-  section('21 · צילומי מסך');
+  section('22 · הנראות: מקשים רכים וצג ירוק');
+  const look = await page.evaluate(() => {
+    const cs = n => getComputedStyle(document.querySelector(n));
+    const root = getComputedStyle(document.documentElement);
+    return {
+      bg: cs('body').backgroundColor,
+      bgImage: cs('body').backgroundImage,
+      rowShadow: cs('.row').boxShadow,
+      rowRadius: cs('.row').borderTopLeftRadius,
+      rowBg: cs('.row').backgroundColor,
+      screen: cs('.totalrow').backgroundImage,
+      green: root.getPropertyValue('--green').trim(),
+      pink: root.getPropertyValue('--pink').trim(),
+      ink: root.getPropertyValue('--ink').trim(),
+      darkCount: [...document.querySelectorAll('#screenList *, nav.bar, .top')].filter(e => {
+        const c = getComputedStyle(e).backgroundColor.match(/\d+/g);
+        if(!c) return false;
+        if(c.length > 3 && Number(c[3]) === 0) return false;
+        return (Number(c[0]) + Number(c[1]) + Number(c[2])) / 3 < 90;
+      }).length
+    };
+  });
+  ok('הרקע מנטה בהיר', look.bg === 'rgb(233, 239, 232)');
+  ok('לרקע יש מעבר עדין', look.bgImage.indexOf('gradient') !== -1);
+  ok('שורה היא מקש רך עם צל', look.rowShadow.indexOf('inset') !== -1 && look.rowShadow.indexOf('rgba(63, 88, 61') !== -1);
+  ok('לשורה פינות גדולות (' + look.rowRadius + ')', parseFloat(look.rowRadius) >= 18);
+  ok('פני המקש כמעט לבנים', look.rowBg === 'rgb(248, 250, 247)');
+  ok('שורת הסכום היא צג ירוק', look.screen.indexOf('gradient') !== -1);
+  ok('הירוק של התמונה', look.green === '#84BE74');
+  ok('הוורוד של התמונה', look.pink === '#F2A0B5');
+  ok('הטקסט ירוק כהה', look.ink === '#1F3A24');
+  ok('אין משטחים כהים באפליקציה (' + look.darkCount + ')', look.darkCount === 0);
+  ok('כפתור השמירה הוא המקש הוורוד', await page.evaluate(() => {
+    document.getElementById('btnNew').click();
+    const b = document.getElementById('sheetSave');
+    const bg = getComputedStyle(b).backgroundImage;
+    const got = bg.indexOf('244, 168, 188') !== -1;
+    document.getElementById('sheetClose').click();
+    return got;
+  }));
+
+  /* ---------------------------------------------------------- */
+  section('23 · צילומי מסך');
   const shots = [];
   const shot = async (n, w) => {
-    await page.setViewportSize({width:w || 420, height:900});
+    await page.setViewportSize({width:w || 430, height:950});
     await page.waitForTimeout(240);
     await page.screenshot({path:path.join(SHOTS, n + '.png'), fullPage:true});
     shots.push(n);
@@ -645,20 +734,21 @@ async function main(){
   await shot('01-empty');
   await page.locator('#emptyDemo').click();
   await page.waitForTimeout(240);
+  await page.evaluate(() => { document.getElementById('snack').hidden = true; });
   await shot('02-list');
   await page.locator('.ghead').first().click();
-  await page.waitForTimeout(180);
+  await page.waitForTimeout(190);
   await shot('03-collapsed');
   await page.locator('.ghead').first().click();
-  await page.waitForTimeout(180);
+  await page.waitForTimeout(190);
   await openSheet(page);
   await shot('04-sheet');
   await page.locator('#fOther').click();
-  await page.waitForTimeout(180);
+  await page.waitForTimeout(190);
   await shot('05-other');
   await page.locator('#sheetClose').click();
   await page.locator('#btnTips').click();
-  await page.waitForTimeout(220);
+  await page.waitForTimeout(230);
   await shot('06-tips');
   await page.locator('#tipsClose').click();
   await page.locator('#navDash').click();
@@ -668,7 +758,7 @@ async function main(){
   await page.waitForTimeout(240);
   await shot('08-settings');
   await page.locator('#navList').click();
-  await page.waitForTimeout(220);
+  await page.waitForTimeout(230);
   await shot('09-list-desktop', 1280);
   await page.locator('#navDash').click();
   await page.waitForTimeout(240);
