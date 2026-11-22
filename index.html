@@ -368,6 +368,11 @@ nav.bar button[aria-current="page"]{color:var(--gold-ink);font-weight:700;
 .askbody{padding:2px 22px 6px}
 .askbody p{margin:0 0 11px;font-size:15px;line-height:1.7;color:var(--ink-soft)}
 .askbody p strong{color:var(--ink);font-weight:800}
+.sendcol{display:flex;flex-direction:column;gap:11px;padding:8px 18px 0}
+.sendnote{margin:14px 20px 0;font-size:12.5px;line-height:1.6;color:var(--ink-faint);text-align:center}
+.sendclose{display:block;margin:4px auto calc(18px + env(safe-area-inset-bottom));padding:10px 18px}
+.sendbtn{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:14px}
+.sendbtn svg{flex:none}
 .askrow{display:flex;gap:11px;padding:8px 18px calc(18px + env(safe-area-inset-bottom))}
 .askrow .btn{flex:1}
 .btn.quiet{background:var(--face);color:var(--ink);box-shadow:var(--lift)}
@@ -985,19 +990,54 @@ function compute(s){
 const LS_KEY = 'waives.stones.v1';
 const LIB_KEY = 'waives.stones.lib';
 
-function b64urlEncode(text){
-  const bytes = new TextEncoder().encode(text);      // Hebrew would break btoa() directly
+function bytesToB64url(bytes){
   let bin = '';
   for(let i=0; i<bytes.length; i++) bin += String.fromCharCode(bytes[i]);
   return btoa(bin).replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 }
-function b64urlDecode(s){
+function b64urlToBytes(s){
   let t = String(s).replace(/-/g,'+').replace(/_/g,'/');
   while(t.length % 4) t += '=';
   const bin = atob(t);
   const bytes = new Uint8Array(bin.length);
   for(let i=0; i<bin.length; i++) bytes[i] = bin.charCodeAt(i);
-  return new TextDecoder().decode(bytes);
+  return bytes;
+}
+function b64urlEncode(text){
+  return bytesToB64url(new TextEncoder().encode(text));  // Hebrew would break btoa() directly
+}
+function b64urlDecode(s){
+  return new TextDecoder().decode(b64urlToBytes(s));
+}
+
+/* The link carries the whole mapping inside itself, and Hebrew is expensive: two
+   bytes a letter before the encoding adds its own third on top. Deflated first, a
+   real mapping of forty tasks drops from 5,300 characters to about 1,500 — the
+   difference between a link that sends and a link the app refuses to make.
+   `#s=` is the old plain form. It is still written when the browser has no
+   CompressionStream, and still read forever. */
+const LINK_MAX = 4000;
+async function encodeScenario(st){
+  const json = JSON.stringify(pack(st));
+  const plain = () => ({k:'s', v:b64urlEncode(json)});
+  if(typeof CompressionStream === 'undefined') return plain();
+  try{
+    const cs = new CompressionStream('deflate-raw');
+    const w = cs.writable.getWriter();
+    w.write(new TextEncoder().encode(json));
+    w.close();
+    const buf = new Uint8Array(await new Response(cs.readable).arrayBuffer());
+    return {k:'z', v:bytesToB64url(buf)};
+  }catch(e){ return plain(); }
+}
+async function decodeScenario(kind, value){
+  if(kind === 's') return JSON.parse(b64urlDecode(value));
+  if(typeof DecompressionStream === 'undefined') throw new Error('old');
+  const ds = new DecompressionStream('deflate-raw');
+  const w = ds.writable.getWriter();
+  w.write(b64urlToBytes(value));
+  w.close();
+  return JSON.parse(await new Response(ds.readable).text());
 }
 /* Compact NAMED keys — adding a field never shifts the meaning of the others.
    A task points at its grouping by INDEX, so the link carries no random ids. */
@@ -1071,14 +1111,22 @@ function loadLib(){
     return sanitizeLib(JSON.parse(raw)) || defaultLib();
   }catch(e){ return defaultLib(); }
 }
-function readHash(){
-  const m = /[#&]s=([A-Za-z0-9\-_]+)/.exec(location.hash || '');
-  if(!m) return null;
-  try{ return sanitize(unpack(JSON.parse(b64urlDecode(m[1])))); }
-  catch(e){ return 'bad'; }
+function hashParts(){
+  const h = location.hash || '';
+  const z = /[#&]z=([A-Za-z0-9\-_]+)/.exec(h);
+  if(z) return {k:'z', v:z[1]};
+  const m = /[#&]s=([A-Za-z0-9\-_]+)/.exec(h);
+  return m ? {k:'s', v:m[1]} : null;
 }
-function shareUrl(){
-  return location.origin + location.pathname + '#s=' + b64urlEncode(JSON.stringify(pack(state)));
+async function readHash(){
+  const part = hashParts();
+  if(!part) return null;
+  try{ return sanitize(unpack(await decodeScenario(part.k, part.v))); }
+  catch(e){ return e && e.message === 'old' ? 'old' : 'bad'; }
+}
+async function shareUrl(){
+  const e = await encodeScenario(state);
+  return location.origin + location.pathname + '#' + e.k + '=' + e.v;
 }
 
 /* ============================================================
@@ -1117,6 +1165,7 @@ function pathSvg(d, size){
 function iconSvg(key, size){ return pathSvg((ICONS[key] || ICONS.clip).d, size); }
 const CHECK_D = 'm4 12.5 5 5L20 6.5';
 const CARET_D = 'm6 9 6 6 6-6';
+const SEND_D = 'M21.5 2.5 2.5 9.3l7.6 3.1 3.1 7.6 8.3-17.5Zm0 0-11.4 10';
 
 function fmtMinutes(m){
   if(m < 60) return m + ' דק׳';
@@ -1276,6 +1325,7 @@ function renderList(res){
 
   host.appendChild(card);
   host.appendChild(tipsButton());
+  host.appendChild(sendButton());
 }
 /* Her own list of task names. One press writes the name into the task being
    added; the ✕ takes it out for good; the field under it adds another. The same
@@ -2237,16 +2287,82 @@ function summaryText(){
   return lines.join('\n');
 }
 let selfHash = false;
-function doShare(){
-  const url = shareUrl();
-  if(url.length > 1900){
-    toast('התרחיש ארוך מדי לקישור');
-    return;
-  }
-  const nextHash = 's=' + url.split('#s=')[1];
+/* Sending is the point of the tool, not a line in an overflow menu: the mapping is
+   done by one person and read by another — a manager hands it to whoever does the
+   work, and it comes back filled in. So it is a key at the end of the list, and the
+   menu item that used to hide it is gone. */
+async function currentLink(){
+  const url = await shareUrl();
+  if(url.length > LINK_MAX) return null;
+  const nextHash = url.split('#')[1];
   if(location.hash !== '#' + nextHash) selfHash = true;
   location.hash = nextHash;
-  copyText(url);
+  return url;
+}
+function sendText(url){
+  const who = state.biz.trim();
+  return 'מיפוי המשימות שחוזרות על עצמן' + (who ? ' ב' + who : '') +
+         ' — אפשר להוסיף, לשנות ולשלוח בחזרה:\n' + url;
+}
+async function openSend(){
+  const url = await currentLink();
+  if(!url){
+    toast('המיפוי ארוך מדי לקישור אחד');
+    return;
+  }
+  const sheet = $('sheet3');
+  sheet.textContent = '';
+  const head = el('div','sheethead plain');
+  const h = el('h2', null, 'שליחת המיפוי');
+  h.id = 'askTitle';
+  head.appendChild(h);
+  sheet.appendChild(head);
+  const body = el('div','askbody');
+  body.appendChild(el('p', null,
+    'הקישור נושא איתו את כל מה שמילאתם. מי שיפתח אותו יראה בדיוק את המסך הזה, ' +
+    'יוכל להוסיף ולשנות — ולשלוח בחזרה קישור מעודכן.'));
+  sheet.appendChild(body);
+
+  const col = el('div','sendcol');
+  const copy = el('button','btn block','העתקת הקישור');
+  copy.type = 'button'; copy.id = 'sendCopy';
+  copy.addEventListener('click', () => { copyText(url); closeAsk(); });
+  col.appendChild(copy);
+  const row = el('div','askrow');
+  const wa = el('button','btn quiet','וואטסאפ');
+  wa.type = 'button'; wa.id = 'sendWa';
+  wa.addEventListener('click', () => {
+    window.open('https://wa.me/?text=' + encodeURIComponent(sendText(url)), '_blank', 'noopener');
+    closeAsk();
+  });
+  const mail = el('button','btn quiet','מייל');
+  mail.type = 'button'; mail.id = 'sendMail';
+  mail.addEventListener('click', () => {
+    location.href = 'mailto:?subject=' + encodeURIComponent('מיפוי המשימות שחוזרות על עצמן') +
+                    '&body=' + encodeURIComponent(sendText(url));
+    closeAsk();
+  });
+  row.appendChild(wa); row.appendChild(mail);
+  col.appendChild(row);
+  sheet.appendChild(col);
+  sheet.appendChild(el('p','sendnote',
+    'הנתונים לא נשמרים בשום שרת — הם נוסעים בתוך הקישור עצמו.'));
+  /* Closing is not a fourth way to send: a quiet line, not a fourth key. */
+  const no = el('button','inline-link sendclose','סגירה');
+  no.type = 'button'; no.id = 'askNo';
+  no.addEventListener('click', closeAsk);
+  sheet.appendChild(no);
+  $('scrim3').hidden = false;
+  document.body.style.overflow = 'hidden';
+  copy.focus();
+}
+function sendButton(){
+  const b = el('button','btn block sendbtn');
+  b.type = 'button'; b.id = 'btnSend';
+  b.appendChild(pathSvg(SEND_D, 19));
+  b.appendChild(el('span', null, 'שליחת המיפוי'));
+  b.addEventListener('click', openSend);
+  return b;
 }
 /* Whatever path the copy takes, a success says the same sentence. */
 function copyText(text){
@@ -2280,7 +2396,9 @@ function closeMenu(){
 function buildMenu(){
   const m = $('menu');
   m.textContent = '';
-  const items = [['טעינת דוגמה', loadDemo], ['קישור לתרחיש', doShare], ['תרחיש חדש', resetAll]];
+  /* "קישור לתרחיש" used to live here, where nobody found it. It is a key on the
+     list now, so one action still has exactly one control. */
+  const items = [['טעינת דוגמה', loadDemo], ['תרחיש חדש', resetAll]];
   items.forEach(pair => {
     const b = el('button', null, pair[0]);
     b.type = 'button';
@@ -2327,10 +2445,11 @@ document.addEventListener('keydown', ev => {
 
 /* A shared link opened in a tab that is already on the page is a navigation the
    browser handles without reloading — the scenario must still load. */
-window.addEventListener('hashchange', () => {
+window.addEventListener('hashchange', async () => {
   if(selfHash){ selfHash = false; return; }
-  const incoming = readHash();
+  const incoming = await readHash();
   if(!incoming) return;
+  if(incoming === 'old'){ toast('הקישור נוצר בדפדפן חדש יותר, נסו דפדפן מעודכן'); return; }
   if(incoming === 'bad'){ toast('הקישור לא נקרא, נפתח התרחיש שלך'); return; }
   const prev = snapshot();
   state = incoming;
@@ -2343,19 +2462,23 @@ window.addEventListener('hashchange', () => {
 /* ============================================================
    7. BOOT — the hash is validated before anything local is touched
    ============================================================ */
-function boot(){
+async function boot(){
   lib = loadLib();
   buildMenu();
-  const hash = readHash();
   const local = loadLocal();
-  if(hash && hash !== 'bad'){
+  /* With no link in the address there is nothing to wait for, so the page is up
+     at once. Only a link costs a turn of the loop, because unpacking it is. */
+  if(!hashParts()){ state = local || emptyState(); render(); return; }
+  const hash = await readHash();
+  if(hash && hash !== 'bad' && hash !== 'old'){
     state = hash;
     save(); render();
     if(local && local.tasks.length) offerUndo('נפתח תרחיש מקישור', pack(local));
   }else{
     state = local || emptyState();
     render();
-    if(hash === 'bad') toast('הקישור לא נקרא, נפתח התרחיש שלך');
+    if(hash === 'old') toast('הקישור נוצר בדפדפן חדש יותר, נסו דפדפן מעודכן');
+    else if(hash === 'bad') toast('הקישור לא נקרא, נפתח התרחיש שלך');
   }
 }
 boot();

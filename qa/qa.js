@@ -535,25 +535,99 @@ async function main(){
   await page.waitForTimeout(220);
   ok('הרשימה שורדת רענון', (await listNums(page)).rows.length === 1);
   const share = await page.evaluate(() => window.__waives.shareUrl());
-  ok('הקישור נבנה', share.indexOf('#s=') !== -1);
+  ok('הקישור נבנה דחוס', share.indexOf('#z=') !== -1);
   await page.locator('#btnMenu').click();
-  ok('בתפריט יש קישור לתרחיש',
-     (await page.locator('#menu').textContent()).indexOf('קישור לתרחיש') !== -1);
-  ok('אין בתפריט "העתקת סיכום"',
-     (await page.locator('#menu').textContent()).indexOf('העתקת סיכום') === -1);
-  await page.locator('#menu button', {hasText:'קישור לתרחיש'}).click();
+  await page.waitForTimeout(160);
+  const menuText = await page.locator('#menu').textContent();
+  ok('"קישור לתרחיש" כבר לא קבור בתפריט', menuText.indexOf('קישור לתרחיש') === -1);
+  ok('אין בתפריט "העתקת סיכום"', menuText.indexOf('העתקת סיכום') === -1);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(160);
+
+  /* השליחה היא המעשה שבשבילו הכלי קיים: מנהל ממלא ומעביר לעובד, והוא מחזיר. */
+  ok('יש כפתור שליחה אחד על הרשימה',
+     (await page.locator('#screenList #btnSend').count()) === 1);
+  ok('אין כפתור שיתוף ישן', (await page.locator('#screenList #btnShare').count()) === 0);
+  await page.locator('#btnSend').click();
+  await page.waitForTimeout(240);
+  ok('נפתח מסך שליחה', !(await page.locator('#scrim3').isHidden()));
+  const sendTxt = await page.locator('#sheet3').textContent();
+  ok('המסך מסביר שמי שמקבל יכול להמשיך ולשלוח בחזרה',
+     sendTxt.indexOf('לשלוח בחזרה') !== -1);
+  ok('המסך אומר שהנתונים לא נשמרים בשרת',
+     sendTxt.indexOf('לא נשמרים בשום שרת') !== -1);
+  ok('שלוש דרכים לשלוח',
+     (await page.locator('#sendCopy').count()) === 1 &&
+     (await page.locator('#sendWa').count()) === 1 &&
+     (await page.locator('#sendMail').count()) === 1);
+  const waUrl = await page.evaluate(async () => {
+    let got = null;
+    const real = window.open;
+    window.open = u => { got = u; return null; };
+    document.getElementById('sendWa').click();
+    window.open = real;
+    return got;
+  });
+  ok('וואטסאפ נפתח עם הקישור בפנים',
+     waUrl.indexOf('https://wa.me/?text=') === 0 && decodeURIComponent(waUrl).indexOf('#z=') !== -1);
+  await page.locator('#btnSend').click();
+  await page.waitForTimeout(240);
+  await page.locator('#sendCopy').click();
   await page.waitForTimeout(260);
   const toast = await page.locator('#snackText').textContent();
   ok('ההודעה אומרת שהקישור הועתק ("' + toast + '")', toast.indexOf('הועתק') !== -1);
-  ok('אין כפתור שיתוף נוסף על המסך', (await page.locator('#screenList #btnShare').count()) === 0);
+  ok('מסך השליחה נסגר אחרי העתקה', await page.locator('#scrim3').isHidden());
   ok('המילים "העתקת סיכום" לא קיימות באפליקציה',
      (await page.evaluate(() => document.body.innerText)).indexOf('העתקת סיכום') === -1);
   await page.goto(url);
   await page.waitForTimeout(170);
   await page.goto(url + '#' + share.split('#')[1]);
-  await page.waitForTimeout(240);
-  ok('קישור נפתח עם אותה משימה', (await listNums(page)).rows.length === 1);
+  await page.waitForTimeout(300);
+  ok('קישור דחוס נפתח עם אותה משימה', (await listNums(page)).rows.length === 1);
   ok('קישור מציע ביטול', await page.locator('#snackBtn').isVisible());
+
+  /* קישור ישן, לא דחוס, חייב להיפתח לנצח */
+  const old = await page.evaluate(() =>
+    '#s=' + window.__waives.b64urlEncode(JSON.stringify(window.__waives.pack(window.__waives.state))));
+  await page.goto(url);
+  await page.waitForTimeout(170);
+  await page.goto(url + old);
+  await page.waitForTimeout(300);
+  ok('קישור ישן בלי דחיסה עדיין נפתח', (await listNums(page)).rows.length === 1);
+
+  /* הדחיסה היא ההבדל בין קישור שנשלח לקישור שהמחשבון מסרב לייצר */
+  const sizes = await page.evaluate(async () => {
+    const W = window.__waives, s = W.state;
+    const names = ['מיון קורות חיים','הקלדת חשבוניות ספקים','מענה לשאלות חוזרות במייל ובוואטסאפ',
+      'עדכון CRM אחרי פגישות ושיחות','תיאום פגישות ביומן','מענה לטלפונים ולמיילים כלליים',
+      'הפקת דוחות חודשיים','מעקב אחרי תשלומים','קליטת עובד חדש (טפסים, הרשאות, ציוד)',
+      'העברת נתונים בין מערכות','בדיקת מלאי בבוקר','הכנת הצעות מחיר ללקוחות',
+      'גבייה ותזכורות ללקוחות','התאמות בנק','סידור עבודה שבועי למשמרות',
+      'אישור חופשות והיעדרויות','הזמנת ציוד משרדי','עדכון מחירון באתר','שליחת ניוזלטר חודשי',
+      'תיוק מסמכים סרוקים','מעקב אחרי חידוש חוזים','בדיקת דוחות שעות','הכנת חומר לישיבת הנהלה',
+      'ניתוב פניות לגורם הנכון','תיעוד פניות במערכת','הפקת תעודות משלוח','מענה לביקורות בגוגל',
+      'סגירת קופה יומית','הזנת שעות לתוכנת השכר','בדיקת חשבוניות מול הזמנות',
+      'הכנת דוח מע״מ','ארכוב מיילים ישנים','עדכון רשימת ספקים','מעקב אחרי תקלות פתוחות',
+      'שליחת סקר שביעות רצון','הכנת תלושי שכר','סידור חדר ישיבות לפני פגישה',
+      'עדכון סטטוס לקוח בקבוצות וואטסאפ','שליחת עדכונים ותשובות למועמדים',
+      'תיאום ראיונות עם מועמדים ומראיינים'];
+    const base = JSON.parse(JSON.stringify(s.tasks[0]));
+    s.tasks.length = 0;
+    names.forEach((n, i) => {
+      const t = JSON.parse(JSON.stringify(base));
+      t.id = 't' + i; t.name = n; t.minutes = [15,30,45,60,120,180][i % 6];
+      s.tasks.push(t);
+    });
+    const plain = JSON.stringify(window.__waives.pack(s));
+    return {tasks:s.tasks.length,
+            plain: window.__waives.b64urlEncode(plain).length,
+            link: (await W.shareUrl()).length};
+  });
+  ok('ארבעים משימות נכנסות לקישור אחד (' + sizes.link + ' תווים מול ' + sizes.plain + ')',
+     sizes.tasks === 40 && sizes.link < 2200 && sizes.link < sizes.plain / 2);
+  await page.goto(url);
+  await page.waitForTimeout(200);
+  await page.evaluate(() => { try{ localStorage.clear(); }catch(e){} });
 
   /* ---------------------------------------------------------- */
   section('15 · קישורים עוינים');
