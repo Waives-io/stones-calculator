@@ -78,6 +78,14 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
    screen in the bottom bar, the chosen estimate and the chosen wish. Green stays
    the colour of the keys you press, pink the colour of the one that commits.
 
+19. **The two open questions in "חדש" are comboboxes, not open fields.** One
+   control each: it shows the list she already has, narrows it as she types, and
+   offers to add what is not there yet. The lists themselves — the task names and
+   the roles — are kept in "הגדרות". She asked for this because the screen had
+   "יותר מדי משתנים ולא מבינים מה צריך להקליד ואיפה" (2026-11-22). The list opens
+   over the questions below it, never among them, and opening it never rebuilds
+   the sheet: focus arrives while someone is typing into that very field.
+
 ## Approach
 - **State**: `{ v:3, biz, groups:[{id,name,people}], tasks:[{id,name,minutes,freq,auto,on,
   icon,gid}], dream:{chips,text} }`. Tasks are FLAT and `gid` may be null, because an

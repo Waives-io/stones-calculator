@@ -84,8 +84,10 @@ async function pickTime(p, o){
 }
 async function addTask(p, o){
   await openSheet(p);
-  if(o.assign) await p.locator('#fAssign').fill(o.assign);
-  if(o.name) await p.locator('#fName').fill(o.name);
+  /* Both open questions are comboboxes: typing opens the list over the questions
+     below, and a person closes it before reaching for them. Escape does that. */
+  if(o.assign){ await p.locator('#fAssign').fill(o.assign); await p.keyboard.press('Escape'); }
+  if(o.name){ await p.locator('#fName').fill(o.name); await p.keyboard.press('Escape'); }
   if(o.freq) await p.selectOption('#fFreq', o.freq);
   if(o.minutes !== undefined || o.hours !== undefined) await pickTime(p, o);
   if(o.auto) await p.locator('#sheet .chip', {hasText:o.auto}).first().click();
@@ -165,6 +167,7 @@ async function main(){
      (await page.locator('#sheet .tname').textContent()) === 'משימה חדשה שחוזרת על עצמה');
   ok('אין כותרת "משימה חדשה" מעל השם', (await page.locator('#sheet .sheethead .t').count()) === 0);
   await page.locator('#fName').fill('מענה לשאלות חוזרות');
+  await page.keyboard.press('Escape');
   await page.waitForTimeout(120);
   ok('שם המשימה מופיע בראש הגיליון',
      (await page.locator('#sheet .tname').textContent()) === 'מענה לשאלות חוזרות');
@@ -185,12 +188,14 @@ async function main(){
   }));
   await page.selectOption('#fFreq', 'week');
   ok('"פעם בשבוע" משנה את המספר', near(await sheetNum(page), 8.1));
-  ok('רשימת המשימות המוכנות יושבת בתוך הגיליון',
-     (await page.locator('#sheet .readychip').count()) === 10);
-  ok('הרשימה המוכנה יושבת מתחת לשאלת השם', await page.evaluate(() => {
-    const q = document.querySelector('#sheet .readychip').closest('.q');
-    return !!q && q.querySelector('.qlabel').textContent.indexOf('מה המשימה?') === 0;
-  }));
+  ok('שאלת השיוך היא רשימה נפתחת',
+     (await page.locator('#fAssign').getAttribute('role')) === 'combobox');
+  ok('שאלת השם היא רשימה נפתחת',
+     (await page.locator('#fName').getAttribute('role')) === 'combobox');
+  ok('אין רצועות צ׳יפים פזורות בגיליון',
+     (await page.locator('#sheet .readychip').count()) === 0);
+  ok('נשארו רק שתי רשתות מקשים: הזמן והאוטומציה',
+     (await page.locator('#sheet .chips.grid').count()) === 2);
   await page.locator('#sheetClose').click();
   await page.waitForTimeout(140);
   ok('הגיליון נסגר', await page.locator('#scrim').isHidden());
@@ -236,35 +241,62 @@ async function main(){
   await page.locator('#sheetClose').click();
 
   /* ---------------------------------------------------------- */
-  section('4 · המשימות המוכנות: שמות בלבד, בתוך "חדש" ובהגדרות');
+  section('4 · רשימה נפתחת: בוחרים, מסננים, או מוסיפים');
   await fresh(page);
   let L = await listNums(page);
   ok('מסך הרשימה נקי ממשימות מוכנות', (await page.locator('#screenList .readychip').count()) === 0);
   await openSheet(page);
-  ok('עשרה שמות מוכנים בתוך הגיליון', (await page.locator('#sheet .readychip').count()) === 10);
-  ok('אין שעות ואין אנשים על השמות', (await page.locator('#sheet .readychip .chipsub').count()) === 0);
-  ok('אין זמנים שמורים ברשימה המוכנה',
-     await page.evaluate(() => window.__waives.lib.every(x => x.minutes === undefined && x.freq === undefined)));
-  await page.locator('#sheet .readychip > .chip', {hasText:'תיאום פגישות ביומן'}).click();
+  ok('הרשימה סגורה עד שנוגעים בה', (await page.locator('#sheet .combolist').count()) === 0);
+  await page.locator('#fName').click();
   await page.waitForTimeout(170);
-  ok('לחיצה ממלאת את שם המשימה',
+  ok('לחיצה פותחת את עשר המשימות',
+     (await page.locator('#sheet .combolist .combo-op').count()) === 10);
+  ok('השדה מסומן כפתוח',
+     (await page.locator('#fName').getAttribute('aria-expanded')) === 'true');
+  await page.locator('#fName').fill('פגישות');
+  await page.waitForTimeout(170);
+  const hits = await page.locator('#sheet .combolist .combo-op:not(.add)').allTextContents();
+  ok('הקלדה מסננת את הרשימה (' + hits.length + ')',
+     hits.length > 0 && hits.length < 10 && hits.every(t => t.indexOf('פגישות') !== -1));
+  ok('מה שלא קיים מוצע להוספה',
+     (await page.locator('#sheet .combo-op.add').count()) === 1);
+  await page.locator('#sheet .combolist .combo-op', {hasText:'תיאום פגישות ביומן'}).first().click();
+  await page.waitForTimeout(170);
+  ok('בחירה ממלאת את השם',
      (await page.locator('#fName').inputValue()) === 'תיאום פגישות ביומן');
-  ok('לחיצה לא מוסיפה משימה לרשימה',
+  ok('הרשימה נסגרת אחרי בחירה', (await page.locator('#sheet .combolist').count()) === 0);
+  ok('בחירה לא מוסיפה משימה לרשימה',
      await page.evaluate(() => window.__waives.state.tasks.length === 0));
-  const readyBefore = await page.evaluate(() => window.__waives.lib.length);
-  await page.locator('#sheet .chipx').first().click();
+  await page.locator('#fName').fill('בדיקת מלאי בבוקר');
   await page.waitForTimeout(170);
-  ok('אפשר להוריד שם מהרשימה המוכנה',
-     await page.evaluate(n => window.__waives.lib.length === n - 1, readyBefore));
-  await page.locator('#sheet [data-k="libadd"]').fill('בדיקת מלאי בבוקר');
-  await page.locator('#sheet .btn.sm').click();
+  await page.locator('#sheet .combo-op.add').click();
   await page.waitForTimeout(170);
-  ok('אפשר להוסיף שם לרשימה המוכנה',
+  ok('שם חדש נוסף לרשימה מתוך "חדש"',
      await page.evaluate(() => window.__waives.lib[0].name === 'בדיקת מלאי בבוקר'));
-  await page.locator('#btnLibResetSheet').click();
+  ok('השם החדש נשאר בשדה',
+     (await page.locator('#fName').inputValue()) === 'בדיקת מלאי בבוקר');
+  ok('אין זמנים שמורים ברשימה',
+     await page.evaluate(() => window.__waives.lib.every(x => x.minutes === undefined && x.freq === undefined)));
+  await page.locator('#fAssign').click();
   await page.waitForTimeout(170);
-  ok('אפשר להחזיר את הרשימה המקורית',
-     await page.evaluate(() => window.__waives.lib.length === 10));
+  ok('רשימת התפקידים ריקה כשאין תפקידים',
+     (await page.locator('#sheet .combolist .combo-op').count()) === 0);
+  await page.locator('#fAssign').fill('צוות שירות');
+  await page.waitForTimeout(170);
+  await page.locator('#sheet .combo-op.add').click();
+  await page.waitForTimeout(220);
+  ok('תפקיד חדש נוסף מתוך "חדש"',
+     await page.evaluate(() => window.__waives.state.groups.length === 1 &&
+       window.__waives.state.groups[0].name === 'צוות שירות'));
+  await page.locator('#fAssign').click();
+  await page.waitForTimeout(170);
+  ok('התפקיד מופיע ברשימה בפעם הבאה',
+     (await page.locator('#sheet .combolist .combo-op:not(.add)').count()) === 1);
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(140);
+  ok('Escape סוגר את הרשימה ולא את הגיליון',
+     (await page.locator('#sheet .combolist').count()) === 0 &&
+     !(await page.locator('#scrim').isHidden()));
   await page.locator('#sheetClose').click();
   await page.waitForTimeout(150);
   await snapText(page);
@@ -355,9 +387,10 @@ async function main(){
   ok('אין כפתור "לא משויכת"',
      (await page.locator('#sheet').textContent()).indexOf('לא משויכת') === -1);
   const ph = (await page.locator('#fAssign').getAttribute('placeholder')) || '';
-  ok('השדה נותן דוגמאות', ph.indexOf('לדוגמא') === 0 && ph.indexOf('מנהלת HR') !== -1);
+  ok('השדה מזמין לבחור או להקליד', ph.indexOf('בחרו תפקיד') === 0);
   ok('השדה לא מזמין משימה בלי בעלים', ph.indexOf('אפשר להשאיר ריק') === -1);
   await page.locator('#fName').fill('בדיקה בלי שיוך');
+  await page.keyboard.press('Escape');
   await page.locator('#sheet .chip', {hasText:'30 דק׳'}).first().click();
   await page.locator('#sheetSave').click();
   await page.waitForTimeout(170);
@@ -375,13 +408,16 @@ async function main(){
   ok('שיוך חדש מתחיל באדם אחד',
      await page.evaluate(() => window.__waives.state.groups[0].people === 1));
   await openSheet(page);
-  ok('שיוך קיים מוצע ככפתור',
-     (await page.locator('#sheet .chip', {hasText:'צוות רכש'}).count()) === 1);
-  await page.locator('#sheet .chip', {hasText:'צוות רכש'}).click();
-  ok('לחיצה על הכפתור ממלאת את השדה',
+  await page.locator('#fAssign').click();
+  await page.waitForTimeout(170);
+  ok('שיוך קיים מוצע ברשימה',
+     (await page.locator('#sheet .combolist .combo-op', {hasText:'צוות רכש'}).count()) === 1);
+  await page.locator('#sheet .combolist .combo-op', {hasText:'צוות רכש'}).click();
+  await page.waitForTimeout(170);
+  ok('בחירה מהרשימה ממלאת את השדה',
      (await page.locator('#fAssign').inputValue()) === 'צוות רכש');
-  await page.locator('#sheet .chip', {hasText:'צוות רכש'}).click();
-  ok('לחיצה נוספת מרוקנת אותו', (await page.locator('#fAssign').inputValue()) === '');
+  ok('שיוך קיים לא מוצע שוב כהוספה',
+     (await page.locator('#sheet .combo-op.add').count()) === 0);
   await page.locator('#sheetClose').click();
 
   /* ---------------------------------------------------------- */
@@ -474,6 +510,7 @@ async function main(){
      (await page.locator('#sheet .sheethead .t').textContent()).indexOf('עדכון') !== -1);
   ok('שם המשימה מופיע בצג', (await page.locator('#sheet .tname').textContent()) === 'מענה לטלפונים');
   await page.locator('#fName').fill('מענה לטלפונים ולמיילים');
+  await page.keyboard.press('Escape');
   await page.locator('#sheetSave').click();
   await page.waitForTimeout(180);
   L = await listNums(page);
@@ -690,6 +727,9 @@ async function main(){
   await page.waitForTimeout(220);
   ok('לחיצה על תיבת סימון לא קופצת לראש הדף',
      Math.abs((await page.evaluate(() => window.scrollY)) - y0) < 40);
+  /* A short screen, so the sheet really has somewhere to scroll. */
+  await page.setViewportSize({width:420, height:520});
+  await page.waitForTimeout(160);
   await page.locator('.row .rowmain').nth(4).click();
   await page.waitForSelector('#sheet #fName');
   /* the sheet itself must not jump back to its first question. Scroll down to the
@@ -708,6 +748,8 @@ async function main(){
      Math.abs((await page.evaluate(() => document.querySelector('.sheetbody').scrollTop)) - s0) < 30);
   await page.locator('#sheetClose').click();
   await page.waitForTimeout(200);
+  await page.setViewportSize({width:420, height:700});
+  await page.waitForTimeout(160);
   ok('סגירת הגיליון לא קופצת לראש הדף',
      Math.abs((await page.evaluate(() => window.scrollY)) - y0) < 60);
   await page.evaluate(() => window.scrollTo(0, 600));

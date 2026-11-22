@@ -279,6 +279,24 @@ nav.bar button[aria-current="page"]{color:var(--gold-ink);font-weight:700;
 .field::placeholder{color:var(--ink-faint)}
 .field:focus{outline:none;background:#fff;
   box-shadow:var(--lift), 0 0 0 2.5px var(--green)}
+.combo{position:relative}
+.combo .field{padding-inline-end:52px}
+.combotog{position:absolute;inset-block:0;inset-inline-end:7px;width:40px;
+  display:grid;place-items:center;color:var(--ink-soft);border-radius:var(--r-round)}
+.combotog svg{width:19px;height:19px}
+.combo .field[aria-expanded="true"] + .combotog svg{transform:rotate(180deg)}
+.combolist{position:absolute;inset-inline:0;top:calc(100% + 8px);z-index:6;
+  background:var(--surface);border-radius:var(--r-key);padding:7px;
+  max-height:228px;overflow:auto;box-shadow:var(--lift-lg)}
+.combo-op{display:flex;align-items:center;gap:9px;width:100%;text-align:start;
+  padding:12px 13px;border-radius:14px;font-size:14.5px;font-weight:600;color:var(--ink)}
+.combo-op svg{width:18px;height:18px;flex:none;color:var(--green-dark)}
+.combo-op bdi{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.combo-op .chipsub{margin-inline-start:auto;flex:none}
+.combo-op:hover,.combo-op[aria-selected="true"]{background:var(--green-soft);color:var(--green-dark)}
+.combo-op.add{color:var(--pink-ink);font-weight:800}
+.combo-op.add:hover{background:var(--pink-soft);color:var(--pink-ink)}
+.combolist .hint{margin:6px 10px 8px}
 .chips{display:flex;flex-wrap:wrap;gap:11px}
 .chips.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
 .chips.grid2{grid-template-columns:repeat(2,1fr)}
@@ -305,7 +323,6 @@ nav.bar button[aria-current="page"]{color:var(--gold-ink);font-weight:700;
 .chip svg{width:17px;height:17px;flex:none;color:var(--green-dark)}
 .chip[aria-pressed="true"] svg{color:#fff}
 .chipsub{font-size:11.5px;font-weight:600;color:var(--ink-faint)}
-.libwrap{max-height:168px;overflow:auto;padding:5px 3px;margin:-5px -3px}
 .readychip{display:inline-flex;align-items:center;gap:7px;max-width:100%}
 .readychip > .chip{flex-wrap:nowrap;min-width:0}
 .readychip > .chip bdi{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -1007,7 +1024,7 @@ function shareUrl(){
    ============================================================ */
 let state = emptyState();
 let lib = [];
-let ui = { screen:'list', editId:null, draft:null, menuOpen:false, collapsed:{}, toTop:false };
+let ui = { screen:'list', editId:null, draft:null, menuOpen:false, collapsed:{}, toTop:false, open:null };
 let undoSnapshot = null, undoTimer = null, snackTimer = null;
 
 const $ = id => document.getElementById(id);
@@ -1202,34 +1219,23 @@ function renderList(res){
    box is shown inside "חדש" and inside "הגדרות", so there is one list, not two.
    No hours and no people live here on purpose: a ready-made duration would be a
    guess dressed up as data, and every business runs these tasks differently. */
-function libCard(pick, redraw){
+function libCard(redraw){
   const card = el('div','card');
   const head = el('div','cardhead');
   head.appendChild(el('h2', null, 'הצעה למשימות אפשריות שחוזרות על עצמן'));
-  if(pick) head.appendChild(el('span','sub','לחיצה ממלאת את השם'));
   card.appendChild(head);
-  card.appendChild(libBox(pick, redraw));
+  card.appendChild(libBox(redraw));
   return card;
 }
-function libBox(pick, redraw){
+function libBox(redraw){
   const box = el('div','padbox');
   if(!lib.length){
     box.appendChild(el('p','hint','הרשימה ריקה כרגע. כל שם שתוסיפו כאן יחכה לפעם הבאה.'));
   }else{
-    /* Inside the sheet this list is a drawer, not the page: it keeps its own
-       scroll so the questions under it stay within reach. */
-    const chips = el('div', pick ? 'chips libwrap' : 'chips');
+    const chips = el('div','chips');
     lib.forEach(item => {
       const pair = el('span','readychip');
-      let face;
-      if(pick){
-        face = el('button','chip');
-        face.type = 'button';
-        face.setAttribute('aria-label','בחירת ' + item.name);
-        face.addEventListener('click', () => pick(item));
-      }else{
-        face = el('span','chip');
-      }
+      const face = el('span','chip');
       face.appendChild(iconSvg(item.icon));
       face.appendChild(el('bdi', null, item.name));
       const del = el('button','chipx','✕');
@@ -1262,10 +1268,7 @@ function libBox(pick, redraw){
   row.appendChild(go);
   box.appendChild(row);
   const reset = el('button','inline-link','החזרת הרשימה המקורית');
-  reset.type = 'button';
-  /* One id per page: the same box can be open inside the sheet while settings is
-     rendered behind it, and two elements may not answer to one name. */
-  reset.id = pick ? 'btnLibResetSheet' : 'btnLibReset';
+  reset.type = 'button'; reset.id = 'btnLibReset';
   reset.addEventListener('click', () => {
     lib = defaultLib(); saveLib(); redraw(); toast('המשימות המוכנות חזרו למקור');
   });
@@ -1398,7 +1401,7 @@ function renderSettings(res){
   gcard.appendChild(gfoot);
   host.appendChild(gcard);
 
-  host.appendChild(libCard(null, render));
+  host.appendChild(libCard(render));
 }
 
 /* ---- dashboard: one banner carries the whole headline ---- */
@@ -1569,16 +1572,113 @@ function openSheet(id){
        custom:false, unit:'min', amount:0};
   $('scrim').hidden = false;
   document.body.style.overflow = 'hidden';
+  /* No autofocus. The first question is the assignment, not the name, and with a
+     list that opens on focus an autofocused field would greet her with an open
+     drawer over the questions and a keyboard she did not ask for. */
   renderSheet(ui.draft);
-  const inp = $('sheet').querySelector('#fName');
-  if(inp) inp.focus();
 }
 function closeSheet(){
-  ui.draft = null; ui.editId = null;
+  ui.draft = null; ui.editId = null; ui.open = null;
   $('scrim').hidden = true;
   $('sheet').textContent = '';
   document.body.style.overflow = '';
 }
+/* One control instead of three. Before this, the two open questions each had a
+   field AND a loose strip of chips under it, and nothing on the screen said which
+   one you were supposed to use. A combobox is the list and the field at once: it
+   shows what she already has, narrows it as she types, and offers to add what is
+   not there yet — and the lists themselves are kept in "הגדרות". */
+function comboList(o, value){
+  const q = String(value || '').trim();
+  const hits = o.items.filter(x => !q || x.name.indexOf(q) !== -1);
+  const list = el('div','combolist');
+  list.setAttribute('role','listbox');
+  list.setAttribute('aria-label', o.label);
+  hits.forEach(item => {
+    const b = el('button','combo-op');
+    b.type = 'button';
+    b.setAttribute('role','option');
+    b.setAttribute('aria-selected', item.name === q ? 'true' : 'false');
+    if(item.icon) b.appendChild(iconSvg(item.icon));
+    b.appendChild(el('bdi', null, item.name));
+    if(item.sub) b.appendChild(el('span','chipsub', item.sub));
+    b.addEventListener('click', () => { ui.open = null; o.onPick(item); });
+    list.appendChild(b);
+  });
+  if(q && !o.items.some(x => x.name === q)){
+    const add = el('button','combo-op add');
+    add.type = 'button';
+    add.appendChild(el('bdi', null, o.addLabel + ': ' + q));
+    add.addEventListener('click', () => { ui.open = null; o.onAdd(q); });
+    list.appendChild(add);
+  }else if(!hits.length){
+    list.appendChild(el('p','hint', o.empty));
+  }
+  return list;
+}
+
+function combo(o){
+  const wrap = el('div','combo');
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.className = 'field'; inp.id = o.id;
+  inp.setAttribute('data-k', o.id);
+  inp.setAttribute('role','combobox');
+  inp.setAttribute('aria-expanded', ui.open === o.key ? 'true' : 'false');
+  inp.setAttribute('aria-autocomplete','list');
+  inp.setAttribute('aria-label', o.label);
+  inp.setAttribute('autocomplete','off');
+  inp.placeholder = o.placeholder;
+  inp.maxLength = LIMITS.names;
+  inp.value = o.value;
+  const tog = el('button','combotog');
+  tog.type = 'button';
+  tog.setAttribute('aria-label', ui.open === o.key ? 'סגירת הרשימה' : 'פתיחת הרשימה');
+  tog.appendChild(pathSvg(CARET_D));
+
+  /* Opening does NOT rebuild the sheet. Focus lands in the middle of someone
+     writing into this very field, and tearing the field out from under them
+     loses what they are typing — the list is simply hung underneath instead. */
+  const openIt = () => {
+    if(ui.open === o.key) return;
+    closeComboNow();
+    ui.open = o.key;
+    inp.setAttribute('aria-expanded','true');
+    tog.setAttribute('aria-label','סגירת הרשימה');
+    wrap.appendChild(comboList(o, inp.value));
+  };
+  inp.addEventListener('focus', openIt);
+  inp.addEventListener('click', openIt);
+  inp.addEventListener('input', () => { ui.open = o.key; o.onType(inp.value.slice(0, LIMITS.names)); });
+  inp.addEventListener('keydown', e => {
+    if(e.key === 'ArrowDown'){
+      openIt();
+      const first = wrap.querySelector('.combo-op');
+      if(first){ e.preventDefault(); first.focus(); }
+    }
+  });
+  tog.addEventListener('click', () => {
+    if(ui.open === o.key){ closeComboNow(); } else { inp.focus(); openIt(); }
+  });
+  wrap.appendChild(inp);
+  wrap.appendChild(tog);
+  if(ui.open === o.key) wrap.appendChild(comboList(o, o.value));
+  return wrap;
+}
+
+/* Closing the list by hand, without rebuilding the sheet. The press that closes
+   it is usually also a press on something else — a time key, say — and that
+   something has to still be there when the click lands. The list is positioned
+   over the questions, not among them, so removing it moves nothing. */
+function closeComboNow(){
+  if(!ui.open) return;
+  ui.open = null;
+  const sheet = $('sheet');
+  const list = sheet.querySelector('.combolist');
+  if(list) list.remove();
+  sheet.querySelectorAll('[role="combobox"]').forEach(i => i.setAttribute('aria-expanded','false'));
+  sheet.querySelectorAll('.combotog').forEach(t => t.setAttribute('aria-label','פתיחת הרשימה'));
+}
+
 /* The draft is computed on its own, so the number at the top of the sheet moves on
    every press — the list screen is a list, but adding an item is still a calculator. */
 function minutesOf(d){
@@ -1637,38 +1737,25 @@ function renderSheet(d){
   const l1 = el('label','qlabel','למי משויכת המשימה?');
   l1.setAttribute('for','fAssign');
   q1.appendChild(l1);
-  const assign = document.createElement('input');
-  assign.type = 'text'; assign.className = 'field'; assign.id = 'fAssign';
-  assign.setAttribute('data-k','assign');
-  assign.placeholder = 'לדוגמא: צוות רכש · מנהלת HR · מזכירה';
-  assign.maxLength = LIMITS.names;
-  assign.value = d.gname;
-  assign.addEventListener('input', () => {
-    d.gname = assign.value.slice(0, LIMITS.names);
-    renderSheet(d);
-  });
-  q1.appendChild(assign);
-  if(state.groups.length){
-    const c1 = el('div','chips');
-    c1.style.marginTop = '10px';
-    state.groups.forEach(g => {
-      const b = el('button','chip sm');
-      b.type = 'button';
-      b.appendChild(el('bdi', null, g.name.trim() || 'שיוך ללא שם'));
-      if(g.people > 1) b.appendChild(el('span','chipsub', g.people + ' אנשים'));
-      b.setAttribute('aria-pressed', d.gname.trim() === g.name.trim() ? 'true' : 'false');
-      b.addEventListener('click', () => {
-        d.gname = (d.gname.trim() === g.name.trim()) ? '' : g.name;
-        renderSheet(d);
-      });
-      c1.appendChild(b);
-    });
-    q1.appendChild(c1);
-  }
+  q1.appendChild(combo({
+    id:'fAssign', key:'assign', label:'למי משויכת המשימה',
+    placeholder:'בחרו תפקיד או הקלידו חדש',
+    value:d.gname,
+    items:state.groups.map(g => ({
+      name:g.name.trim() || 'תפקיד ללא שם',
+      sub:g.people > 1 ? g.people + ' אנשים' : null
+    })),
+    addLabel:'הוספת תפקיד',
+    empty:'עוד לא הגדרתם תפקידים.',
+    onType:v => { d.gname = v; renderSheet(d); },
+    onPick:item => { d.gname = item.name; renderSheet(d); },
+    onAdd:nm => { apply(() => { ensureGroupByName(nm); }); d.gname = nm; renderSheet(d); toast('התפקיד נוסף להגדרות'); },
+    redraw:() => renderSheet(d)
+  }));
   const gnow = groupByName(d.gname);
   q1.appendChild(el('p','hint', gnow && gnow.people > 1
-    ? 'המשימה מוכפלת ב-' + gnow.people + ' אנשים. את הכמות משנים במסך "הגדרות".'
-    : 'שם חדש נפתח כשיוך של אדם אחד, ואת הכמות משנים במסך "הגדרות".'));
+    ? 'המשימה מוכפלת ב-' + gnow.people + ' אנשים. את הרשימה והכמויות משנים במסך "הגדרות".'
+    : 'את רשימת התפקידים ואת מספר האנשים משנים במסך "הגדרות".'));
   body.appendChild(q1);
 
   /* 2 — what the task is. The name also chooses the icon. */
@@ -1676,24 +1763,19 @@ function renderSheet(d){
   const l2 = el('label','qlabel','מה המשימה?');
   l2.setAttribute('for','fName');
   q2.appendChild(l2);
-  const name = document.createElement('input');
-  name.type = 'text'; name.className = 'field'; name.id = 'fName';
-  name.setAttribute('data-k','name');
-  name.placeholder = 'למשל: מענה לשאלות חוזרות במייל';
-  name.maxLength = LIMITS.names;
-  name.value = d.name;
-  name.addEventListener('input', () => {
-    d.name = name.value.slice(0, LIMITS.names);
-    d.icon = iconFor(d.name);
-    renderSheet(d);
-  });
-  q2.appendChild(name);
-  q2.appendChild(el('p','hint','בשמכם שלכם. השם גם בוחר את האייקון, והמשימה מצטרפת למשימות המוכנות.'));
-  q2.appendChild(libBox(item => {
-    d.name = item.name;
-    d.icon = item.icon;
-    renderSheet(d);
-  }, () => renderSheet(d)));
+  q2.appendChild(combo({
+    id:'fName', key:'name', label:'מה המשימה',
+    placeholder:'בחרו משימה או הקלידו חדשה',
+    value:d.name,
+    items:lib.map(x => ({name:x.name, icon:x.icon})),
+    addLabel:'הוספה לרשימה',
+    empty:'הרשימה ריקה. הקלידו שם חדש.',
+    onType:v => { d.name = v; d.icon = iconFor(v); renderSheet(d); },
+    onPick:item => { d.name = item.name; d.icon = item.icon; renderSheet(d); },
+    onAdd:nm => { addToLib(nm); d.name = nm; d.icon = iconFor(nm); renderSheet(d); toast('נוסף לרשימת המשימות'); },
+    redraw:() => renderSheet(d)
+  }));
+  q2.appendChild(el('p','hint','את רשימת המשימות המוצעות משנים במסך "הגדרות".'));
   body.appendChild(q2);
 
   /* 3 — how long it takes. The frequency is a dropdown INSIDE the question, and the
@@ -2003,6 +2085,12 @@ document.addEventListener('click', ev => {
   if($('menu').contains(ev.target) || $('btnMenu').contains(ev.target)) return;
   closeMenu();
 });
+document.addEventListener('pointerdown', ev => {
+  if(!ui.open) return;
+  const t = ev.target;
+  if(t && t.closest && t.closest('.combo')) return;
+  closeComboNow();
+});
 $('navList').addEventListener('click', () => go('list'));
 $('navDash').addEventListener('click', () => go('dash'));
 $('navSet').addEventListener('click', () => go('set'));
@@ -2011,6 +2099,8 @@ $('scrim').addEventListener('click', ev => { if(ev.target === $('scrim')) closeS
 $('scrim2').addEventListener('click', ev => { if(ev.target === $('scrim2')) closeTips(); });
 document.addEventListener('keydown', ev => {
   if(ev.key !== 'Escape') return;
+  /* The first Escape closes the open list, the second closes the sheet. */
+  if(ui.open){ closeComboNow(); return; }
   if(ui.draft) closeSheet();
   else if(!$('scrim2').hidden) closeTips();
   else if(ui.menuOpen) closeMenu();
