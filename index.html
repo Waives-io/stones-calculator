@@ -2630,14 +2630,22 @@ async function openSend(){
   const mail = el('button','btn quiet','מייל');
   mail.type = 'button'; mail.id = 'sendMail';
   mail.addEventListener('click', () => {
-    copyText(url, 'הקישור הועתק. אם תוכנת המייל לא נפתחה — הדביקו אותו במייל שלכם.');
-    const a = document.createElement('a');
-    a.href = 'mailto:?subject=' + encodeURIComponent('מיפוי המשימות שחוזרות על עצמן') +
-             '&body=' + encodeURIComponent(sendText(url));
-    a.rel = 'noopener';
-    document.body.appendChild(a);
-    a.click();
-    document.body.removeChild(a);
+    /* The copy has to finish before the mail program is asked for: handing the
+       page's focus to another application cancels a clipboard write still in
+       flight, and then the one thing that always works would have failed too. */
+    const openMail = () => {
+      const a = document.createElement('a');
+      a.href = 'mailto:?subject=' + encodeURIComponent('מיפוי המשימות שחוזרות על עצמן') +
+               '&body=' + encodeURIComponent(sendText(url));
+      a.rel = 'noopener';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+    };
+    copyText(url,
+      'הקישור הועתק. אם תוכנת המייל לא נפתחה — הדביקו אותו במייל שלכם.',
+      'תוכנת המייל אולי לא נפתחה. הקישור בשורת הכתובת, אפשר להעתיק משם.')
+      .then(openMail, openMail);
     closeAsk();
   });
   row.appendChild(wa); row.appendChild(mail);
@@ -2737,8 +2745,9 @@ function cloudBar(){
 }
 
 /* Whatever path the copy takes, a success says the same sentence. */
-function copyText(text, done){
+function copyText(text, done, missed){
   const said = done || 'הקישור הועתק';
+  const no = missed || 'הקישור בשורת הכתובת, אפשר להעתיק משם';
   const fallback = () => {
     try{
       const ta = document.createElement('textarea');
@@ -2747,12 +2756,14 @@ function copyText(text, done){
       document.body.appendChild(ta); ta.select();
       const good = document.execCommand('copy');
       document.body.removeChild(ta);
-      toast(good ? said : 'הקישור בשורת הכתובת, אפשר להעתיק משם');
-    }catch(e){ toast('הקישור בשורת הכתובת, אפשר להעתיק משם'); }
+      toast(good ? said : no);
+    }catch(e){ toast(no); }
   };
   if(navigator.clipboard && navigator.clipboard.writeText){
-    navigator.clipboard.writeText(text).then(() => toast(said), fallback);
-  }else fallback();
+    return navigator.clipboard.writeText(text).then(() => toast(said), fallback);
+  }
+  fallback();
+  return Promise.resolve();
 }
 
 function go(screen){

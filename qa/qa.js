@@ -697,7 +697,7 @@ async function main(){
     };
   });
   await page.locator('#sendMail').click();
-  await page.waitForTimeout(320);
+  await page.waitForTimeout(600);
   const mailto = await page.evaluate(() => window.__mailto);
   ok('"מייל" מנסה לפתוח את תוכנת המייל עם הקישור בפנים',
      typeof mailto === 'string' && mailto.indexOf('mailto:?subject=') === 0 &&
@@ -707,6 +707,10 @@ async function main(){
      mailToast.indexOf('הועתק') !== -1 && mailToast.indexOf('תוכנת המייל') !== -1);
   ok('מה שהועתק הוא הקישור עצמו',
      (await page.evaluate(() => navigator.clipboard.readText())).indexOf('#z=') !== -1);
+  /* ההעתקה חייבת להסתיים לפני שהמייל נפתח: מעבר לתוכנה אחרת מבטל כתיבה
+     ללוח שעדיין באוויר, ואז גם הדבר היחיד שתמיד עובד היה נופל. */
+  ok('ההעתקה קודמת לפתיחת המייל', (await page.evaluate(
+     () => document.documentElement.outerHTML)).indexOf('.then(openMail, openMail)') !== -1);
   await openSendSheet(page);
   await page.locator('#sendCopy').click();
   await page.waitForTimeout(260);

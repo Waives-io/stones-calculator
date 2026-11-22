@@ -195,7 +195,7 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
 - `PLAN.md` — this file
 - `manifest.webmanifest`, `sw.js`, `icons/` — the installable app
 - `.nojekyll`, `CNAME` — GitHub Pages
-- `qa/qa.js` — 409 Playwright checks (not deployed)
+- `qa/qa.js` — 410 Playwright checks (not deployed)
 - `worker/` — the mapping store (Cloudflare Worker + KV), deployed separately
 - `design-options/` — the five look directions GPT drew; option 4 was chosen
 
