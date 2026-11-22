@@ -1321,6 +1321,30 @@ async function main(){
   await page.waitForTimeout(1900);
   ok('וכשהיא חוזרת, האזהרה יורדת', (await page.locator('#cloudBar.bad').count()) === 0);
 
+  /* קוד שני שמודבק לתוך לשונית פתוחה — בלי טעינה מחדש */
+  await fresh(page);
+  await addTask(page, {assign:'מזכירות', name:'תיוק מסמכים סרוקים', minutes:45, freq:'day'});
+  await page.locator('#btnSend').click();
+  await page.waitForTimeout(240);
+  await page.locator('#sendCloud').click();
+  await page.waitForTimeout(700);
+  const second = await page.evaluate(() => window.__waives.cloud.code);
+  ok('מיפוי שני קיבל קוד משלו', second !== code && store.mem.has(second));
+  await page.locator('#askNo').click();
+  await page.waitForTimeout(200);
+  await page.evaluate(c => { location.hash = 'k=' + c; }, code);
+  await page.waitForTimeout(1200);
+  ok('הדבקת קוד אחר בלשונית פתוחה מחליפה את המיפוי',
+     (await page.evaluate(() => window.__waives.cloud.code)) === code &&
+     (await listNums(page)).rows.length > 1);
+  ok('ושורת הענן מתעדכנת לקוד החדש',
+     (await page.locator('#cloudBar').textContent()).indexOf(code.slice(0,5)) !== -1);
+  ok('ומוצע ביטול', await page.locator('#snackBtn').isVisible());
+  await page.evaluate(c => { location.hash = 'k=' + c; }, code);
+  await page.waitForTimeout(600);
+  ok('הדבקה חוזרת של אותו קוד לא עושה דבר',
+     (await page.evaluate(() => window.__waives.cloud.code)) === code);
+
   /* הדרך החוצה */
   await page.locator('#btnSend').click();
   await page.waitForTimeout(240);
