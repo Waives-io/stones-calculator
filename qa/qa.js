@@ -689,7 +689,7 @@ async function main(){
       bgImage: cs('body').backgroundImage,
       rowShadow: cs('.row').boxShadow,
       rowRadius: cs('.row').borderTopLeftRadius,
-      rowBg: cs('.row').backgroundColor,
+      rowFace: cs('.row').backgroundImage,
       screen: cs('.totalrow').backgroundImage,
       green: root.getPropertyValue('--green').trim(),
       pink: root.getPropertyValue('--pink').trim(),
@@ -702,21 +702,21 @@ async function main(){
       }).length
     };
   });
-  ok('הרקע מנטה בהיר', look.bg === 'rgb(233, 239, 232)');
+  ok('הרקע מנטה בהיר', look.bg === 'rgb(231, 236, 230)');
   ok('לרקע יש מעבר עדין', look.bgImage.indexOf('gradient') !== -1);
-  ok('שורה היא מקש רך עם צל', look.rowShadow.indexOf('inset') !== -1 && look.rowShadow.indexOf('rgba(63, 88, 61') !== -1);
+  ok('שורה היא מקש רך עם צל', look.rowShadow.indexOf('inset') !== -1 && look.rowShadow.indexOf('rgba(72, 96, 70') !== -1);
   ok('לשורה פינות גדולות (' + look.rowRadius + ')', parseFloat(look.rowRadius) >= 18);
-  ok('פני המקש כמעט לבנים', look.rowBg === 'rgb(248, 250, 247)');
+  ok('פני המקש הם מעבר מלבן', look.rowFace.indexOf('gradient') !== -1 && look.rowFace.indexOf('rgb(255, 255, 255)') !== -1);
   ok('שורת הסכום היא צג ירוק', look.screen.indexOf('gradient') !== -1);
-  ok('הירוק של התמונה', look.green === '#84BE74');
-  ok('הוורוד של התמונה', look.pink === '#F2A0B5');
-  ok('הטקסט ירוק כהה', look.ink === '#1F3A24');
+  ok('הירוק של התמונה', look.green === '#7FBE6C');
+  ok('הוורוד של התמונה', look.pink === '#F7799F');
+  ok('הטקסט ירוק כהה', look.ink === '#1E4220');
   ok('אין משטחים כהים באפליקציה (' + look.darkCount + ')', look.darkCount === 0);
   ok('כפתור השמירה הוא המקש הוורוד', await page.evaluate(() => {
     document.getElementById('btnNew').click();
     const b = document.getElementById('sheetSave');
     const bg = getComputedStyle(b).backgroundImage;
-    const got = bg.indexOf('244, 168, 188') !== -1;
+    const got = bg.indexOf('247, 121, 159') !== -1;
     document.getElementById('sheetClose').click();
     return got;
   }));
