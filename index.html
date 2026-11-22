@@ -25,14 +25,15 @@
   --green:#7FBE6C; --green-a:#86C473; --green-b:#5FA54C; --green-dark:#4E8F3D;
   --green-soft:#DCEDD4; --green-line:#D3E6CA;
   --pink:#F7799F; --pink-a:#F7799F; --pink-b:#EE5C8A; --pink-soft:#FBD5E0; --pink-ink:#B23A62;
-  --ring-track:rgba(30,66,32,.10); --ring-arc:#F7799F;
-  --shadow:rgba(72,96,70,.17); --shadow-soft:rgba(72,96,70,.09);
+  --gold-a:#F7D685; --gold-b:#E9B64A; --gold-rim:#C9961F; --gold-ink:#5E4310;
+  --ring-track:rgba(30,66,32,.10); --ring-arc:#E9B64A;
+  --shadow:rgba(72,96,70,.22); --shadow-soft:rgba(72,96,70,.11);
   --r-key:22px; --r-card:28px; --r-screen:26px; --r-pill:18px; --r-round:999px;
   --bar:84px; --sheet-max:560px;
   /* a raised face: white top edge, a soft wide shadow, a close contact shadow */
-  --lift:inset 0 1.5px 0 rgba(255,255,255,1), 0 7px 16px var(--shadow), 0 2px 5px var(--shadow-soft);
-  --lift-sm:inset 0 1.5px 0 rgba(255,255,255,1), 0 4px 10px var(--shadow), 0 1px 3px var(--shadow-soft);
-  --lift-lg:inset 0 1.5px 0 rgba(255,255,255,1), 0 12px 26px var(--shadow), 0 3px 7px var(--shadow-soft);
+  --lift:inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1.5px 0 rgba(72,96,70,.07), 0 10px 20px var(--shadow), 0 3px 6px var(--shadow-soft);
+  --lift-sm:inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1.5px 0 rgba(72,96,70,.07), 0 6px 13px var(--shadow), 0 2px 4px var(--shadow-soft);
+  --lift-lg:inset 0 1.5px 0 rgba(255,255,255,1), inset 0 -1.5px 0 rgba(72,96,70,.07), 0 16px 30px var(--shadow), 0 4px 9px var(--shadow-soft);
   --press:inset 0 1px 0 rgba(255,255,255,.7), 0 2px 5px var(--shadow);
   --face:linear-gradient(180deg, var(--key-a), var(--key-b));
 }
@@ -69,7 +70,7 @@ input,select{font:inherit;color:inherit}
 .top .grow{flex:1}
 
 /* ---------- KEY ---------- */
-.icobtn,.newbtn,.chip,.btn,.tick,.row,.ghead,.stepper,.disclink,.chipx,.menu button{
+.icobtn,.newbtn,.chip,.btn,.tick,.row,.ghead,.stepper,.disclink,.chipx,.menu button,.dreambar{
   transition:transform .13s ease, box-shadow .13s ease, background .13s ease;
 }
 .icobtn{
@@ -225,9 +226,10 @@ nav.bar button{
   color:var(--ink-faint);font-size:12px;font-weight:600;
 }
 nav.bar button svg{width:22px;height:22px}
-nav.bar button[aria-current="page"]{color:var(--green-dark);font-weight:700;
-  background:linear-gradient(180deg,#E3F1DB,#D2E7C7);
-  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.85), 0 4px 10px var(--shadow-soft)}
+nav.bar button[aria-current="page"]{color:var(--gold-ink);font-weight:700;
+  background:linear-gradient(180deg, var(--gold-a), var(--gold-b));
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6), inset 0 -2px 0 rgba(140,100,20,.18),
+             0 7px 15px rgba(201,150,31,.28)}
 
 /* ---------- sheets ---------- */
 .scrim{position:fixed;inset:0;background:rgba(28,48,30,.40);z-index:40;display:grid;align-items:end}
@@ -256,6 +258,7 @@ nav.bar button[aria-current="page"]{color:var(--green-dark);font-weight:700;
 .sheethead .n{font-size:36px;font-weight:800;line-height:1.1;color:var(--screen-ink);
   letter-spacing:-1px;margin-top:2px}
 .sheethead .u{font-size:12.5px;color:var(--screen-soft);font-weight:700}
+.sheethead .u2{font-size:11.5px;color:var(--screen-soft);font-weight:600;opacity:.8;margin-top:3px}
 .sheethead .icobtn{background:linear-gradient(180deg,#fff,#F2F7F0);color:var(--screen-soft);
   width:42px;height:42px;
   box-shadow:inset 0 1.5px 0 rgba(255,255,255,1), 0 5px 12px rgba(70,115,65,.18)}
@@ -271,11 +274,10 @@ nav.bar button[aria-current="page"]{color:var(--green-dark);font-weight:700;
 .q > label,.qlabel{display:flex;align-items:center;gap:9px;flex-wrap:wrap;
   font-weight:800;font-size:16px;color:var(--ink);margin-bottom:12px}
 .field{width:100%;padding:15px 18px;border:0;border-radius:var(--r-key);
-  background:linear-gradient(180deg,#EDF2EC,#F4F8F3);font-size:16px;color:var(--ink);
-  box-shadow:inset 0 2px 5px rgba(72,96,70,.13), inset 0 -1.5px 0 rgba(255,255,255,.9)}
+  background:var(--face);font-size:16px;color:var(--ink);box-shadow:var(--lift)}
 .field::placeholder{color:var(--ink-faint)}
 .field:focus{outline:none;background:#fff;
-  box-shadow:inset 0 2px 5px rgba(72,96,70,.07), 0 0 0 2.5px var(--green)}
+  box-shadow:var(--lift), 0 0 0 2.5px var(--green)}
 .chips{display:flex;flex-wrap:wrap;gap:11px}
 .chips.grid{display:grid;grid-template-columns:repeat(3,1fr);gap:11px}
 .chips.grid2{grid-template-columns:repeat(2,1fr)}
@@ -292,10 +294,17 @@ nav.bar button[aria-current="page"]{color:var(--green-dark);font-weight:700;
   box-shadow:inset 0 1.5px 0 rgba(255,255,255,.4), inset 0 -2px 0 rgba(30,66,32,.12),
              0 6px 14px rgba(78,143,61,.3)}
 .chip[aria-pressed="true"] .chipsub{color:rgba(255,255,255,.85)}
+.chip.gold[aria-pressed="true"]{background:linear-gradient(180deg, var(--gold-a), var(--gold-b));
+  color:var(--gold-ink);
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6), inset 0 -2px 0 rgba(140,100,20,.18),
+             0 8px 16px rgba(201,150,31,.3)}
+.chip.gold[aria-pressed="true"] svg{color:var(--gold-ink)}
+.spark{font-size:12px;line-height:1}
 .chip.sm{padding:10px 15px;font-size:13.5px}
 .chip svg{width:17px;height:17px;flex:none;color:var(--green-dark)}
 .chip[aria-pressed="true"] svg{color:#fff}
 .chipsub{font-size:11.5px;font-weight:600;color:var(--ink-faint)}
+.libwrap{max-height:168px;overflow:auto;padding:5px 3px;margin:-5px -3px}
 .readychip{display:inline-flex;align-items:center;gap:7px;max-width:100%}
 .readychip > .chip{flex-wrap:nowrap;min-width:0}
 .readychip > .chip bdi{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
@@ -330,10 +339,9 @@ select.freqsel{
 /* ---------- settings ---------- */
 .setrow{display:flex;align-items:center;gap:11px;padding:11px 16px}
 .setrow input[type=text]{flex:1;min-width:0;padding:13px 16px;border:0;border-radius:var(--r-pill);
-  background:linear-gradient(180deg,#EDF2EC,#F4F8F3);font-size:15px;
-  box-shadow:inset 0 2px 5px rgba(72,96,70,.13), inset 0 -1.5px 0 rgba(255,255,255,.9)}
+  background:var(--face);font-size:15px;box-shadow:var(--lift-sm)}
 .setrow input[type=text]:focus{outline:none;background:#fff;
-  box-shadow:inset 0 2px 5px rgba(72,96,70,.07), 0 0 0 2.5px var(--green)}
+  box-shadow:var(--lift-sm), 0 0 0 2.5px var(--green)}
 .stepper{display:flex;align-items:center;flex:none;
   border-radius:var(--r-pill);overflow:hidden;background:var(--face);box-shadow:var(--lift-sm)}
 .stepper button{width:38px;height:46px;font-size:20px;font-weight:700;color:var(--green-dark)}
@@ -345,24 +353,30 @@ select.freqsel{
 
 /* ---------- dashboard ---------- */
 .banner{
-  display:flex;align-items:stretch;gap:14px;padding:22px 18px;
+  display:flex;align-items:stretch;gap:12px;padding:12px 16px;
   border-radius:var(--r-card);
 }
-.banner .side{flex:1;min-width:132px;display:flex;flex-direction:column;align-items:center;
+.banner .side{flex:1;min-width:120px;display:flex;flex-direction:column;align-items:center;
   text-align:center}
-.banner .fig{height:124px;display:flex;align-items:center;justify-content:center}
-.banner .big{font-size:42px;font-weight:800;line-height:1;letter-spacing:-1.5px;
+.banner .fig{height:70px;display:flex;align-items:center;justify-content:center}
+.banner .big{font-size:34px;font-weight:800;line-height:1;letter-spacing:-1.2px;
   color:var(--screen-ink)}
-.banner .lbl{font-size:14px;color:var(--screen-ink);font-weight:800;margin-top:12px}
-.banner .sub{font-size:13px;color:var(--screen-soft);margin-top:5px;line-height:1.5}
-.banner .divider{width:1.5px;background:rgba(30,66,32,.11);flex:none;margin:10px 0;
+.banner .lbl{font-size:13.5px;color:var(--screen-ink);font-weight:800;margin-top:6px}
+.banner .lbl.pill{background:linear-gradient(180deg, var(--gold-a), var(--gold-b));
+  color:var(--gold-ink);border-radius:var(--r-round);padding:5px 15px;
+  box-shadow:inset 0 1.5px 0 rgba(255,255,255,.6), 0 5px 12px rgba(201,150,31,.26)}
+.banner .sub{font-size:12.5px;color:var(--screen-soft);margin-top:5px;line-height:1.4}
+.banner .divider{width:1.5px;background:rgba(30,66,32,.11);flex:none;margin:6px 0;
   border-radius:2px}
 .ring{position:relative}
 .ringnum{position:absolute;inset:0;display:grid;place-items:center;
-  font-size:27px;font-weight:800;color:var(--screen-ink);letter-spacing:-.5px}
-.dreambar{margin-top:14px;background:var(--face);border-radius:var(--r-round);
-  padding:15px 22px;font-size:14px;line-height:1.6;box-shadow:var(--lift-sm);text-align:center}
-.dreambar .k{color:var(--ink-soft);font-weight:700}
+  font-size:17px;font-weight:800;color:var(--screen-ink);letter-spacing:-.3px}
+.dreambar{display:block;width:100%;margin-top:12px;background:var(--face);
+  border-radius:var(--r-round);padding:15px 22px;font-size:14px;line-height:1.6;
+  box-shadow:var(--lift-sm);text-align:center}
+.dreambar:hover{transform:translateY(-1px);box-shadow:var(--lift)}
+.dreambar:active{transform:translateY(1px);background:var(--key-press);box-shadow:var(--press)}
+.dreambar .k{color:var(--pink-ink);font-weight:800}
 .dreambar b{color:var(--green-dark)}
 .block{padding:18px}
 .block + .block{box-shadow:inset 0 1.5px 0 var(--green-line)}
@@ -599,7 +613,7 @@ const FREQS = ['day','week','month','quarter'];
 const FREQ_ONCE = {day:'פעם ביום', week:'פעם בשבוע', month:'פעם בחודש', quarter:'פעם ברבעון'};
 const FREQ_SHORT = {day:'יומי', week:'שבועי', month:'חודשי', quarter:'רבעוני'};
 const AUTOS = [0.25, 0.5, 0.7, 0.9];
-const AUTO_LABEL = {0.9:'כמעט הכול', 0.7:'רוב', 0.5:'חצי', 0.25:'קצת'};
+const AUTO_LABEL = {0.9:'כמעט הכול', 0.7:'רוב', 0.5:'חצי', 0.25:'מעט'};
 const TIME_KEYS = [15, 30, 45, 60, 120];
 
 /* Icons are chosen from the task's own words, so "מענה לטלפונים" gets a telephone
@@ -691,19 +705,21 @@ const CATALOG = [
    ['הזמנת ציוד וכיבוד',60,'week']]}
 ];
 
-/* The list of ready-made tasks a person starts with. It is hers to prune, it is
-   stored apart from the scenario, and "תרחיש חדש" never brings the default back. */
+/* The ready-made list holds NAMES and nothing else. A ready-made duration would
+   be a guess dressed up as data: every business runs these tasks differently, so
+   the time is always asked in the room. The list is hers to prune, it is stored
+   apart from the scenario, and "תרחיש חדש" never brings the default back. */
 const LIB_DEFAULT = [
-  ['מיון קורות חיים',120,'day'],
-  ['הקלדת חשבוניות ספקים',90,'day'],
-  ['מענה לשאלות חוזרות במייל ובוואטסאפ',120,'day'],
-  ['עדכון CRM אחרי פגישות ושיחות',45,'day'],
-  ['תיאום פגישות ביומן',60,'day'],
-  ['מענה לטלפונים ולמיילים כלליים',60,'day'],
-  ['הפקת דוחות חודשיים',120,'month'],
-  ['מעקב אחרי תשלומים',45,'day'],
-  ['קליטת עובד חדש (טפסים, הרשאות, ציוד)',180,'week'],
-  ['העברת נתונים בין מערכות',60,'day']
+  'מיון קורות חיים',
+  'הקלדת חשבוניות ספקים',
+  'מענה לשאלות חוזרות במייל ובוואטסאפ',
+  'עדכון CRM אחרי פגישות ושיחות',
+  'תיאום פגישות ביומן',
+  'מענה לטלפונים ולמיילים כלליים',
+  'הפקת דוחות חודשיים',
+  'מעקב אחרי תשלומים',
+  'קליטת עובד חדש (טפסים, הרשאות, ציוד)',
+  'העברת נתונים בין מערכות'
 ];
 
 /* Plural throughout, so the wording never has to pick a gender. */
@@ -721,7 +737,7 @@ const DREAM_CHIPS = ['פרויקט חדש שמחכה','פיתוח מקצועי �
 /* ============================================================
    2. MODEL + VALIDATION
    ============================================================ */
-const LIMITS = {minutes:[0,1440], people:[1,999], names:120, groups:60, tasks:300, lib:60, biz:60};
+const LIMITS = {minutes:[0,12000], people:[1,999], names:120, groups:60, tasks:300, lib:60, biz:60};
 
 function uid(p){ return p + Math.random().toString(36).slice(2,8) + Date.now().toString(36).slice(-3); }
 function clamp(n, lo, hi){ n = Number(n); if(!Number.isFinite(n)) return lo; return Math.min(hi, Math.max(lo, n)); }
@@ -804,15 +820,13 @@ function sanitizeLib(raw){
     if(!name || out.some(x => x.name === name)) continue;
     out.push({
       name,
-      minutes: Math.round(clamp(r.minutes, LIMITS.minutes[0], LIMITS.minutes[1])),
-      freq: FREQS.includes(r.freq) ? r.freq : 'day',
       icon: ICON_KEYS.includes(r.icon) ? r.icon : iconFor(name)
     });
   }
   return out;
 }
 function defaultLib(){
-  return LIB_DEFAULT.map(x => ({name:x[0], minutes:x[1], freq:x[2], icon:iconFor(x[0])}));
+  return LIB_DEFAULT.map(nm => ({name:nm, icon:iconFor(nm)}));
 }
 
 /* ============================================================
@@ -1129,22 +1143,15 @@ function renderList(res){
 
   if(!res.rows.length){
     const e = el('div','empty');
-    e.appendChild(el('h3', null, 'הרשימה ריקה'));
-    e.appendChild(el('p', null, 'הוסיפו משימה קטנה שחוזרת על עצמה, והיא תתקפל לשורה אחת עם השעות שהיא מחזירה לחודש.'));
-    const go = el('button','btn','+ משימה ראשונה');
-    go.type = 'button';
-    go.id = 'emptyAdd';
-    go.addEventListener('click', () => openSheet(null));
-    e.appendChild(go);
+    e.appendChild(el('h3', null, 'רשימת המשימות שחוזרות על עצמן'));
+    e.appendChild(el('p', null, 'הוסיפו משימה קטנה שחוזרת על עצמה בכפתור "חדש" שלמעלה, והיא תתקפל לשורה אחת עם השעות שהיא מחזירה לחודש.'));
     const demo = el('button','btn ghost','טעינת דוגמה');
     demo.type = 'button';
     demo.id = 'emptyDemo';
-    demo.style.marginInlineStart = '8px';
     demo.addEventListener('click', loadDemo);
     e.appendChild(demo);
     card.appendChild(e);
     host.appendChild(card);
-    host.appendChild(readyStrip());
     host.appendChild(tipsButton());
     return;
   }
@@ -1183,62 +1190,91 @@ function renderList(res){
   card.appendChild(tot);
 
   host.appendChild(card);
-  host.appendChild(readyStrip());
   host.appendChild(tipsButton());
 }
-/* Her own list of ready-made tasks, on the screen where the list is: one press
-   adds it, the ✕ takes it out of the ready list for good. */
-function readyStrip(){
+/* Her own list of task names. One press writes the name into the task being
+   added; the ✕ takes it out for good; the field under it adds another. The same
+   box is shown inside "חדש" and inside "הגדרות", so there is one list, not two.
+   No hours and no people live here on purpose: a ready-made duration would be a
+   guess dressed up as data, and every business runs these tasks differently. */
+function libCard(pick, redraw){
   const card = el('div','card');
   const head = el('div','cardhead');
   head.appendChild(el('h2', null, 'משימות מוכנות'));
-  head.appendChild(el('span','sub','לחיצה מוסיפה לרשימה'));
+  head.appendChild(el('span','sub', pick ? 'לחיצה ממלאת את השם' : 'שמות בלבד, הזמן נשאל בכל משימה'));
   card.appendChild(head);
+  card.appendChild(libBox(pick, redraw));
+  return card;
+}
+function libBox(pick, redraw){
   const box = el('div','padbox');
-  const used = {};
-  state.tasks.forEach(t => { used[t.name.trim()] = true; });
-  const free = lib.filter(x => !used[x.name.trim()]);
-  if(!free.length){
-    box.appendChild(el('p','hint','כל המשימות המוכנות כבר ברשימה.'));
+  if(!lib.length){
+    box.appendChild(el('p','hint','הרשימה ריקה כרגע. כל שם שתוסיפו כאן יחכה לפעם הבאה.'));
   }else{
-    const chips = el('div','chips');
-    free.forEach(item => {
+    /* Inside the sheet this list is a drawer, not the page: it keeps its own
+       scroll so the questions under it stay within reach. */
+    const chips = el('div', pick ? 'chips libwrap' : 'chips');
+    lib.forEach(item => {
       const pair = el('span','readychip');
-      const add = el('button','chip');
-      add.type = 'button';
-      add.appendChild(iconSvg(item.icon));
-      add.appendChild(el('bdi', null, item.name));
-      add.appendChild(el('span','chipsub', fmtMinutes(item.minutes) + ' · ' + FREQ_SHORT[item.freq]));
-      add.setAttribute('aria-label','הוספת ' + item.name + ' לרשימה');
-      add.addEventListener('click', () => addFromLib(item));
+      let face;
+      if(pick){
+        face = el('button','chip');
+        face.type = 'button';
+        face.setAttribute('aria-label','בחירת ' + item.name);
+        face.addEventListener('click', () => pick(item));
+      }else{
+        face = el('span','chip');
+      }
+      face.appendChild(iconSvg(item.icon));
+      face.appendChild(el('bdi', null, item.name));
       const del = el('button','chipx','✕');
       del.type = 'button';
       del.setAttribute('aria-label','הסרת ' + item.name + ' מהמשימות המוכנות');
       del.addEventListener('click', () => {
-        const i = lib.indexOf(item);
-        if(i !== -1){ lib.splice(i,1); saveLib(); render(); toast('הוסר מהמשימות המוכנות'); }
+        const k = lib.indexOf(item);
+        if(k !== -1){ lib.splice(k,1); saveLib(); redraw(); toast('הוסר מהמשימות המוכנות'); }
       });
-      pair.appendChild(add);
+      pair.appendChild(face);
       pair.appendChild(del);
       chips.appendChild(pair);
     });
     box.appendChild(chips);
   }
+  const row = el('div','unitrow');
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.className = 'field';
+  inp.placeholder = 'שם משימה להוספה לרשימה';
+  inp.maxLength = LIMITS.names;
+  inp.setAttribute('data-k','libadd');
+  inp.setAttribute('aria-label','שם משימה להוספה לרשימה המוכנה');
+  const go = el('button','btn sm','הוספה');
+  go.type = 'button';
+  go.style.flex = '0 0 auto';
+  const send = () => { if(addToLib(inp.value)){ inp.value = ''; redraw(); } };
+  go.addEventListener('click', send);
+  inp.addEventListener('keydown', e => { if(e.key === 'Enter'){ e.preventDefault(); send(); } });
+  row.appendChild(inp);
+  row.appendChild(go);
+  box.appendChild(row);
   const reset = el('button','inline-link','החזרת הרשימה המקורית');
   reset.type = 'button';
-  reset.id = 'btnLibReset';
+  /* One id per page: the same box can be open inside the sheet while settings is
+     rendered behind it, and two elements may not answer to one name. */
+  reset.id = pick ? 'btnLibResetSheet' : 'btnLibReset';
   reset.addEventListener('click', () => {
-    lib = defaultLib(); saveLib(); render(); toast('המשימות המוכנות חזרו למקור');
+    lib = defaultLib(); saveLib(); redraw(); toast('המשימות המוכנות חזרו למקור');
   });
   box.appendChild(reset);
-  card.appendChild(box);
-  return card;
+  return box;
 }
-function addFromLib(item){
-  apply(() => {
-    if(state.tasks.length >= LIMITS.tasks){ toast('הרשימה מלאה'); return; }
-    state.tasks.push(newTask(item.name, item.minutes, item.freq, item.icon));
-  });
+function addToLib(name){
+  const nm = String(name || '').trim().slice(0, LIMITS.names);
+  if(!nm) return false;
+  if(lib.some(x => x.name === nm)){ toast('השם כבר ברשימה'); return false; }
+  lib.unshift({name:nm, icon:iconFor(nm)});
+  if(lib.length > LIMITS.lib) lib.length = LIMITS.lib;
+  saveLib();
+  return true;
 }
 function tipsButton(){
   const b = el('button','disclink','לא בטוחים מה להוסיף? כמה שאלות שעוזרות למצוא');
@@ -1253,7 +1289,7 @@ function ringPct(fte, size){
   const wrap = el('div','fig ring');
   const pct = Math.max(0, Math.round(fte * 100));
   const frac = Math.min(1, Math.max(0, fte));
-  const s = size || 112, r = s/2 - 9, c = 2 * Math.PI * r;
+  const s = size || 70, r = s/2 - 6, c = 2 * Math.PI * r;
   const svg = document.createElementNS(NS,'svg');
   svg.setAttribute('width', s); svg.setAttribute('height', s);
   svg.setAttribute('viewBox', '0 0 ' + s + ' ' + s);
@@ -1262,7 +1298,7 @@ function ringPct(fte, size){
     const c2 = document.createElementNS(NS,'circle');
     c2.setAttribute('cx', s/2); c2.setAttribute('cy', s/2); c2.setAttribute('r', r);
     c2.setAttribute('fill','none'); c2.setAttribute('stroke', stroke);
-    c2.setAttribute('stroke-width','11'); c2.setAttribute('stroke-linecap','round');
+    c2.setAttribute('stroke-width','8'); c2.setAttribute('stroke-linecap','round');
     if(dash !== undefined) c2.setAttribute('stroke-dasharray', dash + ' ' + c);
     return c2;
   };
@@ -1349,13 +1385,15 @@ function renderSettings(res){
     gcard.appendChild(row);
   });
   const gfoot = el('div','padbox');
-  const addg = el('button','btn ghost block','+ שיוך חדש');
+  const addg = el('button','btn ghost block','+ הוסף תפקיד');
   addg.type = 'button'; addg.id = 'btnAddGroup';
   addg.addEventListener('click', () => apply(() => { state.groups.push(newGroup('', 1)); }));
   gfoot.appendChild(addg);
   gfoot.appendChild(el('p','hint','מספר האנשים מכפיל את כל המשימות המשויכות, בהנחה שכולם עושים אותן באותו זמן.'));
   gcard.appendChild(gfoot);
   host.appendChild(gcard);
+
+  host.appendChild(libCard(null, render));
 }
 
 /* ---- dashboard: one banner carries the whole headline ---- */
@@ -1372,20 +1410,26 @@ function renderDash(res){
   big.appendChild(el('bdi', null, nf(t.freedMonth)));
   fig.appendChild(big);
   right.appendChild(fig);
-  right.appendChild(el('div','lbl','שעות בחודש'));
+  right.appendChild(el('div','lbl pill','שעות בחודש'));
   right.appendChild(el('div','sub', nf(t.freedYear) + ' שעות בשנה'));
   ban.appendChild(right);
   ban.appendChild(el('span','divider'));
   const left = el('div','side');
-  left.appendChild(ringPct(t.fte, 112));
+  left.appendChild(ringPct(t.fte, 70));
   left.appendChild(el('div','lbl','מתוך משרה מלאה'));
   ban.appendChild(left);
   card.appendChild(ban);
 
   const dreamText = res.dream.chips.concat(res.dream.text ? [res.dream.text] : []).join(' · ');
-  const db = el('div','dreambar');
+  /* The bar is the way in: pressing it takes you to the question it is asking. */
+  const db = el('button','dreambar');
+  db.type = 'button'; db.id = 'btnDream';
   db.appendChild(el('span','k','מה אפשרי בזמן שהתפנה? '));
-  db.appendChild(el('b', null, dreamText || 'עוד לא סימנתם'));
+  db.appendChild(el('b', null, dreamText || '(לחצו פה)'));
+  db.addEventListener('click', () => {
+    const target = $('dreamBlock');
+    if(target) target.scrollIntoView({behavior:'smooth', block:'start'});
+  });
   card.appendChild(db);
 
   const ranked = res.live.slice().sort((a,b) => b.freedMonth - a.freedMonth).slice(0,6);
@@ -1435,12 +1479,15 @@ function renderDash(res){
   }
 
   const qb = el('div','block');
+  qb.id = 'dreamBlock';
   qb.appendChild(el('h3', null, 'מה הייתם עושים עם הזמן הזה?'));
   const chips = el('div','chips grid grid2');
   DREAM_CHIPS.forEach(c => {
-    const b = el('button','chip sm', c);
+    const on = state.dream.chips.indexOf(c) !== -1;
+    const b = el('button','chip sm gold', c);
     b.type = 'button';
-    b.setAttribute('aria-pressed', state.dream.chips.indexOf(c) !== -1 ? 'true' : 'false');
+    b.setAttribute('aria-pressed', on ? 'true' : 'false');
+    if(on) b.appendChild(el('span','spark','✨'));
     b.addEventListener('click', () => apply(() => {
       const i = state.dream.chips.indexOf(c);
       if(i === -1) state.dream.chips.push(c); else state.dream.chips.splice(i,1);
@@ -1449,7 +1496,7 @@ function renderDash(res){
   });
   qb.appendChild(chips);
   const free = document.createElement('input');
-  free.type = 'text'; free.className = 'field'; free.style.marginTop = '10px';
+  free.type = 'text'; free.className = 'field'; free.id = 'fDream'; free.style.marginTop = '10px';
   free.placeholder = 'או כתבו בעצמכם';
   free.maxLength = 400;
   free.value = state.dream.text;
@@ -1556,15 +1603,22 @@ function renderSheet(d){
   /* The display carries the name of the task and what it returns a month. */
   const head = el('div','sheethead');
   const ht = el('div','headtext');
-  ht.appendChild(el('div','t', ui.editId ? 'עדכון משימה' : 'משימה חדשה'));
+  if(ui.editId) ht.appendChild(el('div','t','עדכון משימה'));
   const nameLine = el('div','tname');
-  nameLine.appendChild(el('bdi', null, d.name.trim() || 'בלי שם עדיין'));
+  nameLine.appendChild(el('bdi', null, d.name.trim() || 'משימה חדשה שחוזרת על עצמה'));
   ht.appendChild(nameLine);
   const hv = el('div','n');
   const hrs = draftHours(d);
   hv.appendChild(el('bdi', null, hrs > 0 && hrs < 10 ? nf(Math.round(hrs*10)/10) : nf(Math.round(hrs))));
   ht.appendChild(hv);
-  ht.appendChild(el('div','u','שעות בחודש מהמשימה הזאת'));
+  ht.appendChild(el('div','u','שעות שמתפנות בחודש'));
+  /* The number above is what the automation returns, not what the task costs.
+     Saying both out loud is the difference between a calculator and a riddle. */
+  const gross = (d.minutes/60) * freqFactor(d.freq) * peopleByName(d.gname);
+  if(gross > 0){
+    ht.appendChild(el('div','u2', 'מתוך ' + nf(Math.round(gross)) + ' שעות שהמשימה לוקחת · ' +
+      Math.round(d.auto * 100) + '% אוטומטי'));
+  }
   head.appendChild(ht);
   const x = el('button','icobtn','✕');
   x.type = 'button'; x.id = 'sheetClose';
@@ -1587,7 +1641,7 @@ function renderSheet(d){
   const assign = document.createElement('input');
   assign.type = 'text'; assign.className = 'field'; assign.id = 'fAssign';
   assign.setAttribute('data-k','assign');
-  assign.placeholder = 'צוות רכש · מנהלת HR · אפשר להשאיר ריק';
+  assign.placeholder = 'לדוגמא: צוות רכש · מנהלת HR · מזכירה';
   assign.maxLength = LIMITS.names;
   assign.value = d.gname;
   assign.addEventListener('input', () => {
@@ -1636,6 +1690,11 @@ function renderSheet(d){
   });
   q2.appendChild(name);
   q2.appendChild(el('p','hint','בשמכם שלכם. השם גם בוחר את האייקון, והמשימה מצטרפת למשימות המוכנות.'));
+  q2.appendChild(libBox(item => {
+    d.name = item.name;
+    d.icon = item.icon;
+    renderSheet(d);
+  }, () => renderSheet(d)));
   body.appendChild(q2);
 
   /* 3 — how long it takes. The frequency is a dropdown INSIDE the question, and the
@@ -1715,9 +1774,10 @@ function renderSheet(d){
   q4.appendChild(el('div','qlabel','כמה מזה אפשר להפוך לאוטומטי? (הערכה)'));
   const c4 = el('div','chips grid grid2');
   AUTOS.slice().reverse().forEach(a => {
-    const b = el('button','chip', AUTO_LABEL[a] + ' (' + Math.round(a*100) + '%)');
+    const b = el('button','chip gold', AUTO_LABEL[a] + ' (' + Math.round(a*100) + '%)');
     b.type = 'button';
     b.setAttribute('aria-pressed', d.auto === a ? 'true' : 'false');
+    if(d.auto === a) b.appendChild(el('span','spark','✨'));
     b.addEventListener('click', () => { d.auto = a; renderSheet(d); });
     c4.appendChild(b);
   });
@@ -1756,7 +1816,7 @@ function renderSheet(d){
 function rememberInLib(d){
   const nm = d.name.trim();
   if(!nm || lib.some(x => x.name === nm)) return;
-  lib.unshift({name:nm, minutes:d.minutes, freq:d.freq, icon:d.icon});
+  lib.unshift({name:nm, icon:d.icon});
   if(lib.length > LIMITS.lib) lib.length = LIMITS.lib;
   saveLib();
 }

@@ -63,6 +63,21 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
    grid, "אחר" opening a number with a דקות/שעות switch that re-reads the same number),
    and how much can be automated "(הערכה)". The display carries the task's own name.
 
+16. **The ready-made list holds names and nothing else.** No minutes, no frequency,
+   no people: "זה מגוחך להגדיר משהו כזה מראש מתוך ידיעה שכל עסק עובד אחרת לגמרי"
+   (2026-11-22). It is edited in two places that share one list — inside "חדש",
+   under the question "מה המשימה?", and in הגדרות — and nowhere on the list screen.
+
+17. **The display says both numbers.** The big number is the hours that come back;
+   the line under it names the hours the task costs and the share that is automatic.
+   She read 10 hours turning into 7 as a bug; the number was right and the screen
+   was silent. The per-occurrence cap is 200 hours, so a long monthly task is never
+   trimmed behind her back (50 hours used to become 24).
+
+18. **Gold marks what is chosen**: the ring, the "שעות בחודש" label, the current
+   screen in the bottom bar, the chosen estimate and the chosen wish. Green stays
+   the colour of the keys you press, pink the colour of the one that commits.
+
 ## Approach
 - **State**: `{ v:3, biz, groups:[{id,name,people}], tasks:[{id,name,minutes,freq,auto,on,
   icon,gid}], dream:{chips,text} }`. Tasks are FLAT and `gid` may be null, because an

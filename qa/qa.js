@@ -131,10 +131,12 @@ async function main(){
   ok('מסך הגדרות מוסתר', await page.locator('#screenSet').isHidden());
   ok('מסך דשבורד מוסתר', await page.locator('#screenDash').isHidden());
   ok('אין טופס על מסך הרשימה', (await page.locator('#screenList input').count()) === 0);
-  ok('מצב ריק מסביר מה לעשות',
-     (await page.locator('#screenList').textContent()).indexOf('הרשימה ריקה') !== -1);
-  ok('יש כפתור משימה ראשונה', await page.locator('#emptyAdd').isVisible());
+  ok('מצב ריק אומר מהי הרשימה',
+     (await page.locator('#screenList').textContent()).indexOf('רשימת המשימות שחוזרות על עצמן') !== -1);
+  ok('אין כפתור הוספה כפול במצב ריק', (await page.locator('#emptyAdd').count()) === 0);
   ok('יש כפתור טעינת דוגמה', await page.locator('#emptyDemo').isVisible());
+  ok('אין משימות מוכנות במסך הרשימה',
+     (await page.locator('#screenList .readychip').count()) === 0);
   ok('שלושה מסכים בסרגל התחתון', (await page.locator('nav.bar button').count()) === 3);
   ok('הסרגל התחתון מוביל להגדרות', await page.locator('#navSet').isVisible());
   await snapText(page);
@@ -150,8 +152,9 @@ async function main(){
      labels[3].indexOf('כמה מזה אפשר להפוך לאוטומטי? (הערכה)') === 0);
   ok('מספר חי בראש הגיליון', await page.locator('#sheet .sheethead .n').isVisible());
   ok('המספר מתחיל באפס', (await sheetNum(page)) === 0);
-  ok('בראש הגיליון כתוב שאין עדיין שם',
-     (await page.locator('#sheet .tname').textContent()).indexOf('בלי שם') !== -1);
+  ok('בראש הגיליון כתוב מה נבנה כאן',
+     (await page.locator('#sheet .tname').textContent()) === 'משימה חדשה שחוזרת על עצמה');
+  ok('אין כותרת "משימה חדשה" מעל השם', (await page.locator('#sheet .sheethead .t').count()) === 0);
   await page.locator('#fName').fill('מענה לשאלות חוזרות');
   await page.waitForTimeout(120);
   ok('שם המשימה מופיע בראש הגיליון',
@@ -160,6 +163,10 @@ async function main(){
   ok('שעתיים ביום = 28 ש׳ בחודש', (await sheetNum(page)) === 28);
   await page.locator('#sheet .chip', {hasText:'כמעט הכול'}).first().click();
   ok('שינוי האוטומציה מזיז את המספר', (await sheetNum(page)) === 36);
+  ok('הצג אומר גם כמה המשימה לוקחת',
+     (await page.locator('#sheet .u2').textContent()).indexOf('מתוך 40 שעות שהמשימה לוקחת') === 0);
+  ok('הצג אומר כמה מזה אוטומטי',
+     (await page.locator('#sheet .u2').textContent()).indexOf('90% אוטומטי') !== -1);
   ok('התדירות היא תפריט בחירה, לא כפתור מדלג',
      await page.evaluate(() => document.getElementById('fFreq').tagName === 'SELECT'));
   ok('בתפריט התדירות ארבע אפשרויות', (await page.locator('#fFreq option').count()) === 4);
@@ -169,8 +176,12 @@ async function main(){
   }));
   await page.selectOption('#fFreq', 'week');
   ok('"פעם בשבוע" משנה את המספר', near(await sheetNum(page), 8.1));
-  ok('אין רשימת משימות מוכנות בתוך הגיליון',
-     (await page.locator('#sheet .readychip').count()) === 0);
+  ok('רשימת המשימות המוכנות יושבת בתוך הגיליון',
+     (await page.locator('#sheet .readychip').count()) === 10);
+  ok('הרשימה המוכנה יושבת מתחת לשאלת השם', await page.evaluate(() => {
+    const q = document.querySelector('#sheet .readychip').closest('.q');
+    return !!q && q.querySelector('.qlabel').textContent.indexOf('מה המשימה?') === 0;
+  }));
   await page.locator('#sheetClose').click();
   await page.waitForTimeout(140);
   ok('הגיליון נסגר', await page.locator('#scrim').isHidden());
@@ -201,31 +212,52 @@ async function main(){
      (await page.locator('#sheet .chip[data-unit="hr"]').getAttribute('aria-pressed')) === 'true');
   await page.locator('#sheet .chip', {hasText:'45 דק׳'}).first().click();
   ok('חזרה לכפתור מוכן סוגרת את התיבה', (await page.locator('#fMinutes').count()) === 0);
+  /* 50 שעות פעם בחודש נחתכו בשקט ל-24 ויצאו 17. המספר חייב להיות מה שנכתב. */
+  await page.selectOption('#fFreq', 'month');
+  await page.locator('#fOther').click();
+  await page.locator('#fMinutes').fill('50');
+  await page.locator('#sheet .chip[data-unit="hr"]').click();
+  await page.waitForTimeout(140);
+  ok('50 שעות פעם בחודש הן 50 שעות, לא 24', await page.evaluate(() =>
+     window.__waives.ui.draft.minutes === 3000));
+  ok('50 שעות × 70% = 35', (await sheetNum(page)) === 35);
+  await page.locator('#fMinutes').fill('10');
+  await page.waitForTimeout(140);
+  ok('10 שעות × 70% = 7', (await sheetNum(page)) === 7);
   await page.locator('#sheetClose').click();
 
   /* ---------------------------------------------------------- */
-  section('4 · המשימות המוכנות יושבות במסך הרשימה');
+  section('4 · המשימות המוכנות: שמות בלבד, בתוך "חדש" ובהגדרות');
   await fresh(page);
   let L = await listNums(page);
-  ok('הרצועה מופיעה גם כשהרשימה ריקה', L.ready.length === 10);
-  ok('הרצועה מסבירה שהלחיצה מוסיפה',
-     (await page.locator('#screenList').textContent()).indexOf('לחיצה מוסיפה לרשימה') !== -1);
-  await page.locator('.readychip > .chip', {hasText:'תיאום פגישות ביומן'}).click();
-  await page.waitForTimeout(200);
-  L = await listNums(page);
-  ok('לחיצה מוסיפה את המשימה לרשימה', L.rows.length === 1 && L.rows[0].name === 'תיאום פגישות ביומן');
-  ok('המשימה שנוספה יורדת מהרצועה', L.ready.indexOf('תיאום פגישות ביומן') === -1);
-  ok('שעה ביום × 20 × 0.7 = 14', L.rows[0].hrs === 14);
-  const readyBefore = L.ready.length;
-  await page.locator('.chipx').first().click();
-  await page.waitForTimeout(200);
-  L = await listNums(page);
-  ok('אפשר להוריד משימה מוכנה מהרשימה', L.ready.length === readyBefore - 1);
-  ok('ההסרה לא נוגעת ברשימה עצמה', L.rows.length === 1);
-  await page.locator('#btnLibReset').click();
-  await page.waitForTimeout(200);
+  ok('מסך הרשימה נקי ממשימות מוכנות', (await page.locator('#screenList .readychip').count()) === 0);
+  await openSheet(page);
+  ok('עשרה שמות מוכנים בתוך הגיליון', (await page.locator('#sheet .readychip').count()) === 10);
+  ok('אין שעות ואין אנשים על השמות', (await page.locator('#sheet .readychip .chipsub').count()) === 0);
+  ok('אין זמנים שמורים ברשימה המוכנה',
+     await page.evaluate(() => window.__waives.lib.every(x => x.minutes === undefined && x.freq === undefined)));
+  await page.locator('#sheet .readychip > .chip', {hasText:'תיאום פגישות ביומן'}).click();
+  await page.waitForTimeout(170);
+  ok('לחיצה ממלאת את שם המשימה',
+     (await page.locator('#fName').inputValue()) === 'תיאום פגישות ביומן');
+  ok('לחיצה לא מוסיפה משימה לרשימה',
+     await page.evaluate(() => window.__waives.state.tasks.length === 0));
+  const readyBefore = await page.evaluate(() => window.__waives.lib.length);
+  await page.locator('#sheet .chipx').first().click();
+  await page.waitForTimeout(170);
+  ok('אפשר להוריד שם מהרשימה המוכנה',
+     await page.evaluate(n => window.__waives.lib.length === n - 1, readyBefore));
+  await page.locator('#sheet [data-k="libadd"]').fill('בדיקת מלאי בבוקר');
+  await page.locator('#sheet .btn.sm').click();
+  await page.waitForTimeout(170);
+  ok('אפשר להוסיף שם לרשימה המוכנה',
+     await page.evaluate(() => window.__waives.lib[0].name === 'בדיקת מלאי בבוקר'));
+  await page.locator('#btnLibResetSheet').click();
+  await page.waitForTimeout(170);
   ok('אפשר להחזיר את הרשימה המקורית',
      await page.evaluate(() => window.__waives.lib.length === 10));
+  await page.locator('#sheetClose').click();
+  await page.waitForTimeout(150);
   await snapText(page);
 
   /* ---------------------------------------------------------- */
@@ -313,8 +345,9 @@ async function main(){
   ok('שדה השיוך ריק כברירת מחדל', (await page.locator('#fAssign').inputValue()) === '');
   ok('אין כפתור "לא משויכת"',
      (await page.locator('#sheet').textContent()).indexOf('לא משויכת') === -1);
-  ok('השדה מסביר שאפשר להשאיר ריק',
-     ((await page.locator('#fAssign').getAttribute('placeholder')) || '').indexOf('אפשר להשאיר ריק') !== -1);
+  const ph = (await page.locator('#fAssign').getAttribute('placeholder')) || '';
+  ok('השדה נותן דוגמאות', ph.indexOf('לדוגמא') === 0 && ph.indexOf('מנהלת HR') !== -1);
+  ok('השדה לא מזמין משימה בלי בעלים', ph.indexOf('אפשר להשאיר ריק') === -1);
   await page.locator('#fName').fill('בדיקה בלי שיוך');
   await page.locator('#sheet .chip', {hasText:'30 דק׳'}).first().click();
   await page.locator('#sheetSave').click();
@@ -366,8 +399,9 @@ async function main(){
   await page.waitForTimeout(180);
   ok('המסך נקרא הגדרות', (await page.locator('#navSet').textContent()).indexOf('הגדרות') !== -1);
   ok('אין יותר מסך בשם צוותים', (await page.locator('nav.bar').textContent()).indexOf('צוותים') === -1);
-  ok('אין בהגדרות רשימת משימות מוכנות',
-     (await page.locator('#screenSet').textContent()).indexOf('המשימות המוכנות') === -1);
+  ok('הרשימה המוכנה ניתנת לעריכה גם בהגדרות',
+     (await page.locator('#screenSet .readychip').count()) > 0);
+  ok('בהגדרות אפשר גם להוסיף שם', await page.locator('#screenSet [data-k="libadd"]').isVisible());
   ok('יש שדה שם עסק', await page.locator('#fBiz').isVisible());
   await page.locator('#fBiz').fill('משרד עורכי דין לוי');
   await page.waitForTimeout(170);
@@ -380,7 +414,9 @@ async function main(){
   await page.waitForTimeout(180);
   ok('אפשר להוסיף אנשים לשיוך',
      await page.evaluate(() => window.__waives.state.groups[0].people === 2));
-  ok('כפתור שיוך חדש קיים', await page.locator('#btnAddGroup').isVisible());
+  ok('כפתור הוספת תפקיד קיים', await page.locator('#btnAddGroup').isVisible());
+  ok('הכפתור נקרא "הוסף תפקיד"',
+     (await page.locator('#btnAddGroup').textContent()).indexOf('הוסף תפקיד') !== -1);
   await page.locator('#navList').click();
   await page.waitForTimeout(170);
   ok('יש משימות לפני תרחיש חדש',
@@ -550,7 +586,7 @@ async function main(){
   });
   ok('בבאנר שני צדדים', ban.count === 2);
   ok('שני הצדדים באותו גובה', ban.figMid[0] === ban.figMid[1]);
-  ok('הפונט של המספר לא ענק (' + ban.bigSize + ')', ban.bigSize <= 44);
+  ok('הפונט של המספר לא ענק (' + ban.bigSize + ')', ban.bigSize <= 36);
   ok('האחוז בתוך הגלגל (' + ban.ringSize + ')', ban.ringSize <= 30);
   ok('בצד ימין השעות בחודש', ban.right.indexOf('שעות בחודש') !== -1);
   ok('בצד ימין גם השעות בשנה', ban.right.indexOf('שעות בשנה') !== -1);
@@ -564,6 +600,10 @@ async function main(){
        .filter(c => c.getAttribute('stroke-dasharray')).length === 1));
   ok('באנר קטן שואל מה אפשרי בזמן שהתפנה',
      (await page.locator('.dreambar').textContent()).indexOf('מה אפשרי בזמן שהתפנה?') === 0);
+  ok('השורה היא כפתור שמוביל לשאלה', await page.evaluate(() => {
+    const b = document.querySelector('.dreambar');
+    return b.tagName === 'BUTTON' && !!document.getElementById('dreamBlock');
+  }));
   await page.locator('#screenDash .chip', {hasText:'פרויקט חדש שמחכה'}).first().click();
   await page.waitForTimeout(190);
   ok('מה שסומן מופיע בבאנר הקטן',
@@ -620,9 +660,10 @@ async function main(){
      Math.abs((await page.evaluate(() => window.scrollY)) - y0) < 40);
   await page.locator('.row .rowmain').nth(4).click();
   await page.waitForSelector('#sheet #fName');
-  /* the sheet itself must not jump back to its first question */
-  await page.evaluate(() => { document.querySelector('.sheetbody').scrollTop = 260; });
-  await page.waitForTimeout(140);
+  /* the sheet itself must not jump back to its first question. Scroll down to the
+     time question the way a person does, and only then start measuring. */
+  await page.locator('#sheet .chip', {hasText:'45 דק׳'}).first().scrollIntoViewIfNeeded();
+  await page.waitForTimeout(160);
   const s0 = await page.evaluate(() => document.querySelector('.sheetbody').scrollTop);
   ok('אפשר לגלול בתוך הגיליון (' + s0 + ')', s0 > 100);
   await page.locator('#sheet .chip', {hasText:'45 דק׳'}).first().click();
