@@ -128,6 +128,15 @@ async function main(){
     return b.left < window.innerWidth/2 && b.top < 90;
   }));
   ok('המסך הפתוח הוא הרשימה', !(await page.locator('#screenList').isHidden()));
+  ok('הרשימה נקראת בשמה המלא', await page.evaluate(() => {
+    const demo = document.getElementById('emptyDemo');
+    if(demo) demo.click();
+    const h = document.querySelector('#screenList .cardhead h2');
+    return !!h && h.textContent === 'רשימת המשימות שחוזרות על עצמן במשרד/בעסק';
+  }));
+  await page.evaluate(() => { localStorage.clear(); });
+  await page.reload();
+  await page.waitForSelector('#screenList');
   ok('מסך הגדרות מוסתר', await page.locator('#screenSet').isHidden());
   ok('מסך דשבורד מוסתר', await page.locator('#screenDash').isHidden());
   ok('אין טופס על מסך הרשימה', (await page.locator('#screenList input').count()) === 0);
@@ -401,6 +410,9 @@ async function main(){
   ok('אין יותר מסך בשם צוותים', (await page.locator('nav.bar').textContent()).indexOf('צוותים') === -1);
   ok('הרשימה המוכנה ניתנת לעריכה גם בהגדרות',
      (await page.locator('#screenSet .readychip').count()) > 0);
+  ok('בהגדרות הכותרת היא ההסבר כולו',
+     (await page.locator('#screenSet .cardhead h2').last().textContent())
+       === 'הצעה למשימות אפשריות שחוזרות על עצמן');
   ok('בהגדרות אפשר גם להוסיף שם', await page.locator('#screenSet [data-k="libadd"]').isVisible());
   ok('יש שדה שם עסק', await page.locator('#fBiz').isVisible());
   await page.locator('#fBiz').fill('משרד עורכי דין לוי');
@@ -600,6 +612,14 @@ async function main(){
        .filter(c => c.getAttribute('stroke-dasharray')).length === 1));
   ok('באנר קטן שואל מה אפשרי בזמן שהתפנה',
      (await page.locator('.dreambar').textContent()).indexOf('מה אפשרי בזמן שהתפנה?') === 0);
+  const dream = await page.evaluate(() => ({
+    q: getComputedStyle(document.querySelector('.dreambar .k')).color,
+    a: getComputedStyle(document.querySelector('.dreambar b')).color,
+    line: getComputedStyle(document.querySelector('.dreambar b')).display
+  }));
+  ok('השאלה כתובה בכהה', dream.q === 'rgb(30, 66, 32)');
+  ok('התשובה כתובה בוורוד בשורה נפרדת',
+     dream.a === 'rgb(178, 58, 98)' && dream.line === 'block');
   ok('השורה היא כפתור שמוביל לשאלה', await page.evaluate(() => {
     const b = document.querySelector('.dreambar');
     return b.tagName === 'BUTTON' && !!document.getElementById('dreamBlock');
@@ -608,10 +628,22 @@ async function main(){
   await page.waitForTimeout(190);
   ok('מה שסומן מופיע בבאנר הקטן',
      (await page.locator('.dreambar').textContent()).indexOf('פרויקט חדש שמחכה') !== -1);
-  ok('יש פירוט איפה הזמן יושב',
-     (await page.locator('#screenDash').textContent()).indexOf('איפה הזמן יושב') !== -1);
-  ok('יש פירוט לפי שיוך',
-     (await page.locator('#screenDash').textContent()).indexOf('לפי שיוך') !== -1);
+  ok('"איפה הזמן יושב?" היא כותרת אחת',
+     (await page.locator('#screenDash .block h3', {hasText:'איפה הזמן יושב?'}).count()) === 1);
+  const subs = await page.locator('#screenDash .subh').allTextContents();
+  ok('מתחתיה "לפי משימה" ואחריה "לפי שיוך"',
+     subs[0] === 'לפי משימה' && subs[1] === 'לפי שיוך');
+  const tones = await page.evaluate(() => {
+    const g = sel => [...document.querySelectorAll(sel)]
+      .map(b => getComputedStyle(b.querySelector('.bar-fill')).backgroundImage);
+    return {pink: g('#screenDash .bar-item.pinkbar'), gold: g('#screenDash .bar-item.goldbar')};
+  });
+  ok('כל הברים של המשימות ורודים (' + tones.pink.length + ')',
+     tones.pink.length > 1 && tones.pink.every(b => b.indexOf('247, 121, 159') !== -1));
+  ok('כל הברים של השיוכים צהובים (' + tones.gold.length + ')',
+     tones.gold.length > 0 && tones.gold.every(b => b.indexOf('233, 182, 74') !== -1));
+  ok('אין בר ירוק בודד שמתחזה לכותרת',
+     (await page.locator('#screenDash .bar-item:not(.pinkbar):not(.goldbar)').count()) === 0);
   await snapText(page);
 
   /* ---------------------------------------------------------- */
@@ -727,7 +759,12 @@ async function main(){
     const root = getComputedStyle(document.documentElement);
     return {
       bg: cs('body').backgroundColor,
-      bgImage: cs('body').backgroundImage,
+      sheetBg: (() => {
+        document.getElementById('btnNew').click();
+        const c = getComputedStyle(document.querySelector('#sheet')).backgroundColor;
+        document.getElementById('sheetClose').click();
+        return c;
+      })(),
       rowShadow: cs('.row').boxShadow,
       rowRadius: cs('.row').borderTopLeftRadius,
       rowFace: cs('.row').backgroundImage,
@@ -744,7 +781,7 @@ async function main(){
     };
   });
   ok('הרקע מנטה בהיר', look.bg === 'rgb(231, 236, 230)');
-  ok('לרקע יש מעבר עדין', look.bgImage.indexOf('gradient') !== -1);
+  ok('הרקע של הדף הוא הרקע של הגיליון', look.bg === look.sheetBg);
   ok('שורה היא מקש רך עם צל', look.rowShadow.indexOf('inset') !== -1 && look.rowShadow.indexOf('rgba(72, 96, 70') !== -1);
   ok('לשורה פינות גדולות (' + look.rowRadius + ')', parseFloat(look.rowRadius) >= 18);
   ok('פני המקש הם מעבר מלבן', look.rowFace.indexOf('gradient') !== -1 && look.rowFace.indexOf('rgb(255, 255, 255)') !== -1);

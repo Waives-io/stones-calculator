@@ -18,7 +18,7 @@
    and every raised thing has a white top edge and a soft shadow.
    ============================================================ */
 :root{
-  --bg:#E7ECE6; --bg-top:#EFF3EE; --surface:#FFFFFF;
+  --bg:#E7ECE6; --surface:#FFFFFF;
   --key-a:#FFFFFF; --key-b:#F1F5F0; --key-press:#E9EFE8;
   --ink:#1E4220; --ink-soft:#5A7059; --ink-faint:#8CA08C;
   --screen-a:#DCEDD3; --screen-b:#C2DEB4; --screen-ink:#1B4A21; --screen-soft:#4B7150;
@@ -42,9 +42,10 @@ html,body{margin:0;padding:0}
 html{-webkit-tap-highlight-color:transparent}
 body{
   font-family:'Heebo',system-ui,-apple-system,'Segoe UI',Arial,sans-serif;
+  /* One background for the whole tool. The gradient washed the top of every
+      screen out to near-white, and the only screen that looked right was the
+      sheet, which sits on this flat tone. So they all do now. */
   background:var(--bg);
-  background-image:linear-gradient(180deg, var(--bg-top) 0%, var(--bg) 420px);
-  background-attachment:fixed;
   color:var(--ink);
   -webkit-font-smoothing:antialiased;
   padding-bottom:calc(var(--bar) + env(safe-area-inset-bottom));
@@ -57,7 +58,7 @@ input,select{font:inherit;color:inherit}
 /* ---------- the top bar sits ON the page, it is not a band ---------- */
 .top{
   position:sticky; top:0; z-index:30;
-  background:linear-gradient(180deg, var(--bg-top) 58%, rgba(239,243,238,.72));
+  background:linear-gradient(180deg, var(--bg) 70%, rgba(231,236,230,.78));
   -webkit-backdrop-filter:blur(12px); backdrop-filter:blur(12px);
   padding-block:calc(14px + env(safe-area-inset-top)) 14px;
   padding-inline:max(16px, calc((100% - 720px) / 2));
@@ -97,7 +98,7 @@ input,select{font:inherit;color:inherit}
 .card{background:var(--surface);border-radius:var(--r-card);
   box-shadow:inset 0 1.5px 0 rgba(255,255,255,1), 0 7px 18px var(--shadow-soft)}
 .card + .card{margin-top:16px}
-.cardhead{padding:16px 18px 12px;display:flex;align-items:baseline;gap:9px}
+.cardhead{padding:16px 18px 12px;display:flex;align-items:baseline;gap:9px;flex-wrap:wrap}
 .cardhead h2{margin:0;font-size:15.5px;font-weight:700;color:var(--ink)}
 .cardhead .sub{font-size:12.5px;color:var(--ink-faint);font-weight:500}
 
@@ -376,8 +377,8 @@ select.freqsel{
   box-shadow:var(--lift-sm);text-align:center}
 .dreambar:hover{transform:translateY(-1px);box-shadow:var(--lift)}
 .dreambar:active{transform:translateY(1px);background:var(--key-press);box-shadow:var(--press)}
-.dreambar .k{color:var(--pink-ink);font-weight:800}
-.dreambar b{color:var(--green-dark)}
+.dreambar .k{display:block;color:var(--ink);font-weight:800}
+.dreambar b{display:block;margin-top:3px;color:var(--pink-ink);font-weight:800}
 .block{padding:18px}
 .block + .block{box-shadow:inset 0 1.5px 0 var(--green-line)}
 .block h3{margin:0 0 16px;font-size:15px;font-weight:800;color:var(--ink)}
@@ -390,8 +391,12 @@ select.freqsel{
   box-shadow:inset 0 2px 4px rgba(72,96,70,.14)}
 .bar-fill{height:100%;background:linear-gradient(90deg, var(--green-a), var(--green-b));
   border-radius:var(--r-round);box-shadow:inset 0 1.5px 0 rgba(255,255,255,.35)}
-.bar-item.lead .bar-fill{background:linear-gradient(90deg, var(--pink-a), var(--pink-b))}
-.bar-item.lead .bar-top .v{color:var(--pink-ink)}
+.bar-item.pinkbar .bar-fill{background:linear-gradient(90deg, var(--pink-a), var(--pink-b))}
+.bar-item.pinkbar .bar-top .v{color:var(--pink-ink)}
+.bar-item.goldbar .bar-fill{background:linear-gradient(90deg, var(--gold-a), var(--gold-b))}
+.bar-item.goldbar .bar-top .v{color:#9A7418}
+.subh{margin:20px 0 12px;font-size:13.5px;font-weight:800;color:var(--ink-soft)}
+.block h3 + .subh{margin-top:2px}
 
 /* ---------- snackbar & menu ---------- */
 .snack{position:fixed;inset-inline:16px;bottom:calc(var(--bar) + 14px + env(safe-area-inset-bottom));
@@ -1157,7 +1162,7 @@ function renderList(res){
   }
 
   const head = el('div','cardhead');
-  head.appendChild(el('h2', null, 'הרשימה'));
+  head.appendChild(el('h2', null, 'רשימת המשימות שחוזרות על עצמן במשרד/בעסק'));
   const onCount = res.rows.filter(r => r.on && r.minutes > 0).length;
   head.appendChild(el('span','sub', onCount + ' מתוך ' + res.rows.length + ' בחישוב'));
   card.appendChild(head);
@@ -1200,8 +1205,8 @@ function renderList(res){
 function libCard(pick, redraw){
   const card = el('div','card');
   const head = el('div','cardhead');
-  head.appendChild(el('h2', null, 'משימות מוכנות'));
-  head.appendChild(el('span','sub', pick ? 'לחיצה ממלאת את השם' : 'שמות בלבד, הזמן נשאל בכל משימה'));
+  head.appendChild(el('h2', null, 'הצעה למשימות אפשריות שחוזרות על עצמן'));
+  if(pick) head.appendChild(el('span','sub','לחיצה ממלאת את השם'));
   card.appendChild(head);
   card.appendChild(libBox(pick, redraw));
   return card;
@@ -1424,7 +1429,7 @@ function renderDash(res){
   /* The bar is the way in: pressing it takes you to the question it is asking. */
   const db = el('button','dreambar');
   db.type = 'button'; db.id = 'btnDream';
-  db.appendChild(el('span','k','מה אפשרי בזמן שהתפנה? '));
+  db.appendChild(el('span','k','מה אפשרי בזמן שהתפנה?'));
   db.appendChild(el('b', null, dreamText || '(לחצו פה)'));
   db.addEventListener('click', () => {
     const target = $('dreamBlock');
@@ -1432,50 +1437,28 @@ function renderDash(res){
   });
   card.appendChild(db);
 
+  /* One question — where the time sits — answered twice: once by task, once by
+     role. Each answer keeps its own colour, so neither list is read as a ranking
+     of the other. */
   const ranked = res.live.slice().sort((a,b) => b.freedMonth - a.freedMonth).slice(0,6);
-  if(ranked.length){
-    const rb = el('div','block');
-    rb.appendChild(el('h3', null, 'איפה הזמן יושב'));
-    const max = ranked[0].freedMonth || 1;
-    ranked.forEach((r,i) => {
-      const item = el('div','bar-item' + (i === 0 ? ' lead' : ''));
-      const line = el('div','bar-top');
-      line.appendChild(el('bdi', null, r.name || 'משימה ללא שם'));
-      const v = el('span','v');
-      v.appendChild(el('bdi', null, fmtHours(r.freedShown)));
-      line.appendChild(v);
-      item.appendChild(line);
-      const track = el('div','bar-track');
-      const fill = el('div','bar-fill');
-      fill.style.width = Math.max(4, Math.round(r.freedMonth / max * 100)) + '%';
-      track.appendChild(fill);
-      item.appendChild(track);
-      rb.appendChild(item);
-    });
-    card.appendChild(rb);
-  }
-
   const groups = res.byGroup.filter(g => g.freed > 0).sort((a,b) => b.freed - a.freed);
-  if(groups.length){
-    const gb = el('div','block');
-    gb.appendChild(el('h3', null, 'לפי שיוך'));
-    const max = groups[0].freed || 1;
-    groups.forEach(g => {
-      const item = el('div','bar-item');
-      const line = el('div','bar-top');
-      line.appendChild(el('bdi', null, (g.name || 'ללא שיוך') + (g.people > 1 ? ' · ' + g.people + ' אנשים' : '')));
-      const v = el('span','v');
-      v.appendChild(el('bdi', null, fmtHours(Math.round(g.freed))));
-      line.appendChild(v);
-      item.appendChild(line);
-      const track = el('div','bar-track');
-      const fill = el('div','bar-fill');
-      fill.style.width = Math.max(4, Math.round(g.freed / max * 100)) + '%';
-      track.appendChild(fill);
-      item.appendChild(track);
-      gb.appendChild(item);
-    });
-    card.appendChild(gb);
+  if(ranked.length || groups.length){
+    const wb = el('div','block');
+    wb.appendChild(el('h3', null, 'איפה הזמן יושב?'));
+    if(ranked.length){
+      wb.appendChild(el('h4','subh','לפי משימה'));
+      const max = ranked[0].freedMonth || 1;
+      ranked.forEach(r => wb.appendChild(
+        barItem(r.name || 'משימה ללא שם', r.freedShown, r.freedMonth / max, 'pinkbar')));
+    }
+    if(groups.length){
+      wb.appendChild(el('h4','subh','לפי שיוך'));
+      const max = groups[0].freed || 1;
+      groups.forEach(g => wb.appendChild(barItem(
+        (g.name || 'ללא שיוך') + (g.people > 1 ? ' · ' + g.people + ' אנשים' : ''),
+        Math.round(g.freed), g.freed / max, 'goldbar')));
+    }
+    card.appendChild(wb);
   }
 
   const qb = el('div','block');
@@ -1506,6 +1489,22 @@ function renderDash(res){
   card.appendChild(qb);
 
   host.appendChild(card);
+}
+
+function barItem(name, hours, frac, tone){
+  const item = el('div','bar-item ' + tone);
+  const line = el('div','bar-top');
+  line.appendChild(el('bdi', null, name));
+  const v = el('span','v');
+  v.appendChild(el('bdi', null, fmtHours(hours)));
+  line.appendChild(v);
+  item.appendChild(line);
+  const track = el('div','bar-track');
+  const fill = el('div','bar-fill');
+  fill.style.width = Math.max(4, Math.round(frac * 100)) + '%';
+  track.appendChild(fill);
+  item.appendChild(track);
+  return item;
 }
 
 function renderFormula(){
