@@ -107,6 +107,25 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
    `(100% - 720px)/2 + 16px`. Without those 16px the "חדש" key hung outside the page
    it belongs to.
 
+24. **Sending is the point of the tool, not a line in an overflow menu.** The
+   mapping is made by one person and read by another — a manager hands it to
+   whoever does the work and it comes back filled in; Galli does not need to be
+   in that loop at all (2026-11-22). So "שליחת המיפוי" is a key at the end of the
+   list, with copy / WhatsApp / mail, and the old menu item is gone.
+25. **The link is deflated.** Hebrew costs two bytes a letter before base64 adds
+   its third, so ten tasks made a 1,452-character link and anything over 1,900 was
+   refused — from about thirteen tasks the button simply failed. Deflated, forty
+   real tasks come to 1,115 characters. `#z=` is the new form, `#s=` is still
+   written where the browser has no CompressionStream, and both are read forever.
+26. **A code for the mappings that outlive one hand-off.** A link is a snapshot;
+   a code is the mapping itself. `POST /m` mints ten Crockford-base32 characters,
+   `GET`/`PUT`/`DELETE` read, write and remove it, and whoever holds the code may
+   write — that is the point, not an oversight. Every change pushes after 1.2s,
+   a failure says so on the list instead of pretending, and the mapping stays on
+   the device either way. The store never parses the payload. Cloudflare Worker
+   `stones` + KV, free tier, CORS locked to calc.waives.io, two-year TTL from the
+   last write.
+
 ## Approach
 - **State**: `{ v:3, biz, groups:[{id,name,people}], tasks:[{id,name,minutes,freq,auto,on,
   icon,gid}], dream:{chips,text} }`. Tasks are FLAT and `gid` may be null, because an
@@ -145,7 +164,8 @@ work on a phone. No login, no server. GitHub Pages at calc.waives.io.
 - `index.html` — the entire tool
 - `PLAN.md` — this file
 - `.nojekyll`, `CNAME` — GitHub Pages
-- `qa/qa.js` — 293 Playwright checks (not deployed)
+- `qa/qa.js` — 343 Playwright checks (not deployed)
+- `worker/` — the mapping store (Cloudflare Worker + KV), deployed separately
 - `design-options/` — the five look directions GPT drew; option 4 was chosen
 
 ## Definition of done

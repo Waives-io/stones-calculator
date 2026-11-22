@@ -29,6 +29,50 @@ function serve(){
     srv.listen(PORT, () => res(srv));
   });
 }
+/* A local stand-in for the mapping store, same contract as the Worker: the
+   checks never touch the real one and never need the network. */
+const STORE_PORT = 8778;
+const CODE_AB = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+function serveStore(){
+  const mem = new Map();
+  const state = {down:false, puts:0};
+  const srv = http.createServer((req, rep) => {
+    let body = '';
+    req.on('data', c => { body += c; });
+    req.on('end', () => {
+      const head = {'Content-Type':'application/json; charset=utf-8',
+                    'Access-Control-Allow-Origin':'*',
+                    'Access-Control-Allow-Methods':'GET,PUT,POST,DELETE,OPTIONS',
+                    'Access-Control-Allow-Headers':'Content-Type'};
+      const send = (code, obj) => { rep.writeHead(code, head); rep.end(JSON.stringify(obj)); };
+      if(req.method === 'OPTIONS'){ rep.writeHead(204, head); return rep.end(); }
+      if(state.down) return send(500, {error:'down'});
+      const parts = req.url.split('?')[0].split('/').filter(Boolean);
+      if(parts[0] !== 'm') return send(404, {error:'not found'});
+      if(req.method === 'POST' && parts.length === 1){
+        let code = '';
+        for(let i=0;i<10;i++) code += CODE_AB[Math.floor(Math.random()*32)];
+        mem.set(code, body);
+        return send(201, {code});
+      }
+      const code = parts[1];
+      if(!code || code.length !== 10) return send(400, {error:'bad code'});
+      if(req.method === 'GET'){
+        if(!mem.has(code)) return send(404, {error:'gone'});
+        return send(200, {code, body:mem.get(code)});
+      }
+      if(req.method === 'PUT'){
+        if(!mem.has(code)) return send(404, {error:'gone'});
+        mem.set(code, body); state.puts++;
+        return send(200, {code});
+      }
+      if(req.method === 'DELETE'){ mem.delete(code); return send(200, {code, deleted:true}); }
+      return send(405, {error:'method'});
+    });
+  });
+  return new Promise(res => srv.listen(STORE_PORT, () => res({srv, mem, state})));
+}
+
 const enc = obj => Buffer.from(JSON.stringify(obj),'utf8').toString('base64')
   .replace(/\+/g,'-').replace(/\//g,'_').replace(/=+$/,'');
 
@@ -106,7 +150,11 @@ async function main(){
   const consoleErrors = [];
   const ctx = await browser.newContext({viewport:{width:1280, height:900}, locale:'he-IL',
                                         permissions:['clipboard-read','clipboard-write']});
+  const store = await serveStore();
   const page = await ctx.newPage();
+  /* Runs before the page's own script, so boot() already sees the stand-in. */
+  await page.addInitScript(api => { window.__WAIVES_API = api; },
+                           'http://localhost:' + STORE_PORT);
   page.on('console', m => { if(m.type() === 'error') consoleErrors.push(m.text()); });
   page.on('pageerror', e => consoleErrors.push('pageerror: ' + e.message));
   const fresh = async p => {
@@ -1203,7 +1251,100 @@ async function main(){
   await snapText(page);
 
   /* ---------------------------------------------------------- */
-  section('24 · צילומי מסך');
+  section('24 · שמירה בענן: קוד אחד שעובר בין אנשים');
+  await fresh(page);
+  ok('הדף מדבר עם החנות המקומית, לא עם האמיתית',
+     (await page.evaluate(() => window.__waives.cloudApi)) === 'http://localhost:' + STORE_PORT);
+  await page.locator('#emptyDemo').click();
+  await page.waitForTimeout(260);
+  ok('בלי קוד אין שורת ענן על הרשימה', (await page.locator('#cloudBar').count()) === 0);
+  await page.locator('#btnSend').click();
+  await page.waitForTimeout(240);
+  ok('מוצעת שמירה בענן', (await page.locator('#sendCloud').count()) === 1);
+  ok('עוד אין קוד להראות', (await page.locator('#sendCode').count()) === 0);
+  ok('המסך אומר שכלום לא נשמר בשרת',
+     (await page.locator('#sheet3').textContent()).indexOf('לא נשמרים בשום שרת') !== -1);
+  await page.locator('#sendCloud').click();
+  await page.waitForTimeout(700);
+  const code = await page.evaluate(() => window.__waives.cloud.code);
+  ok('התקבל קוד בן עשרה תווים (' + code + ')',
+     typeof code === 'string' && /^[0-9A-HJKMNP-TV-Z]{10}$/.test(code));
+  ok('המיפוי אכן יושב בחנות', store.mem.has(code));
+  ok('מה שנשמר הוא המטען הדחוס', (store.mem.get(code) || '')[0] === 'z');
+  ok('הקוד מוצג למשתמשת',
+     (await page.locator('#sendCode').textContent()).indexOf(code.slice(0,5)) !== -1);
+  ok('המסך אומר מי יכול לראות ולערוך',
+     (await page.locator('#sheet3').textContent()).indexOf('לראות ולערוך') !== -1);
+  const shortUrl = await page.evaluate(() => {
+    let got = null;
+    const real = window.open;
+    window.open = u => { got = u; return null; };
+    document.getElementById('sendWa').click();
+    window.open = real;
+    return decodeURIComponent(got);
+  });
+  ok('הקישור ששולחים הוא הקצר', shortUrl.indexOf('#k=' + code) !== -1 &&
+     shortUrl.indexOf('#z=') === -1);
+  await page.waitForTimeout(200);
+  ok('שורת הענן מופיעה על הרשימה עם הקוד',
+     (await page.locator('#cloudBar').textContent()).indexOf('שמור בענן') === 0);
+
+  /* שינוי אצל אחד — נשמר למי שיפתח אחריו */
+  const before = store.mem.get(code);
+  await page.locator('.row .tick').first().click();
+  await page.waitForTimeout(1800);
+  ok('שינוי נשמר בענן מעצמו', store.mem.get(code) !== before);
+
+  /* מכשיר אחר, אותו מיפוי */
+  const rows = (await listNums(page)).rows.length;
+  await fresh(page);
+  ok('המכשיר השני מתחיל ריק', (await listNums(page)).rows.length === 0);
+  await page.goto(url + '#k=' + code);
+  await page.waitForTimeout(900);
+  ok('הקוד פותח את המיפוי במכשיר אחר', (await listNums(page)).rows.length === rows);
+  ok('המכשיר השני ממשיך לעבוד על אותו קוד',
+     (await page.evaluate(() => window.__waives.cloud.code)) === code);
+  const before2 = store.mem.get(code);
+  await addTask(page, {assign:'מוקדנית', name:'סגירת קופה יומית', minutes:30, freq:'day'});
+  await page.waitForTimeout(1800);
+  ok('גם מה שהוא מוסיף חוזר לענן', store.mem.get(code) !== before2);
+
+  /* חנות שנפלה נאמרת בקול, ולא בשקט */
+  store.state.down = true;
+  await page.locator('.row .tick').first().click();
+  await page.waitForTimeout(1900);
+  ok('כשהשמירה נכשלת זה כתוב על המסך',
+     (await page.locator('#cloudBar.bad').count()) === 1 &&
+     (await page.locator('#cloudBar').textContent()).indexOf('שמור אצלכם במכשיר') !== -1);
+  store.state.down = false;
+  await page.locator('.row .tick').first().click();
+  await page.waitForTimeout(1900);
+  ok('וכשהיא חוזרת, האזהרה יורדת', (await page.locator('#cloudBar.bad').count()) === 0);
+
+  /* הדרך החוצה */
+  await page.locator('#btnSend').click();
+  await page.waitForTimeout(240);
+  await page.locator('#sendOff').click();
+  await page.waitForTimeout(260);
+  const offTxt = await page.locator('#sheet3').textContent();
+  ok('המחיקה מהענן שואלת קודם', !(await page.locator('#scrim3').isHidden()));
+  ok('השאלה אומרת שהקוד יפסיק לעבוד', offTxt.indexOf('יפסיק לעבוד') !== -1);
+  ok('השאלה אומרת שהמיפוי נשאר במכשיר', offTxt.indexOf('נשאר אצלכם במכשיר') !== -1);
+  await page.locator('#askYes').click();
+  await page.waitForTimeout(500);
+  ok('המיפוי ירד מהחנות', !store.mem.has(code));
+  ok('המכשיר כבר לא קשור לקוד',
+     (await page.evaluate(() => window.__waives.cloud.code)) === null);
+  ok('שורת הענן נעלמה', (await page.locator('#cloudBar').count()) === 0);
+  ok('המשימות נשארו במכשיר', (await listNums(page)).rows.length > 0);
+  await page.goto(url + '#k=' + code);
+  await page.waitForTimeout(700);
+  ok('קוד שנמחק אומר זאת',
+     (await page.locator('#snackText').textContent()).indexOf('לא נמצא') !== -1);
+  await snapText(page);
+
+  /* ---------------------------------------------------------- */
+  section('25 · צילומי מסך');
   const shots = [];
   const shot = async (n, w) => {
     await page.setViewportSize({width:w || 430, height:950});
@@ -1249,6 +1390,7 @@ async function main(){
      shots.every(n => fs.existsSync(path.join(SHOTS, n + '.png'))));
 
   await browser.close();
+  store.srv.close();
   if(srv) srv.close();
 
   console.log('\n──────────────────────────────');

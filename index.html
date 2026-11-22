@@ -380,6 +380,21 @@ nav.bar button[aria-current="page"]{color:var(--gold-ink);font-weight:700;
 .askbody p{margin:0 0 11px;font-size:15px;line-height:1.7;color:var(--ink-soft)}
 .askbody p strong{color:var(--ink);font-weight:800}
 .sendcol{display:flex;flex-direction:column;gap:11px;padding:8px 18px 0}
+.sendsep{display:flex;align-items:center;gap:12px;margin:16px 20px 2px;color:var(--ink-faint);
+  font-size:13px;font-weight:600}
+.sendsep::before,.sendsep::after{content:'';flex:1;height:1.5px;background:var(--green-line)}
+.codebox{margin:4px 18px 2px;padding:14px 16px;border-radius:var(--r-key);text-align:center;
+  background:var(--face);box-shadow:var(--lift-sm)}
+.codelbl{display:block;font-size:12.5px;font-weight:600;color:var(--ink-faint)}
+.codeval{display:block;margin-top:5px;font-size:25px;font-weight:800;color:var(--ink);
+  letter-spacing:2.5px}
+.cloudbar{margin-top:16px;padding:13px 17px;border-radius:var(--r-key);
+  font-size:13px;font-weight:700;color:var(--screen-soft);text-align:center;
+  background:linear-gradient(180deg,#E3F1DB,#D2E7C7);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.9), 0 2px 3px rgba(62,88,60,.1)}
+.cloudbar.bad{color:var(--pink-ink);line-height:1.6;
+  background:linear-gradient(180deg,#FDE3EB,#FBD5E0);
+  box-shadow:inset 0 2px 0 rgba(255,255,255,.9), 0 2px 3px rgba(150,40,80,.1)}
 .sendnote{margin:14px 20px 0;font-size:12.5px;line-height:1.6;color:var(--ink-faint);text-align:center}
 .sendclose{display:block;margin:4px auto calc(18px + env(safe-area-inset-bottom));padding:10px 18px}
 .sendbtn{display:flex;align-items:center;justify-content:center;gap:9px;margin-top:14px}
@@ -999,6 +1014,91 @@ function compute(s){
    ============================================================ */
 const LS_KEY = 'waives.stones.v1';
 const LIB_KEY = 'waives.stones.lib';
+const CLOUD_KEY = 'waives.stones.cloud';
+
+/* The saved mapping. A link is a snapshot — good for one hand-off, useless once
+   three people are filling the same list. A code is the mapping itself: whoever
+   holds it reads and writes it, like a link-shared document, and it opens on any
+   device. The store holds the same deflated text the link carries, prefixed with
+   one letter for which form it is, and never looks inside. */
+let CLOUD_API = 'https://stones.autumn-glitter-1f91.workers.dev';
+/* The automated checks run against a local stand-in for the store, so they never
+   touch the real one. The override is ignored on the live host, so nothing that
+   ever reaches a visitor can point their mapping somewhere else. */
+if(location.hostname !== 'calc.waives.io' && typeof window.__WAIVES_API === 'string'){
+  CLOUD_API = window.__WAIVES_API;
+}
+let cloud = {code:null, fail:false};
+let pushTimer = null, pushAgain = false;
+
+function saveCloud(){
+  try{
+    if(cloud.code) localStorage.setItem(CLOUD_KEY, JSON.stringify({code:cloud.code}));
+    else localStorage.removeItem(CLOUD_KEY);
+  }catch(e){}
+}
+function loadCloud(){
+  try{
+    const raw = localStorage.getItem(CLOUD_KEY);
+    if(!raw) return {code:null, fail:false};
+    const o = JSON.parse(raw);
+    return {code: validCode(o && o.code) ? o.code : null, fail:false};
+  }catch(e){ return {code:null, fail:false}; }
+}
+const CODE_ALPHABET = '0123456789ABCDEFGHJKMNPQRSTVWXYZ';
+const validCode = c => typeof c === 'string' && c.length === 10 &&
+  [...c].every(ch => CODE_ALPHABET.indexOf(ch) !== -1);
+const prettyCode = c => c ? c.slice(0,5) + '-' + c.slice(5) : '';
+const cloudLink = c => location.origin + location.pathname + '#k=' + c;
+
+async function cloudBody(){
+  const e = await encodeScenario(state);
+  return e.k + e.v;                       // 'z…' deflated, 's…' plain
+}
+async function cloudCreate(){
+  const r = await fetch(CLOUD_API + '/m', {method:'POST', body: await cloudBody()});
+  if(!r.ok) throw new Error('create');
+  const j = await r.json();
+  if(!validCode(j.code)) throw new Error('code');
+  cloud.code = j.code; cloud.fail = false;
+  saveCloud();
+  return j.code;
+}
+async function cloudPull(code){
+  const r = await fetch(CLOUD_API + '/m/' + code);
+  if(!r.ok) return null;
+  const j = await r.json();
+  const body = String(j.body || '');
+  if(body.length < 2) return null;
+  try{ return sanitize(unpack(await decodeScenario(body[0], body.slice(1)))); }
+  catch(e){ return null; }
+}
+async function cloudDelete(code){
+  try{ await fetch(CLOUD_API + '/m/' + code, {method:'DELETE'}); }catch(e){}
+}
+/* Every change pushes, but not on every keystroke: one write a second and a bit,
+   and a change that lands mid-write queues exactly one more. */
+function schedulePush(){
+  if(!cloud.code) return;
+  clearTimeout(pushTimer);
+  pushTimer = setTimeout(doPush, 1200);
+}
+async function doPush(){
+  if(!cloud.code) return;
+  const code = cloud.code;
+  try{
+    const r = await fetch(CLOUD_API + '/m/' + code, {method:'PUT', body: await cloudBody()});
+    if(!r.ok) throw new Error('push');
+    if(cloud.fail){ cloud.fail = false; render(); }
+  }catch(e){
+    if(!cloud.fail){ cloud.fail = true; render(); }
+  }
+  if(pushAgain){ pushAgain = false; schedulePush(); }
+}
+function codeInHash(){
+  const m = /[#&]k=([0-9A-HJKMNP-TV-Z]{10})/.exec(location.hash || '');
+  return m ? m[1] : null;
+}
 
 function bytesToB64url(bytes){
   let bin = '';
@@ -1103,6 +1203,7 @@ function migrate(o){
 }
 function save(){
   try{ localStorage.setItem(LS_KEY, JSON.stringify(pack(state))); }catch(e){ /* private mode */ }
+  if(cloud.code) schedulePush();
 }
 function saveLib(){
   try{ localStorage.setItem(LIB_KEY, JSON.stringify(lib)); }catch(e){}
@@ -1345,6 +1446,8 @@ function renderList(res){
   host.appendChild(card);
   host.appendChild(tipsButton());
   host.appendChild(sendButton());
+  const bar = cloudBar();
+  if(bar) host.appendChild(bar);
 }
 /* Her own list of task names. One press writes the name into the task being
    added; the ✕ takes it out for good; the field under it adds another. The same
@@ -2328,9 +2431,10 @@ function sendText(url){
          ' — אפשר להוסיף, לשנות ולשלוח בחזרה:\n' + url;
 }
 async function openSend(){
-  const url = await currentLink();
+  const saved = !!cloud.code;
+  const url = saved ? cloudLink(cloud.code) : await currentLink();
   if(!url){
-    toast('המיפוי ארוך מדי לקישור אחד');
+    toast('המיפוי ארוך מדי לקישור — שמרו בענן');
     return;
   }
   const sheet = $('sheet3');
@@ -2340,11 +2444,20 @@ async function openSend(){
   h.id = 'askTitle';
   head.appendChild(h);
   sheet.appendChild(head);
+
   const body = el('div','askbody');
-  body.appendChild(el('p', null,
-    'הקישור נושא איתו את כל מה שמילאתם. מי שיפתח אותו יראה בדיוק את המסך הזה, ' +
-    'יוכל להוסיף ולשנות — ולשלוח בחזרה קישור מעודכן.'));
+  body.appendChild(el('p', null, saved
+    ? 'המיפוי שמור בענן. כל מי שפותח את הקישור רואה את הגרסה האחרונה, ומה שהוא משנה חוזר אליכם מעצמו.'
+    : 'הקישור נושא איתו את כל מה שמילאתם. מי שיפתח אותו יראה בדיוק את המסך הזה, יוכל להוסיף ולשנות — ולשלוח בחזרה קישור מעודכן.'));
   sheet.appendChild(body);
+
+  if(saved){
+    const box = el('div','codebox');
+    box.appendChild(el('span','codelbl','הקוד שלכם'));
+    box.appendChild(el('bdi','codeval', prettyCode(cloud.code)));
+    box.id = 'sendCode';
+    sheet.appendChild(box);
+  }
 
   const col = el('div','sendcol');
   const copy = el('button','btn block','העתקת הקישור');
@@ -2368,17 +2481,91 @@ async function openSend(){
   row.appendChild(wa); row.appendChild(mail);
   col.appendChild(row);
   sheet.appendChild(col);
-  sheet.appendChild(el('p','sendnote',
-    'הנתונים לא נשמרים בשום שרת — הם נוסעים בתוך הקישור עצמו.'));
-  /* Closing is not a fourth way to send: a quiet line, not a fourth key. */
-  const no = el('button','inline-link sendclose','סגירה');
-  no.type = 'button'; no.id = 'askNo';
-  no.addEventListener('click', closeAsk);
-  sheet.appendChild(no);
+
+  if(saved){
+    sheet.appendChild(el('p','sendnote',
+      'המיפוי שמור אצלנו בענן. מי שיש לו את הקישור או את הקוד יכול לראות ולערוך אותו.'));
+    const off = el('button','inline-link danger sendclose','ניתוק ומחיקה מהענן');
+    off.type = 'button'; off.id = 'sendOff';
+    off.addEventListener('click', () => {
+      const code = cloud.code;
+      closeAsk();
+      askConfirm({
+        title:'למחוק את המיפוי מהענן?',
+        lines:[
+          'הקוד ' + prettyCode(code) + ' יפסיק לעבוד, ומי שקיבל אותו לא יוכל לפתוח יותר.',
+          'המיפוי עצמו נשאר אצלכם במכשיר הזה, ואפשר לשמור אותו שוב בענן ולקבל קוד חדש.'
+        ],
+        yes:'מחיקה מהענן',
+        onYes:async () => {
+          await cloudDelete(code);
+          cloud.code = null; cloud.fail = false; saveCloud();
+          if(location.hash.indexOf('#k=') === 0){ selfHash = true; location.hash = ''; }
+          render();
+          toast('המיפוי נמחק מהענן');
+        }
+      });
+    });
+    sheet.appendChild(off);
+  }else{
+    sheet.appendChild(el('p','sendnote',
+      'הנתונים לא נשמרים בשום שרת — הם נוסעים בתוך הקישור עצמו.'));
+    const sep = el('div','sendsep');
+    sep.appendChild(el('span', null, 'או'));
+    sheet.appendChild(sep);
+    const up = el('button','btn ghost block','שמירה בענן וקבלת קוד');
+    up.type = 'button'; up.id = 'sendCloud';
+    up.addEventListener('click', async () => {
+      up.disabled = true;
+      up.textContent = 'שומר…';
+      try{
+        await cloudCreate();
+        render();
+        closeAsk();
+        openSend();
+        toast('המיפוי נשמר בענן');
+      }catch(e){
+        up.disabled = false;
+        up.textContent = 'שמירה בענן וקבלת קוד';
+        toast('השמירה בענן לא הצליחה, נסו שוב');
+      }
+    });
+    const wrap = el('div','sendcol');
+    wrap.appendChild(up);
+    sheet.appendChild(wrap);
+    sheet.appendChild(el('p','sendnote',
+      'אז הקישור נשאר קצר, נפתח מכל מכשיר, וכל מי שממלא עובד על אותו מיפוי.'));
+    const no = el('button','inline-link sendclose','סגירה');
+    no.type = 'button'; no.id = 'askNo';
+    no.addEventListener('click', closeAsk);
+    sheet.appendChild(no);
+  }
+  if(saved){
+    const no = el('button','inline-link sendclose','סגירה');
+    no.type = 'button'; no.id = 'askNo';
+    no.addEventListener('click', closeAsk);
+    sheet.appendChild(no);
+  }
   $('scrim3').hidden = false;
   document.body.style.overflow = 'hidden';
   copy.focus();
 }
+
+/* The one line on the list that says the mapping is not only on this device —
+   and the one that says, loudly, when it stopped being saved. */
+function cloudBar(){
+  if(!cloud.code) return null;
+  const b = el('div','cloudbar' + (cloud.fail ? ' bad' : ''));
+  b.id = 'cloudBar';
+  if(cloud.fail){
+    b.appendChild(el('bdi', null,
+      'לא הצלחנו לשמור בענן. המיפוי שמור אצלכם במכשיר, ננסה שוב בשינוי הבא.'));
+  }else{
+    b.appendChild(el('bdi', null, 'שמור בענן · קוד ' + prettyCode(cloud.code)));
+  }
+  return b;
+}
+
 function sendButton(){
   const b = el('button','btn block sendbtn');
   b.type = 'button'; b.id = 'btnSend';
@@ -2470,6 +2657,18 @@ document.addEventListener('keydown', ev => {
    browser handles without reloading — the scenario must still load. */
 window.addEventListener('hashchange', async () => {
   if(selfHash){ selfHash = false; return; }
+  const code = codeInHash();
+  if(code){
+    if(code === cloud.code) return;
+    const got = await cloudPull(code);
+    if(!got){ toast('הקוד לא נמצא. ייתכן שהמיפוי נמחק'); return; }
+    const prevState = snapshot();
+    state = got; cloud.code = code; cloud.fail = false; saveCloud();
+    ui.screen = 'list'; ui.collapsed = {}; ui.toTop = true;
+    closeSheet(); save(); render();
+    offerUndo('נפתח מיפוי משותף', prevState);
+    return;
+  }
   const incoming = await readHash();
   if(!incoming) return;
   if(incoming === 'old'){ toast('הקישור נוצר בדפדפן חדש יותר, נסו דפדפן מעודכן'); return; }
@@ -2487,8 +2686,27 @@ window.addEventListener('hashchange', async () => {
    ============================================================ */
 async function boot(){
   lib = loadLib();
+  cloud = loadCloud();
   buildMenu();
   const local = loadLocal();
+  /* A code in the address is a saved mapping somebody passed on. The local copy
+     goes up first so the screen is never blank while the network answers. */
+  const code = codeInHash();
+  if(code){
+    state = local || emptyState();
+    render();
+    const got = await cloudPull(code);
+    if(got){
+      state = got;
+      cloud.code = code; cloud.fail = false; saveCloud();
+      ui.screen = 'list'; ui.collapsed = {}; ui.toTop = true;
+      save(); render();
+      toast('נפתח מיפוי משותף');
+    }else{
+      toast('הקוד לא נמצא. ייתכן שהמיפוי נמחק');
+    }
+    return;
+  }
   /* With no link in the address there is nothing to wait for, so the page is up
      at once. Only a link costs a turn of the loop, because unpacking it is. */
   if(!hashParts()){ state = local || emptyState(); render(); return; }
@@ -2512,8 +2730,10 @@ window.__waives = {
   get lib(){ return lib; },
   get ui(){ return ui; },
   compute: () => compute(state),
+  get cloud(){ return cloud; },
   shareUrl, summaryText, sanitize, unpack, pack, b64urlEncode, b64urlDecode,
-  freeText, iconFor, FTE_MONTH, DAYS_MONTH, WEEKS_MONTH
+  freeText, iconFor, FTE_MONTH, DAYS_MONTH, WEEKS_MONTH,
+  cloudCreate, cloudPull, cloudDelete, prettyCode, get cloudApi(){ return CLOUD_API; }
 };
 </script>
 </body>

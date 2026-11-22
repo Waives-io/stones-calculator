@@ -26,7 +26,7 @@ function cors(origin){
   const allow = ORIGINS.indexOf(origin) !== -1 ? origin : ORIGINS[0];
   return {
     'Access-Control-Allow-Origin': allow,
-    'Access-Control-Allow-Methods': 'GET,PUT,POST,OPTIONS',
+    'Access-Control-Allow-Methods': 'GET,PUT,POST,DELETE,OPTIONS',
     'Access-Control-Allow-Headers': 'Content-Type',
     'Access-Control-Max-Age': '86400',
     'Vary': 'Origin'
@@ -97,6 +97,13 @@ export default {
       if(await env.STONES.get(code) === null) return json({error:'gone'}, 404, origin);
       await env.STONES.put(code, body, {expirationTtl:TTL});
       return json({code}, 200, origin);
+    }
+
+    /* DELETE /m/:code — the way out. Whoever holds the code can take the mapping
+       out of the store for good; the copy on their own device is untouched. */
+    if(request.method === 'DELETE'){
+      await env.STONES.delete(code);
+      return json({code, deleted:true}, 200, origin);
     }
 
     return json({error:'method'}, 405, origin);
