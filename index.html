@@ -445,6 +445,169 @@ select.freqsel{
   .row:active,.chip:active,.btn:active,.icobtn:active,.newbtn:active,.tick:active,
   .ghead:active,.disclink:active{transform:none}
 }
+
+
+/* === Sculpted calculator / second pass: physical keycaps, glass and champagne ===
+   Same flat canvas as the sheet. The depth belongs to the components, not the canvas.
+   All values and task behaviour remain unchanged. */
+:root{
+  --bg:#e8eeeb;--surface:#f8faf8;--ink:#12391e;--ink-soft:#47634c;--ink-faint:#58745d;
+  --screen-a:#e4f0dc;--screen-b:#b5d5a5;--screen-ink:#123b1b;--screen-soft:#426548;
+  --green:#6eb052;--green-a:#93c681;--green-b:#519b3a;--green-dark:#357727;
+  --pink-a:#ffb7cb;--pink-b:#ed7098;--pink-ink:#9e214a;
+  --gold-a:#fff0c9;--gold-b:#e6bd62;--gold-ink:#6e4b0b;--ring-arc:#c5a04a;
+  --face:linear-gradient(180deg,#fff 0%,#fbfcfb 18%,#eff3f0 55%,#e1e8e3 100%);
+  --lift:inset 0 2px 1px #fff,inset 1px 0 1px rgba(255,255,255,.85),inset 0 -3px 2px rgba(83,106,88,.17),0 2px 0 #d5ded7,0 4px 5px rgba(38,65,44,.20),0 9px 15px rgba(38,65,44,.13);
+  --lift-sm:inset 0 1.5px 1px #fff,inset 0 -2px 2px rgba(83,106,88,.15),0 1.5px 0 #d5ded7,0 3px 4px rgba(38,65,44,.19),0 6px 10px rgba(38,65,44,.10);
+  --lift-lg:inset 0 2px 1px #fff,inset 0 -3px 2px rgba(83,106,88,.17),0 2px 0 #d5ded7,0 6px 8px rgba(38,65,44,.21),0 12px 20px rgba(38,65,44,.16);
+  --press:inset 0 2px 4px rgba(38,65,44,.22),inset 0 -1px 0 #fff,0 1px 2px rgba(38,65,44,.11);
+  --green-face:linear-gradient(180deg,#bedfb0 0%,#8ec67c 19%,#69af55 60%,#4b903a 100%);
+  --green-lift:inset 0 2px 1px #e9fae4,inset 0 0 0 1px #82b574,inset 0 -3px 2px #407e30,0 2px 0 #558b47,0 4px 5px rgba(48,89,38,.25),0 8px 13px rgba(48,89,38,.17);
+  --pink-face:linear-gradient(180deg,#ffcfdd 0%,#fca6bf 22%,#f184a8 65%,#e86e97 100%);
+  --pink-lift:inset 0 2px 1px #fff1f6,inset 0 0 0 1px #f496b1,inset 0 -3px 2px rgba(174,52,91,.24),0 2px 0 #e16d94,0 4px 5px rgba(161,57,87,.19),0 9px 15px rgba(202,76,114,.17);
+  --gold-face:linear-gradient(180deg,#fff8e7 0%,#ffedbc 22%,#f3d58f 62%,#e5bc62 100%);
+  --gold-lift:inset 0 2px 1px #fffdf6,inset 0 0 0 1px #efd594,inset 0 -3px 2px rgba(169,118,22,.26),0 2px 0 #d8b25b,0 4px 5px rgba(152,104,24,.17),0 8px 14px rgba(158,116,38,.14);
+  --glass:inset 0 2px 1px #fff,inset 0 0 0 1px rgba(255,255,255,.8),inset 0 -3px 7px rgba(66,113,58,.13),0 3px 0 #c2d6bc,0 5px 8px rgba(45,78,42,.16),0 12px 19px rgba(45,78,42,.10);
+  --r-card:26px;--r-key:17px;--r-pill:16px;--r-screen:22px;--bar:106px;
+}
+body,.sheet,.sheetfoot,.top{background:var(--bg)}
+.top{padding-block:14px 16px;padding-inline:max(21px,calc((100% - 590px)/2 + 21px));gap:10px}
+.top h1{font-size:18px;letter-spacing:-.3px;font-weight:800}
+.top .mark{width:24px;height:24px}
+.newbtn{height:43px;padding-inline:17px;color:#fff!important;font-weight:800}
+.icobtn{width:43px;height:43px}
+.wrap{max-width:590px;padding:2px 21px 30px}
+.card{background:linear-gradient(155deg,#fff 0%,#f9fbf9 58%,#f0f4f1 100%);border:1px solid #fff;box-shadow:inset 0 1px 0 #fff,0 4px 0 rgba(218,226,219,.85),0 9px 16px rgba(49,75,57,.10),0 17px 30px rgba(49,75,57,.06)}
+.card+.card{margin-top:20px}
+.cardhead{padding:19px 17px 13px}
+.cardhead h2,.block h3{font-size:18px;font-weight:800;letter-spacing:-.2px}
+.cardhead .sub{font-size:12px;font-weight:500}
+.padbox{padding:2px 16px 20px}
+.icobtn,.newbtn,.btn,.chip,.tick,.chipx,.row,.ghead,.dreambar,.disclink,.stepper{border:1px solid rgba(255,255,255,.86)}
+.icobtn,.row,.chip,.chipx,.dreambar,.disclink,.stepper{background:var(--face);box-shadow:var(--lift)}
+.icobtn,.chipx,.chip,.stepper,.dreambar{box-shadow:var(--lift-sm)}
+.newbtn,.btn:not(.pink):not(.ghost),.tick[aria-checked="true"],.chip[aria-pressed="true"]{background:var(--green-face);box-shadow:var(--green-lift);border-color:#80b375;text-shadow:0 1px 1px #457d36}
+.btn.pink{background:var(--pink-face);box-shadow:var(--pink-lift);border-color:#f496b1;text-shadow:0 1px 1px #c95d83;font-weight:800}
+.btn.ghost{background:linear-gradient(180deg,#fff1f5,#fddbe6 62%,#f8c6d6);box-shadow:inset 0 2px 1px #fff,inset 0 -2px 2px #f3aec4,0 3px 6px rgba(199,82,123,.13),0 8px 14px rgba(199,82,123,.12);border-color:#fff0f4}
+.chip.gold[aria-pressed="true"],nav.bar button[aria-current="page"],.banner .lbl.pill{background:var(--gold-face);box-shadow:var(--gold-lift);border:1px solid #e6c67c;color:var(--gold-ink);text-shadow:none}
+.chip.gold[aria-pressed="true"] svg{color:var(--gold-ink)}
+/* Physical pressed state, distinct from an unselected key. */
+.newbtn:active,.btn:active,.chip:active,.icobtn:active,.tick:active,.ghead:active,.row:active{transform:translateY(2px);box-shadow:var(--press)}
+/* Glass display panel: stronger rim, subtle diagonal reflection, real gold ring. */
+.screen,.sheethead{background:radial-gradient(ellipse at 20% 2%,rgba(255,255,255,.65) 0%,transparent 60%),linear-gradient(150deg,#e5f1df 0%,#d7eacb 47%,#b5d6a5 100%);box-shadow:var(--glass);border:1px solid rgba(255,255,255,.82)}
+.screen::before,.sheethead::before{background:linear-gradient(136deg,rgba(255,255,255,.22) 0%,rgba(255,255,255,.08) 39%,transparent 39.4%);inset:0;height:100%}
+#screenDash > .card,#screenList > .card:first-child{background:none;border:0;box-shadow:none}
+.banner{min-height:0;padding:18px 12px 20px;gap:9px;border-radius:22px}
+.banner .side{min-width:0}
+.banner .fig{height:94px}
+.banner .big{font-size:clamp(42px,11vw,64px);font-weight:800;letter-spacing:-2.4px;line-height:1;text-shadow:0 1px 1px #fff,0 -1px 0 #11391c}
+.banner .lbl{font-size:14.5px;font-weight:800;margin-top:6px}
+.banner .lbl.pill{font-size:13px;padding:4px 13px}
+.banner .sub{font-size:12.5px;margin-top:8px}
+.banner .divider{background:linear-gradient(180deg,#9cc193,#c9e1c1);box-shadow:1px 0 0 rgba(255,255,255,.47);width:1px}
+.ring svg{width:94px;height:94px;overflow:visible;filter:drop-shadow(0 1px 0 #fff1cc)}
+.ring svg circle:last-child{stroke-width:9;filter:drop-shadow(0 1.5px 1px rgba(106,76,24,.38))}
+.ringnum{font-size:21px;font-weight:800;letter-spacing:-.7px;text-shadow:0 1px 0 #fff}
+.dreambar{margin-top:19px;padding:14px 16px;min-height:50px;line-height:1.35;text-align:start;border-radius:22px}
+.dreambar .k{font-size:15px;font-weight:800}.dreambar b{font-size:14px}
+#screenDash .block{border:1px solid #fff;border-radius:24px;background:linear-gradient(155deg,#fff,#f8faf8 75%,#eff3ef);padding:17px 17px 20px;margin-top:20px;box-shadow:inset 0 1px 0 #fff,0 4px 0 rgba(218,226,219,.8),0 8px 18px rgba(48,74,55,.10)}
+#screenDash .block h3{font-size:18px;margin-bottom:10px}
+#screenDash .subh{font-size:12.5px;margin:14px 0 12px}
+#screenDash .bar-item + .subh{border-top:1px solid #d3ded3;padding-top:15px;margin-top:18px}
+.bar-item{margin-bottom:12px}
+.bar-top{font-size:14px;font-weight:550;line-height:1.4;margin-bottom:6px}
+.bar-top .v{font-weight:800;font-size:14px}
+.bar-track{height:9px;background:linear-gradient(180deg,#d5dfd5,#e9efe8);box-shadow:inset 0 1px 2px rgba(64,85,58,.2),0 1px 0 #fff}
+.bar-fill{box-shadow:inset 0 1px 1px rgba(255,255,255,.65),inset 0 -1.5px 1px rgba(94,55,19,.14)}
+.bar-item.pinkbar .bar-fill{background:linear-gradient(180deg,#ffc3d7,#f497b6 42%,#e4759d)}
+.bar-item.goldbar .bar-fill{background:linear-gradient(180deg,#fff1cf,#edcb7c 46%,#caa150)}
+#dreamBlock .chip{border-radius:22px;min-height:45px}
+#dreamBlock .field{margin-top:15px!important}
+/* The rows and role bars are separate keys, not flat list items. */
+.ghead{background:linear-gradient(180deg,#f1f8eb,#dfeeda 43%,#c9e1bf);box-shadow:inset 0 2px 1px #fff,inset 0 -2px 2px rgba(66,111,59,.12),0 3px 5px rgba(51,87,48,.13);margin:20px 0 11px;padding:11px 14px;border-radius:19px;min-height:43px}
+.ghead .gname{font-size:15px}.ghead .gtot{font-size:16px}
+.row{padding:12px 11px;min-height:66px;gap:10px;border-radius:19px;margin-bottom:12px}
+.row .nm{font-size:15px;line-height:1.3;white-space:normal;overflow-wrap:anywhere;font-weight:700}
+.row .meta{font-size:12px;line-height:1.4;color:var(--ink-faint)}
+.row .ico{background:linear-gradient(180deg,#e9f5e1,#c9e4bb);box-shadow:inset 0 1.5px 0 #fff,inset 0 -1px 2px rgba(55,102,44,.13);border:1px solid #edf7e9}
+.row .tick{border-radius:10px;width:32px;height:32px}
+.row .hrs{font-size:16px}
+.totalrow{margin-top:20px;border-radius:22px;min-height:60px}
+.disclink{margin-top:20px;padding:16px 18px;border-radius:22px;line-height:1.5}
+#screenList > .card:first-child > .cardhead{padding:6px 3px 15px}
+/* Fields and role controls: separate raised object, inset face inside it. */
+.field,.setrow input[type=text]{border:1px solid #fff;background:linear-gradient(180deg,#f1f6f0,#e5ede6);box-shadow:inset 0 3px 5px rgba(56,84,62,.13),inset 0 -1.5px 0 #fff,0 1px 2px rgba(49,75,57,.08);border-radius:17px;padding:14px 15px}
+.field:focus,.setrow input[type=text]:focus{background:#fff;box-shadow:inset 0 1px 3px rgba(49,75,57,.08),0 0 0 2px #72b858}
+.setrow{padding:10px 15px 14px;gap:8px}
+.stepper{border-radius:18px;padding:2px;overflow:visible}
+.stepper button{width:33px;height:42px;font-size:20px;color:var(--green-dark);border-radius:15px}
+.stepper input{width:38px;height:42px;background:var(--face);border:1px solid #fff;border-radius:16px;box-shadow:var(--lift-sm)}
+.setrow .inline-link{font-size:13px;flex:none}
+#screenSet .chip{padding:10px 12px;border-radius:20px;font-size:13px;min-height:40px}
+.readychip{gap:7px;align-items:center;min-width:0}
+.readychip > .chip{min-width:0;white-space:normal}
+.readychip > .chip bdi{white-space:normal;overflow-wrap:anywhere}
+.chipx{width:31px;height:31px}
+#screenSet .chips{gap:11px 9px}
+#screenSet .padbox .unitrow{margin-top:18px}
+.hint,.foot{color:var(--ink-faint);font-size:12px;line-height:1.6}
+.btn.block{padding:17px 18px}
+.btn.sm{min-height:44px}
+.foot{margin:28px 2px 12px}
+/* Floating physical rail at the bottom, with gold active key. */
+nav.bar{max-width:548px;inset-inline:21px;bottom:calc(12px + env(safe-area-inset-bottom));background:linear-gradient(180deg,#fff,#f1f5f2 65%,#e4ebe6);border:1px solid #fff;border-radius:26px;padding:7px;gap:7px;box-shadow:inset 0 2px 1px #fff,inset 0 -2px 1px rgba(88,112,92,.12),0 3px 0 #d6dfd8,0 6px 9px rgba(50,77,55,.17),0 13px 23px rgba(50,77,55,.12)}
+nav.bar button{min-height:63px;font-size:12px;border-radius:20px;color:#54785a;padding:8px 4px;gap:5px;font-weight:650}
+nav.bar button svg{width:22px;height:22px}
+nav.bar button[aria-current="page"]{font-weight:800}
+/* Task editor uses the same panel and sculpted key geometry. */
+.scrim{background:rgba(24,48,29,.37);backdrop-filter:blur(3px)}
+.sheet{max-width:548px;border:1px solid rgba(255,255,255,.9);border-radius:30px 30px 0 0;box-shadow:inset 0 2px 1px #fff,0 -10px 30px rgba(33,61,35,.24)}
+.sheethead{margin:16px 17px 11px;padding:16px 17px;border-radius:22px}
+.sheethead .n{font-size:46px;letter-spacing:-1.5px;font-weight:800;text-shadow:0 1px 0 #fff}
+.sheethead .tname{font-size:18px;white-space:normal}
+.sheethead .icobtn{background:var(--face);box-shadow:var(--lift-sm)}
+.sheetbody{padding:12px 17px 20px}
+.q{margin-bottom:25px}
+.q > label,.qlabel{font-size:16px;font-weight:800;line-height:1.4;margin-bottom:13px}
+.chips.grid{gap:12px 10px}
+.chips.grid .chip{min-height:46px;border-radius:17px}
+.chip.sm{padding:10px 12px;min-height:39px}
+select.freqsel{box-shadow:var(--green-lift);border:1px solid #82b574}
+.libwrap{padding:7px 5px 11px;margin:-5px -3px;max-height:165px}
+.sheetbody .q .padbox{margin-top:11px;padding:0 2px 1px}
+.sheetfoot{padding:12px 17px calc(18px + env(safe-area-inset-bottom));box-shadow:0 -8px 15px rgba(49,75,57,.07)}
+.sheetfoot .btn{min-height:55px;border-radius:21px}
+@media(min-width:700px){.sheet{border-radius:30px}.top{padding-block:15px 19px}.wrap{padding-top:5px}}
+@media(max-width:480px){
+ .top{padding-inline:18px;gap:7px;padding-block:12px 16px}.top h1{font-size:15px}.top .mark{width:22px;height:22px}
+ .icobtn,.newbtn{height:39px}.icobtn{width:39px}.newbtn{padding-inline:12px;font-size:14px}
+ .wrap{padding-inline:18px}.cardhead,.padbox{padding-inline:14px}
+ .cardhead h2,.block h3{font-size:16px}
+ .banner{padding:15px 11px 19px}.banner .fig{height:83px}.banner .big{font-size:48px}
+ .ring svg{width:83px;height:83px}.ringnum{font-size:19px}
+ .banner .lbl{font-size:13px}.banner .lbl.pill{font-size:12px}
+ .row{min-height:65px;padding:10px 11px;gap:8px}.row .ico{width:33px;height:33px}.row .tick{width:29px;height:29px}
+ .row .nm{font-size:13.5px}.row .meta{font-size:11px}.row .hrs{font-size:14px}
+ .ghead .gname{font-size:14px}.ghead .gtot{font-size:15px}
+ .setrow{padding-inline:11px;gap:7px}.setrow input[type=text]{font-size:14px;padding-inline:10px}
+ .stepper button{width:27px;height:39px}.stepper input{width:31px;height:39px}
+ .setrow .inline-link{font-size:12px}.chip{font-size:13.5px}
+ #screenDash .block{padding:15px 13px 18px}
+ .bar-top{font-size:13px}
+ nav.bar{inset-inline:18px}
+ .sheetbody{padding-inline:13px}.sheetfoot{padding-inline:13px}
+ .sheethead{margin-inline:13px}.q > label,.qlabel{font-size:15px}
+ .chips.grid{gap:10px 8px}.unitrow{gap:8px}.unitrow .chips{flex-basis:125px}
+}
+@media(max-width:350px){
+ .top{padding-inline:10px;gap:5px}.top h1{font-size:13px}.wrap{padding-inline:11px}
+ .banner .big{font-size:40px}.banner .lbl{font-size:12px}.banner .lbl.pill{padding-inline:10px}
+ .row{gap:6px}.row .ico{width:29px;height:29px}.row .tick{width:27px;height:27px}
+ .setrow{gap:5px;padding-inline:8px}.stepper button{width:24px}.stepper input{width:27px}
+ nav.bar{inset-inline:11px}
+}
+@media(prefers-reduced-motion:reduce){.newbtn:active,.btn:active,.chip:active,.icobtn:active,.tick:active,.row:active,.ghead:active{transform:none}}
+
 </style>
 </head>
 <body>
@@ -1310,9 +1473,21 @@ function ringPct(fte, size){
     if(dash !== undefined) c2.setAttribute('stroke-dasharray', dash + ' ' + c);
     return c2;
   };
+
+  // Decorative gradient only; the numeric fraction and arc length are unchanged.
+  const defs = document.createElementNS(NS,'defs');
+  const gold = document.createElementNS(NS,'linearGradient');
+  gold.setAttribute('id','waivesGoldRing');
+  gold.setAttribute('x1','14%'); gold.setAttribute('y1','0%');
+  gold.setAttribute('x2','86%'); gold.setAttribute('y2','100%');
+  [['0%','#fff1b9'],['32%','#e1bb61'],['68%','#c49b43'],['100%','#be9034']].forEach(([offset,color])=>{
+    const stop = document.createElementNS(NS,'stop');
+    stop.setAttribute('offset',offset); stop.setAttribute('stop-color',color); gold.appendChild(stop);
+  });
+  defs.appendChild(gold); svg.appendChild(defs);
   svg.appendChild(ring('var(--ring-track)'));
   if(frac > 0){
-    const arc = ring('var(--ring-arc)', c * frac);
+    const arc = ring('url(#waivesGoldRing)', c * frac);
     arc.setAttribute('transform','rotate(-90 ' + (s/2) + ' ' + (s/2) + ')');
     svg.appendChild(arc);
   }
